@@ -16,11 +16,6 @@
                         $requiredMark = $requiresApplicantProfile ? ' *' : '';
                         $selectedState = old('state_of_origin', $user->state_of_origin);
                         $selectedLga = old('local_government_area', $user->local_government_area);
-                        $selectedStateModel = $states->firstWhere('name', $selectedState);
-                        $selectedLgas = $selectedStateModel?->localGovernmentAreas ?? collect();
-                        $locationOptions = $states->mapWithKeys(
-                            fn($state) => [$state->name => $state->localGovernmentAreas->pluck('name')->values()],
-                        );
                         $originalProfile = [
                             'first_name' => $user->first_name,
                             'last_name' => $user->last_name,
@@ -122,8 +117,10 @@
                                     <select name="state_of_origin" class="form-control" @required($requiresApplicantProfile)
                                         data-profile-state disabled>
                                         <option value="">Select state</option>
-                                        @foreach ($states as $state)
-                                            <option value="{{ $state->name }}" @selected($selectedState === $state->name)>
+                                            @foreach ($states as $state)
+                                            <option value="{{ $state->name }}"
+                                                data-lga-url="{{ route('locations.states.local-government-areas', $state) }}"
+                                                @selected($selectedState === $state->name)>
                                                 {{ $state->name }}</option>
                                         @endforeach
                                     </select>
@@ -137,10 +134,9 @@
                                     <select name="local_government_area" class="form-control" @required($requiresApplicantProfile)
                                         data-profile-lga data-selected-lga="{{ $selectedLga }}" disabled>
                                         <option value="">Select LGA</option>
-                                        @foreach ($selectedLgas as $lga)
-                                            <option value="{{ $lga->name }}" @selected($selectedLga === $lga->name)>
-                                                {{ $lga->name }}</option>
-                                        @endforeach
+                                        @if ($selectedLga)
+                                            <option value="{{ $selectedLga }}" selected>{{ $selectedLga }}</option>
+                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -203,26 +199,71 @@
                 const stateSelect = form?.querySelector('[data-profile-state]');
                 const lgaSelect = form?.querySelector('[data-profile-lga]');
                 const originalProfile = @json($originalProfile);
-                const lgaOptions = @json($locationOptions);
+                let profileReadonly = true;
 
                 if (!form) {
                     return;
                 }
 
-                const populateLgas = (state, selectedLga = '') => {
+                const resetLgaOptions = (placeholder = 'Select LGA') => {
                     if (!lgaSelect) {
                         return;
                     }
 
                     lgaSelect.innerHTML = '';
-                    lgaSelect.append(new Option('Select LGA', ''));
+                    lgaSelect.append(new Option(placeholder, ''));
+                };
 
-                    (lgaOptions[state] || []).forEach((lga) => {
-                        lgaSelect.append(new Option(lga, lga, false, lga === selectedLga));
-                    });
+                const populateLgas = async (selectedLga = '') => {
+                    if (!stateSelect || !lgaSelect) {
+                        return;
+                    }
+
+                    const selectedOption = stateSelect.selectedOptions[0];
+                    const lgaUrl = selectedOption?.dataset.lgaUrl || '';
+
+                    resetLgaOptions(lgaUrl ? 'Loading LGAs...' : 'Select state first');
+                    lgaSelect.disabled = true;
+
+                    if (!lgaUrl) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(lgaUrl, {
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Unable to load LGAs.');
+                        }
+
+                        const payload = await response.json();
+                        const localGovernmentAreas = Array.isArray(payload.data) ? payload.data : [];
+
+                        resetLgaOptions(localGovernmentAreas.length > 0 ? 'Select LGA' : 'No LGAs available');
+
+                        localGovernmentAreas.forEach((lga) => {
+                            const option = new Option(lga.name, lga.name, false, lga.name === selectedLga);
+                            option.dataset.lgaId = lga.id;
+                            option.dataset.lgaSlug = lga.slug;
+                            lgaSelect.append(option);
+                        });
+
+                        lgaSelect.disabled = profileReadonly || localGovernmentAreas.length === 0;
+                    } catch (error) {
+                        resetLgaOptions('Unable to load LGAs');
+                        lgaSelect.disabled = true;
+                        console.error(error);
+                    }
                 };
 
                 const setReadonly = (readonly) => {
+                    profileReadonly = readonly;
+
                     form.querySelectorAll('input, select').forEach((field) => {
                         if (field.name === 'profile_image') {
                             field.disabled = readonly;
@@ -230,7 +271,7 @@
                         }
 
                         if (field.tagName === 'SELECT') {
-                            field.disabled = readonly;
+                            field.disabled = readonly || (field === lgaSelect && !stateSelect?.value);
                             return;
                         }
 
@@ -247,7 +288,7 @@
                         field.value = originalProfile[field.name] || '';
                     });
 
-                    populateLgas(originalProfile.state_of_origin || '', originalProfile.local_government_area || '');
+                    populateLgas(originalProfile.local_government_area || '');
 
                     if (profileImageInput) {
                         profileImageInput.value = '';
@@ -258,7 +299,7 @@
                     }
                 };
 
-                populateLgas(stateSelect?.value || '', lgaSelect?.dataset.selectedLga || '');
+                populateLgas(lgaSelect?.dataset.selectedLga || '');
                 setReadonly(true);
 
                 editButton?.addEventListener('click', () => {
@@ -292,7 +333,8 @@
                 });
 
                 stateSelect?.addEventListener('change', () => {
-                    populateLgas(stateSelect.value);
+                    lgaSelect.dataset.selectedLga = '';
+                    populateLgas();
                 });
             })();
         </script>
