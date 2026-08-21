@@ -11,6 +11,7 @@ use App\Http\Controllers\EmployerApplicationController;
 use App\Http\Controllers\EmployerApplicationDocumentController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Job;
 use Illuminate\Support\Facades\Route;
@@ -57,6 +58,9 @@ Route::view('features', 'features')->name('features');
 Route::view('faq', 'faq')->name('faq');
 Route::get('contact', [ContactController::class, 'create'])->name('contact');
 Route::post('contact', [ContactController::class, 'store'])->name('contact.store');
+Route::get('locations/states/{nigeriaState}/local-government-areas', [LocationController::class, 'localGovernmentAreas'])
+    ->middleware('throttle:60,1')
+    ->name('locations.states.local-government-areas');
 
 Route::get('Dashboard', DashboardController::class)
     ->middleware('auth')
