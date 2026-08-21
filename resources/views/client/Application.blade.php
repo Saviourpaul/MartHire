@@ -19,11 +19,6 @@
         $educationRows = $educationRows->isEmpty() ? collect([['type' => '']]) : $educationRows;
         $selectedState = old('state_of_origin', $user->state_of_origin);
         $selectedLga = old('local_government_area', $user->local_government_area);
-        $selectedStateModel = $states->firstWhere('name', $selectedState);
-        $selectedLgas = $selectedStateModel?->localGovernmentAreas ?? collect();
-        $locationOptions = $states->mapWithKeys(
-            fn($state) => [$state->name => $state->localGovernmentAreas->pluck('name')->values()],
-        );
         $profileImageAccept = collect(StoreApplicationFormRequest::PROFILE_IMAGE_TYPES)
             ->map(fn($type) => '.'.$type)
             ->implode(',');
@@ -403,7 +398,9 @@
                                 data-state-of-origin>
                                 <option value="">Select state</option>
                                 @foreach ($states as $state)
-                                    <option value="{{ $state->name }}" @selected($selectedState === $state->name)>
+                                    <option value="{{ $state->name }}"
+                                        data-lga-url="{{ route('locations.states.local-government-areas', $state) }}"
+                                        @selected($selectedState === $state->name)>
                                         {{ $state->name }}</option>
                                 @endforeach
                             </select>
@@ -418,10 +415,9 @@
                                 class="form-control @error('local_government_area') is-invalid @enderror" required
                                 data-local-government-area data-selected-lga="{{ $selectedLga }}">
                                 <option value="">Select LGA</option>
-                                @foreach ($selectedLgas as $lga)
-                                    <option value="{{ $lga->name }}" @selected($selectedLga === $lga->name)>
-                                        {{ $lga->name }}</option>
-                                @endforeach
+                                @if ($selectedLga)
+                                    <option value="{{ $selectedLga }}" selected>{{ $selectedLga }}</option>
+                                @endif
                             </select>
                             @error('local_government_area')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -713,7 +709,6 @@
 
                 const steps = Array.from(form.querySelectorAll('[data-application-wizard-step]'));
                 const progressItems = Array.from(document.querySelectorAll('[data-application-wizard-progress-item]'));
-                const lgaOptions = @json($locationOptions);
                 const validationSummary = form.querySelector('[data-validation-summary]');
                 const profileImageInput = document.getElementById('profile-image-input');
                 const profileImagePreview = document.getElementById('profile-image-preview');
@@ -1012,24 +1007,70 @@
                 const stateSelect = form.querySelector('[data-state-of-origin]');
                 const lgaSelect = form.querySelector('[data-local-government-area]');
 
-                const populateLgas = (state, selectedLga = '') => {
+                const resetLgaOptions = (placeholder = 'Select LGA') => {
                     if (!lgaSelect) {
                         return;
                     }
 
                     lgaSelect.innerHTML = '';
-                    lgaSelect.append(new Option('Select LGA', ''));
+                    lgaSelect.append(new Option(placeholder, ''));
+                };
 
-                    (lgaOptions[state] || []).forEach((lga) => {
-                        lgaSelect.append(new Option(lga, lga, false, lga === selectedLga));
-                    });
+                const populateLgas = async (selectedLga = '') => {
+                    if (!stateSelect || !lgaSelect) {
+                        return;
+                    }
+
+                    const selectedOption = stateSelect.selectedOptions[0];
+                    const lgaUrl = selectedOption?.dataset.lgaUrl || '';
+
+                    resetLgaOptions(lgaUrl ? 'Loading LGAs...' : 'Select state first');
+                    lgaSelect.disabled = true;
+
+                    if (!lgaUrl) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(lgaUrl, {
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Unable to load LGAs.');
+                        }
+
+                        const payload = await response.json();
+                        const localGovernmentAreas = Array.isArray(payload.data) ? payload.data : [];
+
+                        resetLgaOptions(localGovernmentAreas.length > 0 ? 'Select LGA' : 'No LGAs available');
+
+                        localGovernmentAreas.forEach((lga) => {
+                            const option = new Option(lga.name, lga.name, false, lga.name === selectedLga);
+                            option.dataset.lgaId = lga.id;
+                            option.dataset.lgaSlug = lga.slug;
+                            lgaSelect.append(option);
+                        });
+
+                        lgaSelect.disabled = localGovernmentAreas.length === 0;
+                    } catch (error) {
+                        resetLgaOptions('Unable to load LGAs');
+                        lgaSelect.disabled = true;
+                        console.error(error);
+                    } finally {
+                        updateSummary();
+                    }
                 };
 
                 if (stateSelect && lgaSelect) {
-                    populateLgas(stateSelect.value, lgaSelect.dataset.selectedLga || '');
+                    populateLgas(lgaSelect.dataset.selectedLga || lgaSelect.value || '');
 
                     stateSelect.addEventListener('change', () => {
-                        populateLgas(stateSelect.value);
+                        lgaSelect.dataset.selectedLga = '';
+                        populateLgas();
                         updateSummary();
                     });
 
