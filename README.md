@@ -1,4 +1,4 @@
-# NextHire - Job Recruitment Portal
+# MartHire - Job Recruitment Portal
 
 <p align="center">
   <strong>A modern, intuitive job recruitment platform connecting employers with top talent</strong>
@@ -6,9 +6,9 @@
 
 ---
 
-## About NextHire
+## About MartHire
 
-NextHire is a comprehensive job recruitment portal designed to streamline the hiring process for employers and provide an excellent job search experience for job seekers. Built with Laravel and modern web technologies, NextHire offers a seamless platform where employers can post job listings and candidates can discover, apply, and manage their career opportunities.
+MartHire is a comprehensive job recruitment portal designed to streamline the hiring process for employers and provide an excellent job search experience for job seekers. Built with Laravel and modern web technologies, MartHire offers a seamless platform where employers can post job listings and candidates can discover, apply, and manage their career opportunities.
 
 For setup, architecture, database, endpoint, deployment, security, scaling, testing, and troubleshooting details, see [Technical Documentation](docs/TECHNICAL_DOCUMENTATION.md).
 
@@ -36,7 +36,7 @@ For setup, architecture, database, endpoint, deployment, security, scaling, test
 
 ### Technology Stack
 
-NextHire is built on modern technologies:
+MartHire is built on modern technologies:
 
 - **Backend**: Laravel - A robust PHP framework with expressive syntax
 - **Frontend**: Blade Templates with Bootstrap CSS for responsive design
