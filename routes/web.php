@@ -138,6 +138,12 @@ Route::middleware(['auth', 'active.account'])->group(function () {
         Route::get('pending-jobs', [JobManagementController::class, 'pending'])->name('pending-jobs');
         Route::get('Reports', [ReportController::class, 'index'])->name('Reports');
         Route::get('Reports/export', [ReportController::class, 'export'])->name('Reports.export');
+        Route::get('admin/dashboard/analytics', [DashboardController::class, 'adminAnalytics'])
+            ->middleware('throttle:60,1')
+            ->name('admin.dashboard.analytics');
+        Route::get('admin/dashboard/active-users', [DashboardController::class, 'adminActiveUsers'])
+            ->middleware('throttle:120,1')
+            ->name('admin.dashboard.active-users');
         Route::get('assessment-templates', fn () => view('admin/assessment-templates'))->name('assessment-templates');
         Route::get('interview-templates', fn () => view('admin/interview-templates'))->name('interview-templates');
         Route::get('email-templates', fn () => view('admin/email-templates'))->name('email-templates');
