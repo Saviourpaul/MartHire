@@ -1,363 +1,434 @@
+<x-layout>
+    <main>
+        <div class="mx-auto max-w-(--breakpoint-2xl) p-4 pb-20 md:p-6 md:pb-6">
+			<div class="flex flex-col justify-between gap-6 rounded-2xl border border-gray-200 bg-white px-6 py-5 sm:flex-row sm:items-center dark:border-gray-800 dark:bg-white/3">
+                  <div class="flex items-center gap-2 sm:pr-3">
+                    <span class="text-base font-medium text-gray-700 dark:text-gray-400">
+                      Welcome Back</span>
+                    <span class="bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500 inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-lg font-medium">{{ auth()->user()->first_name  }} {{ auth()->user()->last_name }}</span>
+                  </div>
+              </div>
+			  <br>
+            <div class="grid grid-cols-12 gap-4 md:gap-6">
+                <div class="col-span-12">
+                    <!-- Metric Group Two -->
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
+                        <!-- Metric Item Start -->
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <p class="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Total Applicants
+                            </p>
 
-@use('App\Enums\DashboardPeriod')
-<x-admin-layout title="Dashboard">
-	<div class="page-header">
-		<div class="row align-items-center">
-			<div class="col-md-7">
-				<h3 class="page-title">Dashboard</h3>
-				<p class="text-muted mb-0">
-					Recruitment insights for <strong>{{ $dateRange->label() }}</strong>
-				</p>
-			</div>
-			<div class="col-md-5">
-				<form method="GET" action="{{ route('dashboard') }}" id="dashboard-filter-form" class="dashboard-filter-form">
-					<div class="row g-2 align-items-end">
-						<div class="col-sm-6">
-							<label for="period" class="form-label mb-1">Period</label>
-							<select name="period" id="period" class="form-select">
-								@foreach (DashboardPeriod::cases() as $option)
-									<option value="{{ $option->value }}" @selected($filterValues['period'] === $option->value)>
-										{{ $option->label() }}
-									</option>
-								@endforeach
-							</select>
-						</div>
-						<div class="col-sm-3 custom-date-field {{ $filterValues['period'] === 'custom' ? '' : 'd-none' }}">
-							<label for="date_from" class="form-label mb-1">From</label>
-							<input type="date" name="date_from" id="date_from" class="form-control" value="{{ $filterValues['date_from'] }}">
-						</div>
-						<div class="col-sm-3 custom-date-field {{ $filterValues['period'] === 'custom' ? '' : 'd-none' }}">
-							<label for="date_to" class="form-label mb-1">To</label>
-							<input type="date" name="date_to" id="date_to" class="form-control" value="{{ $filterValues['date_to'] }}">
-						</div>
-						<div class="col-sm-12 col-md-auto">
-							<button type="submit" class="btn btn-primary w-100">
-								<i class="fas fa-filter me-1"></i> Apply
-							</button>
-						</div>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-	<div class="row mb-4">
-		<div class="col-md-4 d-flex">
-			<div class="card w-100">
-				<div class="card-body pt-0">
-					<div class="card-header border-0 pb-0">
-						<div class="row align-items-center">
-							<div class="col-8">
-								<p class="mb-1 text-muted">Welcome back,</p>
-								<h6 class="text-primary mb-0">
-									<strong>{{ auth()->user()->first_name }}</strong>
-								</h6>
-							</div>
-							<div class="col-4 text-end">
-								<span class="welcome-dash-icon bg-1">
-									<i class="fas fa-user-shield"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                            <div class="mt-3 flex items-end justify-between">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
+                                        {{ number_format($metrics['total_applicants']) }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Metric Item End -->
 
-	<div class="row">
-		<div class="col-xl-4 col-md-6 d-flex">
-			<div class="card wizard-card flex-fill">
-				<div class="card-body">
-					<p class="text-primary mt-0 mb-2">Total Applicants</p>
-					<h3>{{ number_format($metrics['total_applicants']) }}</h3>
-					<p><a href="{{ route('applicants') }}">View applicants</a></p>
-					<span class="dash-widget-icon bg-1"><i class="fas fa-user-graduate"></i></span>
-				</div>
-			</div>
-		</div>
-		<div class="col-xl-4 col-md-6 d-flex">
-			<div class="card wizard-card flex-fill">
-				<div class="card-body">
-					<p class="text-primary mt-0 mb-2">Total Employers</p>
-					<h3>{{ number_format($metrics['total_employers']) }}</h3>
-					<p><a href="{{ route('Employers') }}">View employers</a></p>
-					<span class="dash-widget-icon bg-1"><i class="fas fa-building"></i></span>
-				</div>
-			</div>
-		</div>
-		<div class="col-xl-4 col-md-6 d-flex">
-			<div class="card wizard-card flex-fill">
-				<div class="card-body">
-					<p class="text-primary mt-0 mb-2">Total Jobs Posted</p>
-					<h3>{{ number_format($metrics['total_jobs']) }}</h3>
-					<p class="text-muted mb-0">Within selected period</p>
-					<span class="dash-widget-icon bg-1"><i class="fas fa-briefcase"></i></span>
-				</div>
-			</div>
-		</div>
-		<div class="col-xl-4 col-md-6 d-flex">
-			<div class="card wizard-card flex-fill">
-				<div class="card-body">
-					<p class="text-primary mt-0 mb-2">Total Applications</p>
-					<h3>{{ number_format($metrics['total_applications']) }}</h3>
-					<p class="text-muted mb-0">{{ number_format($metrics['pending_candidates']) }} pending</p>
-					<span class="dash-widget-icon bg-1"><i class="fas fa-file-alt"></i></span>
-				</div>
-			</div>
-		</div>
-		<div class="col-xl-4 col-md-6 d-flex">
-			<div class="card wizard-card flex-fill">
-				<div class="card-body">
-					<p class="text-primary mt-0 mb-2">Approved Candidates</p>
-					<h3>{{ number_format($metrics['approved_candidates']) }}</h3>
-					<p class="text-muted mb-0">Applications approved</p>
-					<span class="dash-widget-icon bg-1"><i class="fas fa-user-check"></i></span>
-				</div>
-			</div>
-		</div>
-		<div class="col-xl-4 col-md-6 d-flex">
-			<div class="card wizard-card flex-fill">
-				<div class="card-body">
-					<p class="text-primary mt-0 mb-2">Rejected Candidates</p>
-					<h3>{{ number_format($metrics['rejected_candidates']) }}</h3>
-					<p class="text-muted mb-0">Applications rejected</p>
-					<span class="dash-widget-icon bg-1"><i class="fas fa-user-times"></i></span>
-				</div>
-			</div>
-		</div>
-	</div>
+                        <!-- Metric Item Start -->
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <p class="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Total Employers
+                            </p>
 
-	<div class="row">
-		<div class="col-lg-8 d-flex">
-			<div class="card w-100">
-				<div class="card-body">
-					<div class="card-header border-0 px-0 pt-0">
-						<h5 class="card-title mb-0">Jobs and Applicants Over Time</h5>
-					</div>
-					<div id="jobs-over-time-chart" class="mt-3"></div>
-				</div>
-			</div>
-		</div>
-		<div class="col-lg-4 d-flex">
-			<div class="card w-100">
-				<div class="card-body">
-					<div class="card-header border-0 px-0 pt-0">
-						<h5 class="card-title mb-0">Application Status</h5>
-					</div>
-					<div id="application-status-chart" class="mt-3"></div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-lg-4 d-flex">
-			<div class="card w-100">
-				<div class="card-body">
-					<div class="card-header border-0 px-0 pt-0">
-						<h5 class="card-title mb-0">Recent Registrations</h5>
-					</div>
-					<div class="table-responsive mt-3">
-						<table class="table table-hover mb-0">
-							<thead>
-								<tr>
-									<th>User</th>
-									<th>Role</th>
-									<th>Registered</th>
-								</tr>
-							</thead>
-							<tbody>
-								@forelse ($recentActivities['users'] as $user)
-									<tr>
-										<td>
-											<div class="fw-medium">{{ $user->first_name }} {{ $user->last_name }}</div>
-											<small class="text-muted">{{ $user->email }}</small>
-										</td>
-										<td><span class="badge bg-info-light">{{ $user->role->label() }}</span></td>
-										<td class="text-nowrap">{{ $user->created_at->diffForHumans() }}</td>
-									</tr>
-								@empty
-									<tr>
-										<td colspan="3" class="text-center text-muted py-4">No recent registrations.</td>
-									</tr>
+                            <div class="mt-3 flex items-end justify-between">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
+                                        {{ number_format($metrics['total_employers'])   }} 
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Metric Item End -->
+
+                        <!-- Metric Item Start -->
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <p class="text-theme-sm text-gray-500 dark:text-gray-400">Total Jobs Posted</p>
+
+                            <div class="mt-3 flex items-end justify-between">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">{{ number_format($metrics['total_jobs']) }}</h4>
+								</div>
+                            </div>
+                        </div>
+                        <!-- Metric Item End -->
+
+                        <!-- Metric Item Start -->
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <p class="text-theme-sm text-gray-500 dark:text-gray-400">Total Applications</p>
+
+                            <div class="mt-3 flex items-end justify-between">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
+                                        {{ number_format($metrics['total_applications']) }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Metric Item End -->
+                    </div>
+                    <!-- Metric Group Two -->
+                </div>
+                <div class="col-span-12">
+                    <!-- Metric Group Two -->
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
+                        <!-- Metric Item Start -->
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <p class="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Approved Candidates
+                            </p>
+
+                            <div class="mt-3 flex items-end justify-between">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
+                                        {{ number_format($metrics['approved_candidates']) }}
+                                    </h4>
+                                </div>
+                               
+                            </div>
+                        </div>
+                        <!-- Metric Item End -->
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <p class="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Pending Applications
+                            </p>
+
+                            <div class="mt-3 flex items-end justify-between">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
+                                        {{ number_format($metrics['pending_applications']) }}
+                                    </h4>
+                                </div>
+                               
+                            </div>
+                        </div>
+
+                        <!-- Metric Item Start -->
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <p class="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Rejected Candidates
+                            </p>
+
+                            <div class="mt-3 flex items-end justify-between">
+                                <div>
+                                    <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
+                                       {{ number_format($metrics['rejected_candidates']) }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Metric Item End -->
+                    </div>
+                    <!-- Metric Group Two -->
+                </div>
+
+                <div class="col-span-12">
+                    <!-- ====== Chart Four Start -->
+                    <div
+                        class="rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+                        <div class="flex flex-wrap items-start justify-between gap-5">
+                            <div>
+                                <h3 class="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">
+                                    Analytics
+                                </h3>
+                                <span class="block text-theme-sm text-gray-500 dark:text-gray-400">
+                                    Jobs and Applicants Over Time
+                                </span>
+                            </div>
+
+                            <div x-data="{ selected: '12_months' }"
+                                class="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
+                                <button type="button" data-analytics-period="12_months" @click="selected = '12_months'"
+                                    :class="selected === '12_months' ?
+                                        'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800' :
+                                        'text-gray-500 dark:text-gray-400'"
+                                    class=":hover:text-white rounded-md px-3 py-2 text-theme-sm font-medium hover:text-gray-900">
+                                    12 Months
+                                </button>
+
+                                <button type="button" data-analytics-period="30_days" @click="selected = '30_days'"
+                                    :class="selected === '30_days' ?
+                                        'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800' :
+                                        'text-gray-500 dark:text-gray-400'"
+                                    class="hover:text-gray-900dark:hover:text-white rounded-md px-3 py-2 text-theme-sm font-medium">
+                                    30 Days
+                                </button>
+
+                                <button type="button" data-analytics-period="7_days" @click="selected = '7_days'"
+                                    :class="selected === '7_days' ?
+                                        'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800' :
+                                        'text-gray-500 dark:text-gray-400'"
+                                    class="rounded-md px-3 py-2 text-theme-sm font-medium hover:text-gray-900 dark:hover:text-white">
+                                    7 Days
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-4 text-theme-sm text-gray-500 dark:text-gray-400">
+                            <span>Jobs: <strong id="adminAnalyticsJobsTotal" class="font-semibold text-gray-800 dark:text-white/90">0</strong></span>
+                            <span>Applicants: <strong id="adminAnalyticsApplicantsTotal" class="font-semibold text-gray-800 dark:text-white/90">0</strong></span>
+                            <span id="adminAnalyticsEmptyState" class="hidden text-gray-400">No activity for this period.</span>
+                        </div>
+                        <div class="custom-scrollbar max-w-full overflow-x-auto">
+                            <div id="adminAnalyticsChart" class="-ml-5 min-w-[1300px] pl-2"></div>
+                        </div>
+                    </div>
+                    <!-- ====== Chart Four End -->
+                </div>
+
+                
+
+                <div class="col-span-12 xl:col-span-5">
+                    <!-- ====== Chart Five Start -->
+                    <div
+                        class="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div class="flex items-start justify-between">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+                                Active Users
+                            </h3>
+
+                           
+                        </div>
+
+                        <div class="mt-6 flex items-end gap-1.5">
+                            <div class="flex items-center gap-2.5">
+                                <span class="relative inline-block w-5 h-5">
+                                    <span
+                                        class="absolute w-2 h-2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-error-500 top-1/2 left-1/2">
+                                        <span
+                                            class="absolute inline-flex w-4 h-4 rounded-full opacity-75 bg-error-400 -top-1 -left-1 animate-ping">
+                                        </span> </span></span>
+                                <span class="font-semibold text-gray-800 activeUsers text-title-sm dark:text-white/90">
+                                    {{ number_format($liveVisitors) }}
+                                </span>
+                            </div>
+                            <span class="block mb-1 text-gray-500 text-theme-sm dark:text-gray-400">
+                                Live visitors
+                            </span>
+                        </div>
+
+                        <div class="my-5 min-h-[155px] rounded-xl bg-gray-50 dark:bg-gray-900">
+                            <div id="adminActiveUsersChart" class="-mr-2.5 -ml-[22px] h-full"></div>
+                        </div>
+
+                        
+                    </div>
+                    <!-- ====== Chart Five End -->
+                </div>
+
+              
+
+                <div class="col-span-12 xl:col-span-5">
+                    <!-- ====== Chart Seven Start -->
+                    <div
+                        class="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div class="flex items-center justify-between mb-9">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+                                Application Status
+                            </h3>
+                        </div>
+                        <div class="">
+                            <div id="adminApplicationStatusChart" class="flex justify-center mx-auto chartDarkStyle"></div>
+                        </div>
+                    </div>
+                    <!-- ====== Chart Seven End -->
+                </div>
+
+                <div class="col-span-12 xl:col-span-5">
+					
+                    <!-- ====== Map One Start -->
+                    <div
+                        class="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+						
+                        <div class="flex justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+                                    Latest Applications
+                                </h3>
+                               
+                            </div>
+
+                           
+                        </div>
+						 
+                       <div class="max-w-full overflow-x-auto custom-scrollbar">
+						
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-t border-gray-100 dark:border-gray-800">
+										<th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                                Applicants
+                                            </p>
+                                        </th>
+                                        <th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                                Applications
+                                            </p>
+                                        </th>
+                                        <th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                                job 
+                                            </p>
+                                        </th>
+                                        
+                                        <th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                                status
+                                            </p>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+									@forelse ($recentActivities['applications'] as $application)
+                                    <tr class="border-t border-gray-100 dark:border-gray-800">
+                                        <td class="px-6 py-3.5">
+                                            <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                               {{ $application->applicant?->first_name }} {{ $application->applicant?->last_name }}
+                                            </p>
+                                        </td>
+                                        <td class="px-6 py-3.5">
+                                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ $application->reference }}</p>
+                                        </td>
+                                        
+                                        <td class="px-6 py-3.5">
+                                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
+                                               {{ $application->job?->title ?? '—' }}
+                                            </p>
+                                        </td>
+                                        <td class="px-6 py-3.5">
+                                            <p class="text-theme-sm text-success-600">{{ $application->status->label() }}</p>
+                                        </td>
+                                    </tr>
+									@empty
+									<tr class="border-t border-gray-100 dark:border-gray-800">
+                                        <td class="px-6 py-3.5">
+                                            <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                No Applications
+                                            </p>
+                                        </td>
+                                        
+                                    </tr>
+									@endforelse
+                                   
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- ====== Map One End -->
+                </div>
+
+                <div class="col-span-12 xl:col-span-7">
+                    <!-- ====== Table Two Start -->
+                    <div
+                        class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div class="flex flex-col gap-4 px-6 mb-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+                                    Recent Registrations
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div class="max-w-full overflow-x-auto custom-scrollbar">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-t border-gray-100 dark:border-gray-800">
+                                        <th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                                Users
+                                            </p>
+                                        </th>
+										 <th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                                email
+                                            </p>
+                                        </th>
+                                        <th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                                 Registered
+                                            </p>
+                                        </th>
+                                        <th class="px-6 py-3 text-left">
+                                            <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">
+                                               Role
+                                            </p>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                 <tbody>
+									@forelse ($recentActivities['users'] as $user)
+                                    <tr class="border-t border-gray-100 dark:border-gray-800">
+                                        <td class="px-6 py-3.5">
+                                            <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                               {{ $user->first_name }} {{ $user->last_name }}
+                                            </p>
+                                        </td>
+										<td class="px-6 py-3.5">
+                                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
+                                               {{ $user->email }}
+                                            </p>
+                                        </td>
+                                        <td class="px-6 py-3.5">
+                                            <p class="text-gray-500 text-theme-sm dark:text-gray-400">
+                                               {{ $user->created_at->diffForHumans() }}
+                                            </p>
+                                        </td>
+                                        <td class="px-6 py-3.5">
+                                            <p class="text-theme-sm text-success-600">{{ $user->role->label() }}</p>
+                                        </td>
+                                    </tr>
+									@empty
+									<tr class="border-t border-gray-100 dark:border-gray-800">
+                                        <td colspan="4" class="px-6 py-3.5">
+                                            <p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                No Recent Registrations.
+                                            </p>
+                                        </td>
+                                    </tr>
 								@endforelse
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-lg-4 d-flex">
-			<div class="card w-100">
-				<div class="card-body">
-					<div class="card-header border-0 px-0 pt-0">
-						<h5 class="card-title mb-0">Recently Posted Jobs</h5>
-					</div>
-					<div class="table-responsive mt-3">
-						<table class="table table-hover mb-0">
-							<thead>
-								<tr>
-									<th>Job</th>
-									<th>Status</th>
-									<th>Posted</th>
-								</tr>
-							</thead>
-							<tbody>
-								@forelse ($recentActivities['jobs'] as $job)
-									<tr>
-										<td>
-											<div class="fw-medium">{{ $job->title }}</div>
-											<small class="text-muted">{{ $job->company }}</small>
-										</td>
-										<td>
-											<span class="badge {{ $job->status->badgeClass() }}">
-												{{ $job->status->label() }}
-											</span>
-										</td>
-										<td class="text-nowrap">{{ $job->created_at->diffForHumans() }}</td>
-									</tr>
-								@empty
-									<tr>
-										<td colspan="3" class="text-center text-muted py-4">No jobs posted yet.</td>
-									</tr>
-								@endforelse
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-lg-4 d-flex">
-			<div class="card w-100">
-				<div class="card-body">
-					<div class="card-header border-0 px-0 pt-0">
-						<h5 class="card-title mb-0">Latest Applications</h5>
-					</div>
-					<div class="table-responsive mt-3">
-						<table class="table table-hover mb-0">
-							<thead>
-								<tr>
-									<th>Applicant</th>
-									<th>Job</th>
-									<th>Status</th>
-								</tr>
-							</thead>
-							<tbody>
-								@forelse ($recentActivities['applications'] as $application)
-									<tr>
-										<td>
-											<div class="fw-medium">
-												{{ $application->applicant?->first_name }} {{ $application->applicant?->last_name }}
-											</div>
-											<small class="text-muted">{{ $application->reference }}</small>
-										</td>
-										<td>{{ $application->job?->title ?? '—' }}</td>
-										<td>
-											<span class="badge {{ $application->status->badgeClass() }}">
-												{{ $application->status->label() }}
-											</span>
-										</td>
-									</tr>
-								@empty
-									<tr>
-										<td colspan="3" class="text-center text-muted py-4">No applications yet.</td>
-									</tr>
-								@endforelse
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	@push('scripts')
-		<script>
-			document.addEventListener('DOMContentLoaded', function () {
-				const periodSelect = document.getElementById('period');
-				const customDateFields = document.querySelectorAll('.custom-date-field');
-
-				if (periodSelect) {
-					periodSelect.addEventListener('change', function () {
-						const showCustom = this.value === 'custom';
-						customDateFields.forEach(function (field) {
-							field.classList.toggle('d-none', !showCustom);
-						});
-
-						if (this.value !== 'custom') {
-							document.getElementById('dashboard-filter-form').submit();
-						}
-					});
-				}
-
-				const jobsOverTime = @json($charts['jobsOverTime']);
-				const applicantsOverTime = @json($charts['applicantsOverTime']);
-				const applicationStatus = @json($charts['applicationStatus']);
-				const userRegistrations = @json($charts['userRegistrations']);
-
-				if (document.querySelector('#jobs-over-time-chart')) {
-					new ApexCharts(document.querySelector('#jobs-over-time-chart'), {
-						chart: { type: 'area', height: 320, toolbar: { show: false } },
-						series: [
-							{ name: jobsOverTime.label, data: jobsOverTime.series },
-							{ name: applicantsOverTime.label, data: applicantsOverTime.series },
-						],
-						colors: ['#0073b1', '#28a745'],
-						dataLabels: { enabled: false },
-						stroke: { curve: 'smooth', width: 2 },
-						fill: {
-							type: 'gradient',
-							gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.05 },
-						},
-						xaxis: { categories: jobsOverTime.categories },
-						yaxis: { labels: { formatter: (value) => Math.round(value) } },
-						tooltip: {
-							y: {
-								formatter: (value, { seriesIndex }) => `${value} ${seriesIndex === 0 ? 'jobs' : 'applicants'}`,
-							},
-						},
-					}).render();
-				}
-
-				if (document.querySelector('#application-status-chart')) {
-					new ApexCharts(document.querySelector('#application-status-chart'), {
-						chart: { type: 'donut', height: 320 },
-						series: applicationStatus.series,
-						labels: applicationStatus.labels,
-						colors: applicationStatus.colors,
-						legend: { position: 'bottom' },
-						plotOptions: {
-							pie: {
-								donut: {
-									size: '68%',
-									labels: {
-										show: true,
-										total: {
-											show: true,
-											label: 'Applications',
-											formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0),
-										},
-									},
-								},
-							},
-						},
-					}).render();
-				}
-
-				if (document.querySelector('#user-registrations-chart')) {
-					new ApexCharts(document.querySelector('#user-registrations-chart'), {
-						chart: { type: 'bar', height: 320, stacked: false, toolbar: { show: false } },
-						series: userRegistrations.series,
-						colors: ['#0073b1', '#feb019'],
-						plotOptions: {
-							bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 },
-						},
-						dataLabels: { enabled: false },
-						xaxis: { categories: userRegistrations.categories },
-						yaxis: { labels: { formatter: (value) => Math.round(value) } },
-						legend: { position: 'top' },
-					}).render();
-				}
-			});
-		</script>
-	@endpush
-</x-admin-layout>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- ====== Table Two End -->
+                </div>
+            </div>
+        </div>
+    </main>
+    @php
+        $initialAnalyticsPayload = [
+            'categories' => $charts['jobsOverTime']['categories'],
+            'series' => [
+                ['name' => $charts['jobsOverTime']['label'], 'data' => $charts['jobsOverTime']['series']],
+                ['name' => $charts['applicantsOverTime']['label'], 'data' => $charts['applicantsOverTime']['series']],
+            ],
+            'totals' => [
+                'jobs' => array_sum($charts['jobsOverTime']['series']),
+                'applicants' => array_sum($charts['applicantsOverTime']['series']),
+            ],
+        ];
+        $initialAnalyticsPayload['empty'] = ($initialAnalyticsPayload['totals']['jobs'] + $initialAnalyticsPayload['totals']['applicants']) === 0;
+        $initialAnalyticsPayload['applicationStatus'] = $charts['applicationStatus'];
+    @endphp
+    <script>
+        window.AdminDashboardCharts = {
+            analyticsUrl: {{ Illuminate\Support\Js::from(route('admin.dashboard.analytics')) }},
+            activeUsersUrl: {{ Illuminate\Support\Js::from(route('admin.dashboard.active-users')) }},
+            analytics: {{ Illuminate\Support\Js::from($initialAnalyticsPayload) }},
+            applicationStatus: {{ Illuminate\Support\Js::from($charts['applicationStatus']) }},
+            activeUsersTrend: {{ Illuminate\Support\Js::from($activeUsersTrend) }},
+        };
+    </script>
+    <script src="{{ asset('assets/js/admin-dashboard-charts.js') }}"></script>
+</x-layout>
