@@ -7,6 +7,7 @@ use App\Services\AdminDashboardService;
 use App\Services\EmployerDashboardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -30,6 +31,24 @@ class DashboardController extends Controller
             UserRole::Employer => view('employer.Dashboard', $this->employerDashboardService->getOverview($request, $user)),
             UserRole::Applicant => view('client.Dashboard'),
         };
+    }
+
+    public function adminAnalytics(Request $request): JsonResponse
+    {
+        abort_unless($request->user()?->isAdmin(), 403);
+
+        $period = $request->validate([
+            'period' => ['nullable', 'in:12_months,30_days,7_days'],
+        ])['period'] ?? '12_months';
+
+        return response()->json($this->adminDashboardService->analytics($period));
+    }
+
+    public function adminActiveUsers(Request $request): JsonResponse
+    {
+        abort_unless($request->user()?->isAdmin(), 403);
+
+        return response()->json($this->adminDashboardService->activeUsers());
     }
 
     private function logoutSuspendedUser(Request $request): RedirectResponse
