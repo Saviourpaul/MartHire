@@ -54,10 +54,10 @@ Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])
     ->name('applications.create');
 Route::get('about', fn () => view('about'))->name('about');
 Route::view('services', 'services')->name('services');
-Route::view('features', 'features')->name('features');
-Route::view('faq', 'faq')->name('faq');
-Route::get('contact', [ContactController::class, 'create'])->name('contact');
-Route::post('contact', [ContactController::class, 'store'])->name('contact.store');
+Route::view('pricing', 'pricing')->name('pricing');
+Route::view('how-it-works', 'how-it-works')->name('how-it-works');
+Route::view('our-team', 'our-team')->name('our-team');
+Route::view('contact', 'contact')->name('contact');
 Route::get('locations/states/{nigeriaState}/local-government-areas', [LocationController::class, 'localGovernmentAreas'])
     ->middleware('throttle:60,1')
     ->name('locations.states.local-government-areas');
