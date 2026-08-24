@@ -1,303 +1,260 @@
-@props(['bodyClass' => 'home-page bg-one', 'title' => 'NextHire'])
 <!DOCTYPE html>
-<html lang="en">
+
+<html lang="zxx">
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+
 <head>
-		<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
-		<title>{{ $title ?? 'NextHire' }}</title>
-		
-		<!-- Favicon -->
-		<link rel="shortcut icon" href="{{ asset('assets/img/favicon.ico') }}" type="image/x-icon" height="32" width="32">
-		
-		<!-- Bootstrap CSS -->
-		<link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
-				
-		<!-- Fontawesome CSS -->
-		<link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/fontawesome.min.css') }}">
-		<link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/all.min.css') }}">
-		
-		<!-- Slick CSS -->
-		<link rel="stylesheet" href="{{ asset('assets/plugins/slick/slick.css') }}">
-		<link rel="stylesheet" href="{{ asset('assets/plugins/slick/slick-theme.css') }}">
-		
-		<link rel="stylesheet" href="{{ asset('assets/css/animate.min.css') }}">
-		<link rel="stylesheet" href="{{ asset('assets/css/animate.css') }}">
+    <!-- favicon -->
+    <link rel="shortcut icon" href="assets/images/favicon.ico" />
+    <!-- theme meta -->
+    <meta name="msapplication-TileColor" content="#000000" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+    <meta name="generator" content="gulp" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<!-- Primary Meta Tags -->
+	<title>MartHire — Recruitment Management Platform for Employers & Recruiters</title>
+	<meta name="title" content="MarHire — Recruitment Management Platform for Employers & Recruiters">
+	<meta name="description" content="Marthire is a recruitment technology platform that helps organizations manage the full hiring lifecycle — from job vacancies to candidate selection — through structured digital workflows. Join the waitlist.">
 
-		<!-- Feather CSS -->
-		<link rel="stylesheet" href="{{ asset('assets/plugins/feather/feather.css') }}">
-		
-		<!-- Aos CSS -->
-		<link rel="stylesheet" href="{{ asset('assets/plugins/aos/aos.css') }}">
-		
-		<!-- Select2 CSS -->
-		<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-		
-		<!-- Main CSS -->
-		<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-	
-		
-	</head>	
-  <body class="{{ $bodyClass }}">
-		
-		<!-- Loader -->
-		<!--div id="global-loader"  >
-			<div class="whirly-loader"> </div>
-			<div class="loader-img">
-				<img src="{{ asset('assets/img/load-icon.svg') }}" class="img-fluid" alt="Img">
-			</div>
-		</div-->
-		<!-- Loader -->
-		
-		<!-- Main Wrapper -->
-		<div class="main-wrapper">
-					
-			<!-- Start Navigation -->
-			<!-- Header -->
-			<header class="header">
-				<div class="container">
-					<nav class="navbar navbar-expand-lg header-nav p-0">
-						<div class="navbar-header">
-							<a id="mobile_btn" href="javascript:void(0);">
-								<span class="bar-icon">
-									<span></span>
-									<span></span>
-									<span></span>
-								</span>
-							</a>
-							<a href="/" class="navbar-brand logo">
-								<img src="{{ asset('assets/img/logo.png') }}" class="img-fluid" alt="Logo" height="120" width="120">
-							</a>
-							
-						</div>
-						<div class="main-menu-wrapper">
-							<div class="menu-header">
-								<a href="/" class="menu-logo">
-									<img src="{{ asset('assets/img/logo.png') }}" class="img-fluid" alt="Logo" height="120" width="120">
-								</a>
-								<a id="menu_close" class="menu-close" href="javascript:void(0);">
-									<i class="fas fa-times"></i>
-								</a>
-							</div>
-							<ul class="main-nav">
-								<li class="{{ request()->routeIs('home') ? 'active' : '' }}">
-									<a href="{{ route('home') }}">Home</a>
-								</li>
-								<li class="{{ request()->routeIs('jobs.public') ? 'active' : '' }}">
-									<a href="{{ route('jobs.public') }}">Jobs</a>
-								</li>
-								<li class="{{ request()->routeIs('services') ? 'active' : '' }}">
-									<a href="{{ route('services') }}">Services</a>
-								</li>
-								<li class="{{ request()->routeIs('features') ? 'active' : '' }}">
-									<a href="{{ route('features') }}">Features</a>
-								</li>
-								
-								<li class="{{ request()->routeIs('about') ? 'active' : '' }}">
-									<a href="{{ route('about') }}">About</a>
-								</li>
-								<li class="{{ request()->routeIs('faq') ? 'active' : '' }}">
-									<a href="{{ route('faq') }}">FAQ</a>
-								</li>
-								<li class="{{ request()->routeIs('contact') ? 'active' : '' }}">
-									<a href="{{ route('contact') }}">Contact</a>
-								</li>
-								<li class="login-link d-lg-none">
-									@guest
-									<a href="/login"><img src="{{ asset('assets/img/icon/lock.svg') }}" class="me-1" alt="img"> Login</a>
-									@endguest
-								</li>
-								<li class="login-link d-lg-none">
-									@guest
-									<a href="/register"><img src="{{ asset('assets/img/icon/users.svg') }}" class="me-1" alt="img">Get Started</a>
-									@endguest
-								</li>
-								
-							</ul>
-						</div>		 
-<ul class="nav header-navbar-rht reg-head">												
-							@guest
-							<li class="d-none d-lg-block"><a href="/login" class="log-btn"><img src="{{ asset('assets/img/icon/lock.svg') }}" class="me-1" alt="img"> Login</a></li>
-							<li class="d-none d-lg-block"><a href="/register" class="login-btn"><img src="{{ asset('assets/img/icon/users.svg') }}" class="me-1" alt="img">Get Started</a></li>
-							@endguest
-							@auth
-							<li class="nav-item dropdown ">
-								<a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
-									<span class="user-img">
-										<img src="{{ auth()->user()->profileImageUrl() }}" alt="{{ auth()->user()->first_name }}">
-										<span class="status online"></span>
-									</span>
-								</a>
-								<div class="dropdown-menu">
-									<a class="dropdown-item" href="{{ route('profile.edit') }}"><i data-feather="user" class="me-1"></i> Profile</a>
-									<form
-										action="{{ route('logout') }}"
-										method="POST"
-										data-confirm
-										data-confirm-title="Sign out?"
-										data-confirm-text="Are you Sure You Want to Logout."
-										data-confirm-button="Logout"
-									>
-										@csrf
-										<button type="submit" class="dropdown-item"><i data-feather="log-out" class="me-1"></i> Logout</button>
-									</form>
-								</div>
-				            </li>
-							@endauth
-						</ul>
-					</nav>
-				</div>
-				
-			</header>
+<!-- Keywords (low SEO value, harmless to include) -->
+<meta name="keywords" content="recruitment platform, recruitment management system, hiring software, applicant tracking, recruitment technology, HR software, candidate management, recruitment workflow, employer platform, recruitment agency software">
 
-      
-			<!-- /Header -->		
+<!-- Canonical -->
+<link rel="canonical" href="https://marthire.com/">
 
-			{{ $slot }}
-		
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://marthire.com/">
+<meta property="og:title" content="MarHire — Recruitment Management Platform">
+<meta property="og:description" content="Manage hiring from vacancy creation to candidate selection in one structured platform. Built for employers, recruiters, and organizations. Join the waitlist.">
+<meta property="og:image" content="https://marthire.com/og-image.png">
+<meta property="og:site_name" content="MarHire">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://marthire.com/">
+<meta name="twitter:title" content="MarHire — Recruitment Management Platform">
+<meta name="twitter:description" content="Manage hiring from vacancy creation to candidate selection in one structured platform. Join the waitlist.">
+<meta name="twitter:image" content="https://marthire.com/og-image.png">
+
+<!-- Robots -->
+<meta name="robots" content="index, follow">
+    <!-- responsive meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <!-- google font css -->
+    <link rel="preconnect" href="https://fonts.googleapis.com/" />
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;display=swap"
+        rel="stylesheet" />
+
+    <!-- styles -->
+
+    <!-- Swiper slider -->
+    <link rel="stylesheet" href="assets/plugins/swiper/swiper-bundle.css" />
+
+    <!-- Fontawesome -->
+    <link rel="stylesheet" href="assets/plugins/font-awesome/v6/brands.css" />
+    <link rel="stylesheet" href="assets/plugins/font-awesome/v6/solid.css" />
+    <link rel="stylesheet" href="assets/plugins/font-awesome/v6/fontawesome.css" />
+
+    <!-- Main Stylesheet -->
+    <link href="assets/css/main.css" rel="stylesheet" />
+</head>
+
+<header class="header">
+    <nav class="navbar container">
+        <!-- logo -->
+        <div class="order-0">
+            <a href="{{ route('home') }}">
+                <img src="assets/images/logo.png" height="80" width="139" alt="" />
+            </a>
+        </div>
+        <!-- navbar toggler -->
+        <input id="nav-toggle" type="checkbox" class="hidden" />
+        <label id="show-button" for="nav-toggle"
+            class="text-black order-2 flex cursor-pointer items-center lg:order-1 lg:hidden">
+            <svg class="h-6 fill-current" viewBox="0 0 20 20">
+                <title>Menu Open</title>
+                <path d="M0 3h20v2H0V3z m0 6h20v2H0V9z m0 6h20v2H0V0z"></path>
+            </svg>
+        </label>
+        <label id="hide-button" for="nav-toggle"
+            class="text-black order-2 hidden cursor-pointer items-center lg:order-1">
+            <svg class="h-6 fill-current" viewBox="0 0 20 20">
+                <title>Menu Close</title>
+                <polygon points="11 9 22 9 22 11 11 11 11 22 9 22 9 11 -2 11 -2 9 9 9 9 -2 11 -2"
+                    transform="rotate(45 10 10)"></polygon>
+            </svg>
+        </label>
+        <!-- /navbar toggler -->
+        <ul id="nav-menu"
+            class="navbar-nav order-3 lg:items-center hidden w-full lg:order-1 lg:flex lg:w-auto lg:space-x-2 pb-3 lg:pb-0">
+            <li class="nav-item">
+                <a href="about.html" class="nav-link">
+                    About Us
+                </a>
+            </li>
+            <li class="nav-item nav-dropdown group relative">
+                <a href="{{ route("services") }}" class="nav-link">
+                    services
+                </a>
+            </li>
+            <li class="nav-item nav-dropdown group relative">
+                <a href="{{ route("pricing") }}" class="nav-link">
+                    Pricing
+                </a>
+            </li>
+			<li class="nav-item nav-dropdown group relative">
+				<a href="{{ route("how-it-works") }}" class="nav-link"> How it works </a>
+			</li>
+			<li class="nav-item nav-dropdown group relative">
+				<a href="{{ route("our-team") }}" class="nav-link"> Our Team </a>
+			</li>
+            <li class="nav-item nav-dropdown group relative">
+                <a href="{{ route("contact") }}" class="nav-link">
+                    Contact Us
+                </a>
+            </li>
+           
 			
-			<!-- Footer -->	
-			<footer class="footer">
-				<div class="footer-top ">
-					<div class="container">
+            <li class="nav-item lg:hidden mt-3.5">
+                <a class="btn btn-outline-dark btn-sm" href="{{route("login")}}">
+                    Get Started
+                    <i class="fa fa-chevron-right"></i>
+                </a>
+                </div>
+            </li>
+        </ul>
+        <div class="order-1 ml-auto items-center lg:order-2 lg:ml-0 hidden lg:flex">
+            <a class="btn btn-outline-dark btn-sm" href="{{ route("login") }}">
+                Start journey
+                <i class="fa fa-chevron-right"></i>
+            </a>
+        </div>
+    </nav>
+</header>
 
-						<div class="row">
-							<div class=" col-lg-4 col-md-12">
-								<div class="footer-bottom-logo">
-									<a href="/" class="menu-logo">
-										<img src="{{ asset('assets/img/logo.png') }}" class="img-fluid" alt="Logo" height="50" width="90">
-									</a>
-									<p>NextHire connects government agencies, private organizations, and employers with qualified job seekers through a secure, modern recruitment platform.</p>
-									<ul>
-										<li>
-											<a href="javascript:void(0);" aria-label="NextHire on Facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></a>
-										</li>
-										<li>
-											<a href="javascript:void(0);" aria-label="NextHire on Twitter"><i class="fa-brands fa-twitter" aria-hidden="true"></i></a>
-										</li>
-										<li>
-											<a href="javascript:void(0);" aria-label="NextHire on Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
-										</li>
-										<li>
-											<a href="javascript:void(0);" aria-label="NextHire on LinkedIn"><i class="fa-brands fa-linkedin" aria-hidden="true"></i></a>
-										</li>
-									</ul>
-									<a href="{{ route('contact') }}" class="btn btn-connectus">Contact Us</a>
-								</div>
-							</div>
-							<div class=" col-lg-8 col-md-12">
-								<div class="row">
-									<div class="col-xl-3 col-md-6">
-										<div class="footer-widget footer-menu">
-											<h2 class="footer-title">Platform</h2>
-											<ul>
-												<li><a href="{{ route('about') }}"><i class="fas fa-angle-right me-1"></i>About Us</a></li>
-												<li><a href="{{ route('services') }}"><i class="fas fa-angle-right me-1"></i>Services</a></li>
-												<li><a href="{{ route('features') }}"><i class="fas fa-angle-right me-1"></i>Features</a></li>
-												<li><a href="{{ route('jobs.public') }}"><i class="fas fa-angle-right me-1"></i>Browse Jobs</a></li>
-												<li><a href="{{ route('faq') }}"><i class="fas fa-angle-right me-1"></i>FAQ</a></li>
-											</ul>
-										</div>
-									</div>
-									<div class="col-xl-3 col-md-6">
-										<div class="footer-widget footer-menu">
-											<h2 class="footer-title">For Users</h2>
-											<ul>
-												<li><a href="{{ route('register') }}"><i class="fas fa-angle-right me-1"></i>Register</a></li>
-												<li><a href="{{ route('login') }}"><i class="fas fa-angle-right me-1"></i>Login</a></li>
-												<li><a href="{{ route('register') }}"><i class="fas fa-angle-right me-1"></i>Job Seekers</a></li>
-												<li><a href="{{ route('register') }}"><i class="fas fa-angle-right me-1"></i>Employers</a></li>
-												<li><a href="{{ route('contact') }}"><i class="fas fa-angle-right me-1"></i>Contact Support</a></li>
-											</ul>
-										</div>
-									</div>
-									<div class="col-xl-3 col-md-6">
-										<div class="footer-widget footer-menu">
-											<h2 class="footer-title">Recruitment Solutions</h2>
-											<ul>
-												<li><a href="{{ route('services') }}#government"><i class="fas fa-angle-right me-1"></i>Government Hiring</a></li>
-												<li><a href="{{ route('services') }}#private"><i class="fas fa-angle-right me-1"></i>Private Sector</a></li>
-												<li><a href="{{ route('services') }}#employers"><i class="fas fa-angle-right me-1"></i>Employer Services</a></li>
-												<li><a href="{{ route('services') }}#job-seekers"><i class="fas fa-angle-right me-1"></i>Job Seeker Services</a></li>
-												<li><a href="{{ route('services') }}#contract"><i class="fas fa-angle-right me-1"></i>Contract Recruitment</a></li>
-											</ul>
-										</div>
-									</div>
-									<div class="col-xl-3 col-md-6">
-										<div class="footer-widget footer-menu">
-											<h2 class="footer-title">Contact</h2>
-											<ul>
-												<li><a href="mailto:support@nexhire.com"><i class="fas fa-angle-right me-1"></i>support@nexhire.com</a></li>
-												<li><a href="tel:+2348000000000"><i class="fas fa-angle-right me-1"></i>+234 800 000 0000</a></li>
-												<li><a href="{{ route('contact') }}"><i class="fas fa-angle-right me-1"></i>Send a Message</a></li>
-												<li><a href="{{ route('contact') }}#office-location"><i class="fas fa-angle-right me-1"></i>Office Location</a></li>
-												<li><a href="{{ route('faq') }}"><i class="fas fa-angle-right me-1"></i>Help Center</a></li>
-											</ul>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- /Footer Top -->
-				
-				<!-- Footer Bottom -->
-                <div class="footer-bottom">
-					<div class="container">
-					
-						<!-- Copyright -->
-						<div class="copyright">
-							<div class="row">
-								<div class="col-md-12">
-									<div class="copyright-text text-center">
-										<script>document.write(new Date().getFullYear());</script> &copy; NextHire. All rights reserved.
-									</div>
-								</div>
-							</div>
-						</div>
-						<!-- /Copyright -->						
-					</div>
-				</div>
-				<!-- /Footer Bottom -->				
-			</footer>
-			<!-- /Footer -->
-		
-		</div>		
-		<!-- /Main Wrapper -->
-		<button class="scroll-top scroll-to-target" data-target="html">
-			<span class="ti-angle-up"><img src="{{ asset('assets/img/icon/top-icon.svg') }}" class="img-fluid" alt="Img"></span>
-		</button>
-		<!-- jQuery -->
-		<script src="{{ asset('assets/js/jquery-3.7.1.min.js') }}"></script>
-		
-		<!-- Bootstrap Bundle JS -->
-		<script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
+<body><!-- banner -->
+    {{ $slot }}
+    <footer class="footer bg-dark">
+        <div class="container">
+            <div class="row justify-center">
+                <div class="lg:col-10 footer-grid pt-[100px] pb-16">
+                    <div class="footer-col lg:max-w-[270px] mb-10 lg:mb-0">
+                        <a href="{{ route('home') }}" class="mb-4 inline-block">
+                            <img src="assets/images/logo2.png" alt="">
+                        </a>
+                        <p class="mb-10">Lorem ipsum dolor sit sed dmi amet
+                            consectetur adipiscing. Cdo tellus
+                            sed condimentum volutpat. </p>
+                        <span class="inline-block font-semibold text-lg font-primary mb-2">Follow us</span>
+                        <ul class="social-icons footer-social-icons">
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-facebook-f"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-twitter"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-instagram"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-linkedin-in"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="footer-col mb-10 lg:mb-0">
+                        <h5>Products</h5>
+                        <ul class="footer-links">
+                            <li>
+                                <a class="footer-link" href="#">The Platform</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Partner</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Information</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">About</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Take the Tour</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="footer-col mb-10 lg:mb-0">
+                        <h5>About</h5>
+                        <ul class="footer-links">
+                            <li>
+                                <a class="footer-link" href="#">The Platform</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Webinars/Events</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Leadership</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Privacy</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Cookie Preferences</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Legal</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h5>What We Offer</h5>
+                        <ul class="footer-links">
+                            <li>
+                                <a class="footer-link" href="#">Products</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Webinars/Events</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Support</a>
+                            </li>
+                            <li>
+                                <a class="footer-link" href="#">Migration Services</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="lg:col-10 row py-8 text-center border-[#4B4B4B] border-t">
+                    <p class="text-sm text-[#ABABAB]">Designed By <a class="underline hover:text-pri
+                    " href="www.themefisher.html">Themefisher</a>, Developed by <a class="underline hover:text-pri
+                    " href="https://gethugothemes.com/">Gethugothemes</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-		<!-- counterup JS -->
-		<script src="{{ asset('assets/js/jquery.waypoints.js') }}"></script>
-		<script src="{{ asset('assets/js/jquery.counterup.min.js') }}"></script>
-		
-		<!-- Aos -->
-		<script src="{{ asset('assets/plugins/aos/aos.js') }}"></script>
-		
-		<!-- Select2 JS -->
-		<script src="{{ asset('assets/plugins/select2/js/select2.min.js') }}"></script>
-		<script src="{{ asset('assets/plugins/summernote/dist/summernote-lite.min.js') }}"></script>
-		<!-- Slick JS -->
-		<script src="{{ asset('assets/js/slick.js') }}"></script>
 
-		<!-- Sticky Sidebar JS -->
-		<script src="{{ asset('assets/plugins/theia-sticky-sidebar/ResizeSensor.js') }}"></script>
-		<script src="{{ asset('assets/plugins/theia-sticky-sidebar/theia-sticky-sidebar.js') }}"></script>
-		
-		<!-- Custom JS -->
-		<script src="{{ asset('assets/js/script.js') }}"></script>
-		@include('components.sweet-alerts')
-		<script src="{{ asset('assets/js/sweetalert.js') }}"></script>
-		<script src="{{ asset('assets/js/app-alerts.js') }}"></script>
-		@include('components.password-visibility-script')
-	</body>
+    <!-- jQuery -->
+    <!-- <script src="assets/plugins/jquery/jquery.min.js"></script> -->
+    <!-- Swiper JS -->
+    <script src="assets/plugins/swiper/swiper-bundle.js"></script>
+    <!-- Shuffle JS -->
+    <script src="assets/plugins/shuffle/shuffle.js"></script>
+
+    <!-- Main Script -->
+    <script src="assets/js/main.js"></script>
+</body>
 
 </html>
