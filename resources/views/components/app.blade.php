@@ -5,7 +5,7 @@
 
 <head>
     <!-- favicon -->
-    <link rel="shortcut icon" href="assets/images/favicon.ico" />
+    <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}" />
     <!-- theme meta -->
     <meta name="msapplication-TileColor" content="#000000" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
@@ -54,15 +54,15 @@
     <!-- styles -->
 
     <!-- Swiper slider -->
-    <link rel="stylesheet" href="assets/plugins/swiper/swiper-bundle.css" />
+    <link rel="stylesheet" href="{{ asset('assets/plugins/swiper/swiper-bundle.css') }}" />
 
     <!-- Fontawesome -->
-    <link rel="stylesheet" href="assets/plugins/font-awesome/v6/brands.css" />
-    <link rel="stylesheet" href="assets/plugins/font-awesome/v6/solid.css" />
-    <link rel="stylesheet" href="assets/plugins/font-awesome/v6/fontawesome.css" />
+    <link rel="stylesheet" href="{{ asset('assets/plugins/font-awesome/v6/brands.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/plugins/font-awesome/v6/solid.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/plugins/font-awesome/v6/fontawesome.css') }}" />
 
     <!-- Main Stylesheet -->
-    <link href="assets/css/main.css" rel="stylesheet" />
+    <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet" />
 </head>
 
 <header class="header">
@@ -70,7 +70,7 @@
         <!-- logo -->
         <div class="order-0">
             <a href="{{ route('home') }}">
-                <img src="assets/images/logo.png" height="80" width="139" alt="" />
+                <img src="{{ asset('assets/images/logo.png') }}" height="80" width="139" alt="" />
             </a>
         </div>
         <!-- navbar toggler -->
@@ -94,7 +94,7 @@
         <ul id="nav-menu"
             class="navbar-nav order-3 lg:items-center hidden w-full lg:order-1 lg:flex lg:w-auto lg:space-x-2 pb-3 lg:pb-0">
             <li class="nav-item">
-                <a href="about.html" class="nav-link">
+                <a href="{{ route ("about") }}" class="nav-link">
                     About Us
                 </a>
             </li>
@@ -146,7 +146,7 @@
                 <div class="lg:col-10 footer-grid pt-[100px] pb-16">
                     <div class="footer-col lg:max-w-[270px] mb-10 lg:mb-0">
                         <a href="{{ route('home') }}" class="mb-4 inline-block">
-                            <img src="assets/images/logo2.png" alt="">
+                            <img src="{{ asset('assets/images/logo2.png') }}" alt="">
                         </a>
                         <p class="mb-10">Lorem ipsum dolor sit sed dmi amet
                             consectetur adipiscing. Cdo tellus
@@ -237,24 +237,20 @@
                     </div>
                 </div>
                 <div class="lg:col-10 row py-8 text-center border-[#4B4B4B] border-t">
-                    <p class="text-sm text-[#ABABAB]">Designed By <a class="underline hover:text-pri
-                    " href="www.themefisher.html">Themefisher</a>, Developed by <a class="underline hover:text-pri
-                    " href="https://gethugothemes.com/">Gethugothemes</a></p>
+                    <p class="text-sm text-[#ABABAB]"> Developed by <a class="underline hover:text-pri
+                    " href="https://saviourpaul.com/">Saviour Paul</a></p>
                 </div>
             </div>
         </div>
     </footer>
 
-
-    <!-- jQuery -->
-    <!-- <script src="assets/plugins/jquery/jquery.min.js"></script> -->
     <!-- Swiper JS -->
-    <script src="assets/plugins/swiper/swiper-bundle.js"></script>
+    <script src="{{ asset('assets/plugins/swiper/swiper-bundle.js') }}"></script>
     <!-- Shuffle JS -->
-    <script src="assets/plugins/shuffle/shuffle.js"></script>
+    <script src="{{ asset('assets/plugins/shuffle/shuffle.js') }}"></script>
 
     <!-- Main Script -->
-    <script src="assets/js/main.js"></script>
+    <script src="{{ asset('assets/js/main.js') }}"></script>
 </body>
 
 </html>
