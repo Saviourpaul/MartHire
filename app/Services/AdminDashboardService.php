@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AdminDashboardService
@@ -23,53 +24,209 @@ class AdminDashboardService
      */
     public function getOverview(Request $request): array
     {
-        $dateRange = AdminDashboardDateRange::fromRequest($request);
+        $dateRange = $this->analyticsDateRange($request->input('period', '12_months'));
+        $analytics = $this->analytics($request->input('period', '12_months'));
 
         return [
             'dateRange' => $dateRange,
-            'filterValues' => $dateRange->filterValues(),
-            'metrics' => $this->metrics($dateRange),
+            'filterValues' => ['period' => $request->input('period', '12_months')],
+            'metrics' => $this->metrics(),
             'charts' => [
-                'jobsOverTime' => $this->jobsOverTime($dateRange),
-                'applicantsOverTime' => $this->applicantsOverTime($dateRange),
-                'applicationStatus' => $this->applicationStatusDistribution($dateRange),
-                'userRegistrations' => $this->userRegistrations($dateRange),
-                'mostAppliedJobs' => $this->mostAppliedJobs($dateRange),
+                'jobsOverTime' => [
+                    'label' => $analytics['series'][0]['name'],
+                    'categories' => $analytics['categories'],
+                    'series' => $analytics['series'][0]['data'],
+                ],
+                'applicantsOverTime' => [
+                    'label' => $analytics['series'][1]['name'],
+                    'categories' => $analytics['categories'],
+                    'series' => $analytics['series'][1]['data'],
+                ],
+                'applicationStatus' => $analytics['applicationStatus'],
+                'userRegistrations' => Cache::remember(
+                    $this->cacheKey('user_registrations', $dateRange),
+                    now()->addMinutes(5),
+                    fn (): array => $this->userRegistrations($dateRange),
+                ),
+                'mostAppliedJobs' => Cache::remember(
+                    $this->cacheKey('most_applied_jobs', $dateRange),
+                    now()->addMinutes(5),
+                    fn (): array => $this->mostAppliedJobs($dateRange),
+                ),
             ],
+            'liveVisitors' => $this->liveVisitors(),
+            'activeUsersTrend' => $this->activeUsersTrend(),
             'recentActivities' => $this->recentActivities(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function analytics(string $period = '12_months'): array
+    {
+        $dateRange = $this->analyticsDateRange($period);
+
+        return Cache::remember(
+            $this->cacheKey("analytics_{$period}", $dateRange),
+            now()->addMinutes(5),
+            function () use ($period, $dateRange): array {
+                $jobs = $this->jobsOverTime($dateRange);
+                $applicants = $this->applicantsOverTime($dateRange);
+
+                return [
+                    'period' => $period,
+                    'label' => $dateRange->label(),
+                    'categories' => $jobs['categories'],
+                    'series' => [
+                        [
+                            'name' => $jobs['label'],
+                            'data' => $jobs['series'],
+                        ],
+                        [
+                            'name' => $applicants['label'],
+                            'data' => $applicants['series'],
+                        ],
+                    ],
+                    'totals' => [
+                        'jobs' => array_sum($jobs['series']),
+                        'applicants' => array_sum($applicants['series']),
+                    ],
+                    'empty' => array_sum($jobs['series']) + array_sum($applicants['series']) === 0,
+                    'applicationStatus' => $this->applicationStatusDistribution($dateRange),
+                ];
+            },
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function activeUsers(): array
+    {
+        return [
+            'liveVisitors' => $this->liveVisitors(),
+            'trend' => $this->activeUsersTrend(),
         ];
     }
 
     /**
      * @return array<string, int>
      */
-    private function metrics(AdminDashboardDateRange $dateRange): array
+    private function metrics(): array
     {
-        $applicationCounts = ApplicationForm::query()
-            ->whereBetween('submitted_at', [$dateRange->start, $dateRange->end])
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        return Cache::remember('admin_dashboard.metrics', now()->addMinutes(5), function (): array {
+            $applicationCounts = ApplicationForm::query()
+                ->selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
 
-        return [
-            'total_applicants' => $this->countUsersByRole(UserRole::Applicant, $dateRange),
-            'total_employers' => $this->countUsersByRole(UserRole::Employer, $dateRange),
-            'total_jobs' => Job::query()
-                ->whereBetween('created_at', [$dateRange->start, $dateRange->end])
-                ->count(),
-            'total_applications' => (int) $applicationCounts->sum(),
-            'approved_candidates' => (int) ($applicationCounts[ApplicationStatus::Approved->value] ?? 0),
-            'rejected_candidates' => (int) ($applicationCounts[ApplicationStatus::Rejected->value] ?? 0),
-            'pending_candidates' => (int) ($applicationCounts[ApplicationStatus::Pending->value] ?? 0),
-        ];
+            return [
+                'total_applicants' => $this->countUsersByRole(UserRole::Applicant),
+                'total_employers' => $this->countUsersByRole(UserRole::Employer),
+                'total_jobs' => Job::query()->count(),
+                'total_applications' => (int) $applicationCounts->sum(),
+                'approved_candidates' => (int) ($applicationCounts[ApplicationStatus::Approved->value] ?? 0),
+                'rejected_candidates' => (int) ($applicationCounts[ApplicationStatus::Rejected->value] ?? 0),
+                'pending_applications' => (int) ($applicationCounts[ApplicationStatus::Pending->value] ?? 0),
+            ];
+        });
     }
 
-    private function countUsersByRole(UserRole $role, AdminDashboardDateRange $dateRange): int
+    private function countUsersByRole(UserRole $role): int
     {
         return User::query()
             ->role($role)
-            ->whereBetween('created_at', [$dateRange->start, $dateRange->end])
             ->count();
+    }
+
+    private function liveVisitors(): int
+    {
+        if (! $this->hasTable('sessions')) {
+            return 0;
+        }
+
+        return DB::table('sessions')
+            ->where('last_activity', '>=', now()->subMinutes(5)->timestamp)
+            ->count();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function activeUsersTrend(): array
+    {
+        if (! $this->hasTable('sessions')) {
+            return [
+                'categories' => [],
+                'series' => [['name' => 'Live visitors', 'data' => []]],
+            ];
+        }
+
+        $end = now();
+        $windowStart = $end->copy()->subHour();
+        $categories = [];
+        $series = array_fill(0, 12, 0);
+
+        for ($bucket = 1; $bucket <= 12; $bucket++) {
+            $categories[] = $windowStart->copy()->addMinutes($bucket * 5)->format('H:i');
+        }
+
+        DB::table('sessions')
+            ->whereBetween('last_activity', [$windowStart->timestamp, $end->timestamp])
+            ->pluck('last_activity')
+            ->each(function ($lastActivity) use (&$series, $windowStart): void {
+                $bucket = min(11, max(0, intdiv(((int) $lastActivity) - $windowStart->timestamp, 300)));
+                $series[$bucket]++;
+            });
+
+        return [
+            'categories' => $categories,
+            'series' => [
+                [
+                    'name' => 'Live visitors',
+                    'data' => $series,
+                ],
+            ],
+        ];
+    }
+
+    private function analyticsDateRange(?string $period): AdminDashboardDateRange
+    {
+        $now = now();
+
+        return match ($period) {
+            '30_days' => new AdminDashboardDateRange(
+                period: \App\Enums\DashboardPeriod::Custom,
+                start: $now->copy()->subDays(29)->startOfDay(),
+                end: $now->copy()->endOfDay(),
+            ),
+            '7_days' => new AdminDashboardDateRange(
+                period: \App\Enums\DashboardPeriod::Custom,
+                start: $now->copy()->subDays(6)->startOfDay(),
+                end: $now->copy()->endOfDay(),
+            ),
+            default => new AdminDashboardDateRange(
+                period: \App\Enums\DashboardPeriod::Custom,
+                start: $now->copy()->subMonths(11)->startOfMonth(),
+                end: $now->copy()->endOfDay(),
+            ),
+        };
+    }
+
+    private function hasTable(string $table): bool
+    {
+        return DB::getSchemaBuilder()->hasTable($table);
+    }
+
+    private function cacheKey(string $name, AdminDashboardDateRange $dateRange): string
+    {
+        return implode(':', [
+            'admin_dashboard',
+            $name,
+            $dateRange->start->timestamp,
+            $dateRange->end->timestamp,
+        ]);
     }
 
     /**
@@ -119,13 +276,13 @@ class AdminDashboardService
         $series = [];
         $colors = [];
 
-        foreach (ApplicationStatus::cases() as $status) {
+        foreach ([ApplicationStatus::Approved, ApplicationStatus::Pending, ApplicationStatus::Rejected] as $status) {
             $labels[] = $status->label();
             $series[] = (int) ($counts[$status->value] ?? 0);
             $colors[] = match ($status) {
-                ApplicationStatus::Pending => '#ffc107',
-                ApplicationStatus::Approved => '#28a745',
-                ApplicationStatus::Rejected => '#dc3545',
+                ApplicationStatus::Approved => '#3641f5',
+                ApplicationStatus::Pending => '#7592ff',
+                ApplicationStatus::Rejected => '#dde9ff',
             };
         }
 

@@ -68,7 +68,7 @@ class JobManagementController extends Controller
 
         $query = Job::query()
             ->select('job_posts.*')
-            ->with(['employer:id,first_name,last_name,username,email,profile_image_path'])
+            ->with(['employer:id,first_name,last_name,email,profile_image_path'])
             ->withCount('applications')
             ->when($statusConstraint, fn ($query) => $query->status($statusConstraint))
             ->when(! $statusConstraint && $statusFilter, fn ($query) => $query->status($statusFilter))
@@ -94,7 +94,6 @@ class JobManagementController extends Controller
                                 ->orWhereHas('employer', function ($query) use ($term) {
                                     $query->where('first_name', 'like', $term)
                                         ->orWhere('last_name', 'like', $term)
-                                        ->orWhere('username', 'like', $term)
                                         ->orWhere('email', 'like', $term);
                                 });
                         });

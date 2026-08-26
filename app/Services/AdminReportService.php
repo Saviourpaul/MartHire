@@ -326,20 +326,20 @@ class AdminReportService
     {
         return User::query()
             ->role(UserRole::Employer)
-            ->select(['users.id', 'users.first_name', 'users.last_name', 'users.username'])
+            ->select(['users.id', 'users.first_name', 'users.last_name'])
             ->leftJoin('job_posts', 'job_posts.employer_id', '=', 'users.id')
             ->leftJoin('application_forms', function ($join) use ($dateRange): void {
                 $join->on('application_forms.job_id', '=', 'job_posts.id')
                     ->whereBetween('application_forms.submitted_at', [$dateRange->start, $dateRange->end]);
             })
-            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.username')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name')
             ->selectRaw('COUNT(DISTINCT job_posts.id) as jobs_count')
             ->selectRaw('COUNT(application_forms.id) as applications_count')
             ->orderByDesc('applications_count')
             ->limit(10)
             ->get()
             ->map(fn ($employer): array => [
-                'name' => trim($employer->first_name.' '.$employer->last_name) ?: $employer->username,
+                'name' => trim($employer->first_name.' '.$employer->last_name),
                 'jobs_count' => (int) $employer->jobs_count,
                 'applications_count' => (int) $employer->applications_count,
             ])

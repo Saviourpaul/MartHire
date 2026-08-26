@@ -61,7 +61,6 @@ class JobApplicationController extends Controller
             'job' => $job,
             'user' => $user,
             'states' => NigeriaState::query()
-                ->with('localGovernmentAreas')
                 ->ordered()
                 ->get(),
         ]);

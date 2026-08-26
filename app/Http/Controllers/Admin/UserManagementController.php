@@ -46,7 +46,6 @@ class UserManagementController extends Controller
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', 'min:8', Rules\Password::defaults()],
             'role' => ['required', Rule::in($this->getAllowedRoles())],
@@ -56,7 +55,6 @@ class UserManagementController extends Controller
         $user = new User([
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
-            'username' => $data['username'],
             'email' => $data['email'],
             'password' => $data['password'],
             'role' => UserRole::from($data['role']),
@@ -73,7 +71,6 @@ class UserManagementController extends Controller
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user)],
             'role' => ['required', Rule::in($this->getAllowedRoles())],
             'status' => ['required', Rule::in(UserStatus::values())],
@@ -89,7 +86,6 @@ class UserManagementController extends Controller
         $user->fill([
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
-            'username' => $data['username'],
             'email' => $data['email'],
             'role' => $role,
         ]);
@@ -152,7 +148,7 @@ class UserManagementController extends Controller
         ?UserStatus $status = null,
         bool $showCreate = true,
     ): View {
-        $sortableColumns = ['first_name', 'last_name', 'username', 'email', 'phone', 'created_at'];
+        $sortableColumns = ['first_name', 'last_name',  'email', 'phone', 'created_at'];
         $sortColumn = $request->input('sort') && in_array($request->input('sort'), $sortableColumns, true)
             ? $request->input('sort')
             : 'created_at';
@@ -167,7 +163,6 @@ class UserManagementController extends Controller
                 'id',
                 'first_name',
                 'last_name',
-                'username',
                 'email',
                 'role',
                 'status',
@@ -188,7 +183,6 @@ class UserManagementController extends Controller
                         $query->where(function ($query) use ($term) {
                             $query->where('first_name', 'like', $term)
                                 ->orWhere('last_name', 'like', $term)
-                                ->orWhere('username', 'like', $term)
                                 ->orWhere('email', 'like', $term)
                                 ->orWhere('phone', 'like', $term)
                                 ->orWhere('local_government_area', 'like', $term)

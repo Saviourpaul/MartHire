@@ -22,7 +22,6 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => $request->user(),
             'states' => NigeriaState::query()
-                ->with('localGovernmentAreas')
                 ->ordered()
                 ->get(),
         ]);
