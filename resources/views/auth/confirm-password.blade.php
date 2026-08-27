@@ -1,4 +1,4 @@
-<x-auth-layout title="Confirm Password - NextHire" card-width="600px">
+<x-auth-layout title="Confirm Password - MartHire" card-width="600px">
     <h1 class="auth-title">Confirm Password</h1>
     <p class="auth-description">
         This is a secure area of the application. Please confirm your password before proceeding.
