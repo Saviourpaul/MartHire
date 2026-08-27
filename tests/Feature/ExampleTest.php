@@ -6,7 +6,7 @@ it('returns a successful response', function () {
     $response = $this->get('/');
 
     $response->assertStatus(200);
-    $response->assertSee('NextHire');
+    $response->assertSee('MartHire');
     $response->assertSee('Latest Job Openings');
 });
 
@@ -62,7 +62,7 @@ it('accepts valid contact form submissions', function () {
         'phone' => '+2348000000001',
         'subject' => 'Employer onboarding',
         'inquiry_type' => 'employer',
-        'message' => 'We would like to discuss posting vacancies on NextHire.',
+        'message' => 'We would like to discuss posting vacancies on MartHire.',
     ]);
 
     $response->assertRedirect(route('contact'));

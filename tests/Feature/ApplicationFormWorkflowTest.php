@@ -48,6 +48,14 @@ function validApplicationPayload(array $overrides = []): array
     ];
 }
 
+function tinyPngUpload(string $name = 'tiny-profile.png'): UploadedFile
+{
+    return UploadedFile::fake()->createWithContent(
+        $name,
+        base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=')
+    );
+}
+
 it('renders the application wizard with dependent location and document controls', function () {
     $employer = User::factory()->employer()->create();
     $job = Job::factory()->approved()->for($employer, 'employer')->create();
@@ -62,6 +70,7 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee('Application Summary')
         ->assertSee('data-state-of-origin', false)
         ->assertSee('data-local-government-area', false)
+        ->assertSee('data-lga-url=', false)
         ->assertSee('id="profile-image-preview"', false)
         ->assertSee('data-file-kind="profile-image"', false)
         ->assertSee('data-min-width="200"', false)
@@ -203,7 +212,7 @@ it('validates profile photo and document uploads before storing an application',
     $this->actingAs($applicant)
         ->from(route('applications.create', $job))
         ->post(route('applications.store', $job), validApplicationPayload([
-            'profile_image' => UploadedFile::fake()->image('tiny-profile.jpg', 100, 100),
+            'profile_image' => tinyPngUpload(),
             'nin_document' => UploadedFile::fake()->create('nin.svg', 100, 'image/svg+xml'),
             'bvn_document' => UploadedFile::fake()->create('bvn.pdf', 6000, 'application/pdf'),
             'education_documents' => [
