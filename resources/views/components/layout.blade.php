@@ -7,10 +7,10 @@
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>
-        NextHire
+        MartHire
     </title>
     <link rel="icon" href="{{ asset('favicon.ico') }}">
-    <link href="{{ asset('assets/css/main.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/mains.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/plugins/summernote/dist/summernote-lite.css') }}">
 
 
@@ -25,7 +25,7 @@ $currentUser = auth()->user();
 		};
         $recentNotifications = $currentUser ? $currentUser->notifications()->latest()->limit(4)->get() : collect();
         $unreadNotificationCount = $currentUser ? $currentUser->unreadNotifications()->count() : 0; @endphp
-    x-data="{ page: 'ai', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false, 'isProfileInfoModal': false, 'isProfileAddressModal': false }" x-init="darkMode = JSON.parse(localStorage.getItem('darkMode')) ?? false;
+    x-data="{ page: 'ai', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false, 'isProfileInfoModal': false, 'isProfileAddressModal': false, 'isChangePasswordModal': false, 'isDeleteAccountModal': false }" x-init="darkMode = JSON.parse(localStorage.getItem('darkMode')) ?? false;
     $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))" :class="{ 'dark bg-gray-900': darkMode === true }">
     <!-- ===== Preloader Start ===== -->
      <div x-show="loaded"
@@ -45,19 +45,22 @@ $currentUser = auth()->user();
                 class="sidebar-header flex items-center gap-2 pt-8 pb-7">
                 <a href="{{ route('dashboard') }}">
                     <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
-                        <img class="dark:hidden"src="{{ asset('admin/assets/img/logo.png') }}" alt="Logo"
-                            width="80" height="70" />
+                        <img class="dark:hidden"src="{{ asset('assets/images/logo.png') }}" alt="Logo"
+                            width="150" height="100" />
                     </span>
                 </a>
             </div>
             <!-- SIDEBAR HEADER -->
             <br>
+            
             <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
                 <!-- Sidebar Menu -->
                 <nav x-data="{ selected: $persist('Dashboard') }">
+                    
                     <!-- Menu Group -->
                     <div>
                         <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
+                            
 
 
                             <svg :class="sidebarToggle ? 'xl:block hidden' : 'hidden'"
