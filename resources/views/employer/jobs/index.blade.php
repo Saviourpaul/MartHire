@@ -35,8 +35,12 @@
 
             <div id="jobsAjaxMessage" class="mb-6 hidden rounded-lg border px-4 py-3 text-theme-sm font-medium"></div>
 
-            <section class="overflow-hidden rounded-xl border border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <section data-table-refresh-region data-table-refresh-id="employer-jobs" class="overflow-hidden rounded-xl border border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="mb-4 flex flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between">
+                    <button type="button" data-table-refresh-button class="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                        <svg data-table-refresh-icon class="fill-current" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.75 6.667a.75.75 0 0 1-.75.75h-3.333a.75.75 0 0 1 0-1.5h1.516A5.25 5.25 0 0 0 5.02 7.553a.75.75 0 1 1-1.372-.606 6.75 6.75 0 0 1 11.602-1.9V3.75a.75.75 0 0 1 1.5 0v2.917ZM3.25 13.333a.75.75 0 0 1 .75-.75h3.333a.75.75 0 0 1 0 1.5H5.817a5.25 5.25 0 0 0 9.163-1.636.75.75 0 1 1 1.372.606 6.75 6.75 0 0 1-11.602 1.9v1.297a.75.75 0 0 1-1.5 0v-2.917Z"/></svg>
+                        <span data-table-refresh-label>Reload</span>
+                    </button>
                     <form method="GET" action="{{ route('jobs') }}" class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                         <div class="relative w-full sm:max-w-sm">
                             <button type="submit" class="absolute top-1/2 left-4 -translate-y-1/2 text-gray-500 dark:text-gray-400">
@@ -50,6 +54,7 @@
                         @endif
                     </form>
                 </div>
+                <div data-table-refresh-message class="mx-4 mb-4 hidden rounded-lg border px-4 py-3 text-theme-sm font-medium"></div>
 
                 <div class="max-w-full overflow-x-auto">
                     <table class="w-full min-w-[980px]">
