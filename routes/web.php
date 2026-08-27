@@ -101,6 +101,7 @@ Route::middleware(['auth', 'active.account'])->group(function () {
         Route::post('jobs', [JobController::class, 'store'])
             ->middleware('throttle:uploads')
             ->name('jobs.store');
+        Route::get('jobs/{job}', [JobController::class, 'employerShow'])->name('jobs.show');
         Route::put('jobs/{job}', [JobController::class, 'update'])
             ->middleware('throttle:uploads')
             ->name('jobs.update');
@@ -112,6 +113,9 @@ Route::middleware(['auth', 'active.account'])->group(function () {
         Route::get('employer/applications/{applicationForm}', [EmployerApplicationController::class, 'show'])->name('employer.applications.show');
         Route::patch('employer/applications/{applicationForm}/status', [EmployerApplicationController::class, 'review'])->name('employer.applications.review');
         Route::patch('employer/application-documents/{applicationDocument}/status', [EmployerApplicationDocumentController::class, 'update'])->name('employer.application-documents.review');
+        Route::get('employer/dashboard/analytics', [DashboardController::class, 'employerAnalytics'])
+            ->middleware('throttle:60,1')
+            ->name('employer.dashboard.analytics');
         Route::get('employer/notifications', fn () => view('employer.notifications'))->name('employer.notifications');
         Route::get('employer/settings', fn () => view('employer.settings'))->name('employer.settings');
 
