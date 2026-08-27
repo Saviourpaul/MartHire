@@ -1,347 +1,686 @@
-@use('Illuminate\Support\Str')
 
-<x-app title="NextHire - Professional Job Recruitment Portal">
-	<section class="section home-banner row-middle">
-		<div class="container">
-			<div class="row align-items-center">
-				<div class="col-md-8 col-lg-7">
-					<div class="banner-content aos" data-aos="fade-up" data-aos-duration="3000">
-						<div class="rating">
-							<i class="fas fa-star checked"></i>
-							<i class="fas fa-star checked"></i>
-							<i class="fas fa-star checked"></i>
-							<i class="fas fa-star checked"></i>
-							<i class="fas fa-star checked"></i>
-							<h5>Trusted by organizations nationwide</h5>
-						</div>
-						<h1>Find Your Next <span class="orange-text"><br>Career Opportunity</span></h1>
-						<p>NextHire connects government agencies, private organizations, and employers with qualified professionals through a secure, modern recruitment platform.</p>
-						<form class="form" method="get" action="{{ route('jobs.public') }}">
-							<div class="form-inner">
-								<div class="input-group">
-									<span class="drop-detail">
-										<select class="form-control select" name="category">
-											<option value="">All Categories</option>
-											<option value="government">Government</option>
-											<option value="private">Private Sector</option>
-											<option value="contract">Contract</option>
-											<option value="freelance">Freelance</option>
-										</select>
-									</span>
-									<input type="text" class="form-control" name="search" placeholder="Job title, keyword, or organization">
-									<button class="btn btn-primary sub-btn" type="submit">Search Jobs</button>
-								</div>
-							</div>
-						</form>
-					</div>
-				</div>
-				<div class="col-md-4 col-lg-5">
-					<div class="banner-img aos" data-aos="zoom-in" data-aos-duration="3000">
-						<img src="{{ asset('assets/img/banner-img.svg') }}" class="img-fluid" alt="NextHire recruitment platform">
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+<x-app>
 
-	<section class="section news">
-		<div class="container">
-			<div class="row">
-				<div class="col-12">
-					<div class="section-header text-center aos" data-aos="fade-up">
-						<h2 class="header-title">Latest Job Openings</h2>
-					</div>
-				</div>
-			</div>
-			<div class="row blog-grid-row g-4">
-				@forelse($jobs->take(3) as $job)
-				<div class="col-xl-4 col-md-6 col-sm-12 d-flex">
-					<div class="blog grid-blog aos flex-fill w-100" data-aos="fade-up">
-						<div class="blog-image">
-							<a href="{{ route('job-details', $job) }}"><img class="img-fluid w-100" src="{{ $job->logoUrl() }}" alt="{{ $job->company }} logo" style="height: 220px; object-fit: contain;"></a>
-						</div>
-						<div class="blog-content d-flex flex-column h-100">
-							<ul class="entry-meta meta-item mb-2">
-								<li class="mb-0">
-									<div class="post-author">
-										<a href="{{ route('job-details', $job) }}"><span>{{ $job->company }}</span></a>
-									</div>
-								</li>
-								<li><i class="feather-calendar me-1"></i> {{ $job->created_at->format('d M Y') }}</li>
-							</ul>
-							<div class="blog-read mt-auto">
-								<a href="{{ route('job-details', $job) }}">Apply Now <i class="fas fa-arrow-right ms-1"></i></a>
-							</div>
-							<h3 class="blog-title"><a href="{{ route('job-details', $job) }}">{{ $job->title }}</a></h3>
-							<p class="mb-0 flex-grow-1">{{ Str::limit(strip_tags($job->description), 150) }}</p>
-						</div>
-					</div>
-				</div>
-				@empty
-				<div class="col-12 text-center">
-					<p>No active job listings at the moment. Check back soon or register to be notified when new roles are posted.</p>
-				</div>
-				@endforelse
-			</div>
-			<div class="row mt-4">
-				<div class="col-12 text-center">
-					<a href="{{ route('jobs.public') }}" class="btn btn-primary">View All Jobs</a>
-				</div>
-			</div>
-		</div>
-	</section>
+      <section class="pt-28 lg:pt-[206px] pb-12 lg:pb-20 relative">
+        <div class="grained-bg absolute top-0 left-0 w-full h-full opacity-[0.36]">
+            <img src="{{ asset('assets/images/hp-banner.png') }}" alt="">
+        </div>
+        <div class="container">
+            <div class="row justify-center text-center">
+                <div class="lg:col-8 xl:col-6 mb-[72px]">
+                    <h1 class="h1-lg highlighted">The Future of Work - <br>
+                        and <span>Extended</span> Workforce Planning - is Here</h1>
+                    <p class="mt-8">The choice of font and font size with which Lorem ipsum is reproduced answers to
+                        specific needs that go beyond the simple and simple filling of spaces dedicated to accepting
+                        real texts and allowing to have hands an advertising/publishing product,</p>
+                    <div class="mt-14">
+                        <a class="block sm:inline-block btn btn-primary sm:mx-2 mb-2 sm:mb-0 w-full sm:w-auto"
+                            href="#">Stay in Touch</a>
+                        <button id="modal-open-button"
+                            class="block sm:inline-block btn btn-outline-dark sm:mx-2 w-full sm:w-auto">
+                            watch a video
+                        </button>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <ul class="flex items-center flex-wrap justify-center">
+                        <li class="bg-white rounded-lg mx-2 my-2 lg:mx-5 py-1 px-2 lg:my-5">
+                            <i class="fa fa-check text-[#15B400] mr-2"></i>Engagement Footprint
+                        </li>
+                        <li class="bg-white rounded-lg mx-2 my-2 lg:mx-5 py-1 px-2 lg:my-5">
+                            <i class="fa fa-check text-[#15B400] mr-2"></i>Cost Savings
+                        </li>
+                        <li class="bg-white rounded-lg mx-2 my-2 lg:mx-5 py-1 px-2 lg:my-5">
+                            <i class="fa fa-check text-[#15B400] mr-2"></i>Operational Agility
+                        </li>
+                        <li class="bg-white rounded-lg mx-2 my-2 lg:mx-5 py-1 px-2 lg:my-5">
+                            <i class="fa fa-check text-[#15B400] mr-2"></i>Increase Candidate Quality
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
 
-	<section class="section review">
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12 col-sm-12 col-12 mx-auto text-center">
-					<div class="section-header aos" data-aos="fade-up">
-						<h2 class="header-title">Recruitment Categories</h2>
-						<p>Opportunities across public, private, and contract-based employment</p>
-					</div>
-				</div>
-				<div class="row">
-					@foreach([
-						['icon' => 'categories1.svg', 'title' => 'Government & Public Sector', 'count' => '120+ Open Roles'],
-						['icon' => 'categories7.svg', 'title' => 'Private Organizations', 'count' => '350+ Open Roles'],
-						['icon' => 'categories3.svg', 'title' => 'Healthcare & Education', 'count' => '85+ Open Roles'],
-						['icon' => 'categories4.svg', 'title' => 'Finance & Administration', 'count' => '95+ Open Roles'],
-						['icon' => 'categories5.svg', 'title' => 'Engineering & Technical', 'count' => '70+ Open Roles'],
-						['icon' => 'categories6.svg', 'title' => 'Contract & Project Roles', 'count' => '60+ Open Roles'],
-						['icon' => 'categories7.svg', 'title' => 'IT & Digital Services', 'count' => '110+ Open Roles'],
-						['icon' => 'categories8.svg', 'title' => 'Freelance & Consultancy', 'count' => '45+ Open Roles'],
-					] as $index => $category)
-					<div class="col-lg-3 col-md-6 col-12 aos" data-aos="zoom-in" data-aos-duration="{{ 1000 + ($index * 500) }}">
-						<div class="popular-catergories">
-							<div class="popular-catergories-img">
-								<span><img src="{{ asset('assets/img/icon/'.$category['icon']) }}" alt="{{ $category['title'] }}"></span>
-							</div>
-							<div class="popular-catergories-content">
-								<h5>{{ $category['title'] }}</h5>
-								<a href="{{ route('jobs.public') }}">{{ $category['count'] }}<i class="feather-arrow-right ms-2"></i></a>
-							</div>
-						</div>
-					</div>
-					@endforeach
-				</div>
-			</div>
-		</div>
-	</section>
+    <!-- brands -->
+    <div class="brands py-10">
+        <div class="container">
+            <div class="text-center mb-14">
+                <h2 class="h4 capitalize highlighted">best <span>customer experiences</span> with DataSource</h2>
+            </div>
+            <div class="overflow-hidden">
+                <div class="swiper brands-carousel cursor-pointer">
+                    <div class="swiper-wrapper">
+                        <div class="swiper-slide">
+                            <img src="{{ asset('assets/images/brands/company-logo-1.png') }}" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="{{ asset('assets/images/brands/company-logo-2.png') }}" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="{{ asset('assets/images/brands/company-logo-2.png') }}" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="{{ asset('assets/images/brands/company-logo-3.png') }}" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="{{ asset('assets/images/brands/company-logo-4.png') }}" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="{{ asset('assets/images/brands/company-logo-5.png') }}" alt="">
+                        </div>
+                        <div class="swiper-slide">
+                            <img src="{{ asset('assets/images/brands/company-logo-6.png') }}" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-	<section class="section news pt-0 review-set">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-6 col-md-12">
-					<div class="work-box bg1" data-aos="zoom-in" data-aos-duration="1000">
-						<div class="work-content">
-							<h2>Hiring for Your <span>Organization?</span></h2>
-							<p>Post vacancies, manage applications, and shortlist qualified candidates through a streamlined recruitment workflow.</p>
-							<a href="{{ route('services') }}#employers" class="btn btn-primary">Employer Solutions</a>
-						</div>
-					</div>
-				</div>
-				<div class="col-lg-6 col-md-12">
-					<div class="work-box aos bg2" data-aos="zoom-in" data-aos-duration="2000">
-						<div class="work-content">
-							<h2>Looking for Your <span>Next Role?</span></h2>
-							<p>Create your profile, apply to verified jobs, and track your application status from one secure portal.</p>
-							<a href="{{ route('register') }}" class="btn btn-primary">Start Applying</a>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+    <!-- Video -->
+    <section class="section-bordered mt-20">
+        <div class="container">
+            <div class="row justify-center">
+                <div class="lg:col-12 text-center max-w-[1072px] px-8">
+                    <div class="mb-20">
+                        <h2 class="section-title">Get the <span>fastest time</span> to hire</h2>
+                        <p>suitable full-time and temporary candidates. Publish job vacancies all major
+                            sites to broaden your reach – and access a global candidate warehouse that offers thousands
+                            of pre-vetted technical, professional, and scientific candidates.</p>
+                    </div>
+                    <div class="video-wrapper">
+                        <div class="video-frame"></div>
+                        <div class="video">
+                            <img class="video-thumbnail" src="{{ asset('assets/images/video-thumbnail.png') }}" alt="">
+                            <iframe class="video-iframe hidden" src="https://www.youtube.com/embed/ResipmZmpDU"
+                                title="YouTube video player" frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen></iframe>
+                        </div>
+                        <button class="video-play-btn">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section />
+    <!-- ./end Video -->
 
-	<section class="section projects pt-0">
-		<div class="container">
-			<div class="row">
-				<div class="col-md-12 col-sm-12 col-12 mx-auto text-center">
-					<div class="section-header aos" data-aos="fade-up">
-						<h2 class="header-title">Platform at a Glance</h2>
-						<p>At NextHire, we believe that talent is borderless and opportunity should be too.</p>
-					</div>
-				</div>
-				<div class="col-xl-3 col-md-6 aos" data-aos="zoom-in" data-aos-duration="1000">
-					<div class="feature-item freelance-count">
-						<div class="feature-icon">
-							<img src="{{ asset('assets/img/icon/achievement-1.svg') }}" class="img-fluid" alt="Registered applicants">
-						</div>
-						<div class="feature-content course-count">
-							<h3 class="counter-up">50000</h3>
-							<p>Registered Applicants</p>
-						</div>
-					</div>
-				</div>
-				<div class="col-xl-3 col-md-6 aos" data-aos="zoom-in" data-aos-duration="1500">
-					<div class="feature-item">
-						<div class="feature-icon">
-							<img src="{{ asset('assets/img/icon/achievement-2.svg') }}" class="img-fluid" alt="Shortlisted candidates">
-						</div>
-						<div class="feature-content course-count">
-							<h3><span class="counter-up">8368</span></h3>
-							<p>Shortlisted Candidates</p>
-						</div>
-					</div>
-				</div>
-				<div class="col-xl-3 col-md-6 aos" data-aos="zoom-in" data-aos-duration="2000">
-					<div class="feature-item comp-project">
-						<div class="feature-icon">
-							<img src="{{ asset('assets/img/icon/achievement-3.svg') }}" class="img-fluid" alt="Approved jobs">
-						</div>
-						<div class="feature-content course-count">
-							<h3 class="counter-up">9198</h3>
-							<p>Approved Jobs</p>
-						</div>
-					</div>
-				</div>
-				<div class="col-xl-3 col-md-6 aos" data-aos="zoom-in" data-aos-duration="2500">
-					<div class="feature-item comp-project">
-						<div class="feature-icon">
-							<img src="{{ asset('assets/img/icon/achievement-4.svg') }}" class="img-fluid" alt="Registered organizations">
-						</div>
-						<div class="feature-content course-count">
-							<h3 class="counter-up">998</h3>
-							<p>Registered Organizations</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+    <!-- Features -->
+    <section class="features section-bordered">
+        <div class="container">
+            <div class="relative row justify-center">
+                <div class="absolute left-0 top-0 h-full w-full grained-bg opacity-[0.16]">
+                    <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
+                </div>
+                <div class="lg:col-11 xl:col-10">
+                    <h2 class="section-title text-center"><span>ultimate</span> platform for creating, <br>
+                        sharing, and executing</h2>
+                </div>
+                <div class="lg:col-10 features-grid mb-3 relative">
+                    <div class="row">
+                        <div class="md:col-6 py-10 px-6 lg:px-14 hover:bg-white transition-all duration-300 ">
+                            <div class="pl-10 relative">
+                                <span class="icon absolute left-0 -top-2">
+                                    <img src="{{ asset('assets/images/svgs/lock.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-2">Centralised Repository</h5>
+                                <p>Enhance how you work with assets/images in bulk & raise the bar for your team’s potential
+                                    with the most simplified image library.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 py-10 px-6 lg:px-14 hover:bg-white transition-all duration-300">
+                            <div class="pl-10 relative">
+                                <span class="icon absolute left-0 -top-2">
+                                    <img src="{{ asset('assets/images/svgs/magnet.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-2">Centralised Repository</h5>
+                                <p>Enhance how you work with assets/images in bulk & raise the bar for your team’s potential
+                                    with the most simplified image library.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="md:col-6 py-10 px-6 lg:px-14 hover:bg-white transition-all duration-300">
+                            <div class="pl-10 relative">
+                                <span class="icon absolute left-0 -top-2">
+                                    <img src="{{ asset('assets/images/svgs/link.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-2">Centralised Repository</h5>
+                                <p>Enhance how you work with assets/images in bulk & raise the bar for your team’s potential
+                                    with the most simplified image library.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 py-10 px-6 lg:px-14 hover:bg-white transition-all duration-300">
+                            <div class="pl-10 relative">
+                                <span class="icon absolute left-0 -top-2">
+                                    <img src="{{ asset('assets/images/svgs/lock.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-2">Centralised Repository</h5>
+                                <p>Enhance how you work with assets/images in bulk & raise the bar for your team’s potential
+                                    with the most simplified image library.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="md:col-6 py-10 px-6 lg:px-14 hover:bg-white transition-all duration-300">
+                            <div class="pl-10 relative">
+                                <span class="icon absolute left-0 -top-2">
+                                    <img src="{{ asset('assets/images/svgs/magnet.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-2">Centralised Repository</h5>
+                                <p>Enhance how you work with assets/images in bulk & raise the bar for your team’s potential
+                                    with the most simplified image library.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 py-10 px-6 lg:px-14 hover:bg-white transition-all duration-300">
+                            <div class="pl-10 relative">
+                                <span class="icon absolute left-0 -top-2">
+                                    <img src="{{ asset('assets/images/svgs/link.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-2">Centralised Repository</h5>
+                                <p>Enhance how you work with assets/images in bulk & raise the bar for your team’s potential
+                                    with the most simplified image library.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-10 text-center relative z-10">
+                    <a class="btn btn-primary" href="#">learn more</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ./end features -->
 
-	<section class="section review">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-6">
-					<div class="work-set-image">
-						<div class="work-set">
-							<div class="recent-pro-img aos" data-aos="zoom-in" data-aos-duration="1000">
-								<img src="{{ asset('assets/img/work1.jpg') }}" alt="Recruitment professionals collaborating" class="img-fluid">
-							</div>
-						</div>
-						<div class="work-sets">
-							<div class="recent-pro-img">
-								<img src="{{ asset('assets/img/work2.jpg') }}" alt="Job interview process" class="img-fluid mb-2 aos" data-aos="zoom-in" data-aos-duration="2000">
-								<img src="{{ asset('assets/img/work3.jpg') }}" alt="Team reviewing applications" class="img-fluid aos" data-aos="zoom-in" data-aos-duration="2500">
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="col-lg-6">
-					<div class="aos" data-aos="fade-up">
-						<div class="demand-professional">
-							<h2>A Smarter Way to Recruit and Apply</h2>
-							<p>NextHire simplifies every stage of the hiring journey — from job posting and application review to candidate shortlisting and onboarding.</p>
-						</div>
-						<div class="demand-post-job">
-							<div class="demand-post-img">
-								<img src="{{ asset('assets/img/recent-icon-01.svg') }}" alt="Post a job" class="img-fluid">
-							</div>
-							<div class="demand-content">
-								<h6>Post & Manage Vacancies</h6>
-								<p>Employers and agencies publish approved job listings with detailed requirements, deadlines, and application guidelines.</p>
-							</div>
-						</div>
-						<div class="demand-post-job">
-							<div class="demand-post-img">
-								<img src="{{ asset('assets/img/recent-icon-02.svg') }}" alt="Review applications" class="img-fluid">
-							</div>
-							<div class="demand-content">
-								<h6>Review & Shortlist Candidates</h6>
-								<p>Access structured applications, verified documents, and candidate profiles to make informed hiring decisions faster.</p>
-							</div>
-						</div>
-						<div class="demand-post-job">
-							<div class="demand-post-img">
-								<img src="{{ asset('assets/img/recent-icon-03.svg') }}" alt="Track progress" class="img-fluid">
-							</div>
-							<div class="demand-content">
-								<h6>Track Every Stage</h6>
-								<p>Both applicants and recruiters receive real-time updates on application status, approvals, and next steps.</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+    <!-- services -->
+    <section class="services section-bordered">
+        <div class="container">
+            <div class="relative row justify-center mb-20 lg:mb-[120px]">
+                <div class="absolute left-0 top-0 h-full w-full grained-bg opacity-[0.16]">
+                    <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
+                </div>
+                <div class="lg:col-11 xl:col-10">
+                    <div class="row items-center">
+                        <div class="lg:col-7 lg:order-2 flex justify-center">
+                            <img src="{{ asset('assets/images/service-img-1.png') }}" alt="">
+                        </div>
+                        <div class="lg:col-5 order-2 lg:order-1">
+                            <h2 class="section-title">
+                                Avoid falling foul to
+                                <span>employment</span> complian
+                                & regulatory matters
+                            </h2>
+                            <p class="mb-8">suitable fulltime and temporary candidates. Publish job vacancies all major
+                                sites to broaden your reach – and access a global candidate warehouse offers thousands
+                                of pre-vetted technical, professional, and scientific candidates.</p>
+                            <a class="btn btn-primary" href="#">learn more</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="relative row justify-center mb-20 lg:mb-[120px]">
+                <div class="absolute left-0 top-0 h-full w-full grained-bg opacity-[0.16]">
+                    <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
+                </div>
+                <div class="lg:col-11 xl:col-10">
+                    <div class="row items-center">
+                        <div class="lg:col-7  flex justify-center">
+                            <img src="{{ asset('assets/images/service-img-1.png') }}" alt="">
+                        </div>
+                        <div class="lg:col-5">
+                            <h2 class="section-title">
+                                Avoid falling foul to
+                                <span>employment</span> complian
+                                & regulatory matters
+                            </h2>
+                            <p class="mb-8">suitable fulltime and temporary candidates. Publish job vacancies all major
+                                sites to broaden your reach – and access a global candidate warehouse offers thousands
+                                of pre-vetted technical, professional, and scientific candidates.</p>
+                            <a class="btn btn-primary" href="#">learn more</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="relative row justify-center">
+                <div class="absolute left-0 top-0 h-full w-full grained-bg opacity-[0.16]">
+                    <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
+                </div>
+                <div class="lg:col-6 mx-auto text-center">
+                    <h2 class="section-title">Next-Gen VMS <span>Software</span></h2>
+                    <p>Explore why so many Fortune 500 businesses are ditching their 1st gen SaaS platform VMS systems
+                        in favor of Total Talent Management VMS Software.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- end services -->
 
-	<section class="section testimonial-section review">
-		<div class="container">
-			<div class="row">
-				<div class="col-12">
-					<div class="section-header aos text-center" data-aos="fade-up">
-						<h2 class="header-title">What Our Users Say</h2>
-						<p>Trusted by job seekers, employers, and public sector organizations</p>
-					</div>
-				</div>
-			</div>
-			<div class="testimonial-slider aos" data-aos="fade-up">
-				@foreach([
-					['name' => 'Adaeze Okonkwo', 'role' => 'HR Manager, Private Sector', 'text' => 'NextHire has transformed how we manage recruitment. The application tracking and document verification features save our team hours every week.', 'rating' => '4.9'],
-					['name' => 'Emmanuel Bassey', 'role' => 'Job Applicant', 'text' => 'I found my current role through NextHire. The platform is easy to use, and I could track my application status at every stage.', 'rating' => '5.0'],
-					['name' => 'Dr. Fatima Yusuf', 'role' => 'Public Sector Recruiter', 'text' => 'The structured workflow and role-based access controls make NextHire ideal for government recruitment processes that require transparency and accountability.', 'rating' => '4.8'],
-					['name' => 'Chinedu Eze', 'role' => 'Employer', 'text' => 'From posting vacancies to shortlisting candidates, NextHire gives us everything we need in one professional platform.', 'rating' => '4.7'],
-				] as $index => $testimonial)
-				<div class="review-slide">
-					<div class="review-blog">
-						<div class="review-top d-flex align-items-center">
-							<div class="review-img">
-								<img class="img-fluid" src="{{ asset('assets/img/review/review-0'.(($index % 3) + 1).'.jpg') }}" alt="{{ $testimonial['name'] }}">
-							</div>
-							<div class="review-info">
-								<h3>{{ $testimonial['name'] }}</h3>
-								<h5>{{ $testimonial['role'] }}</h5>
-							</div>
-							<div class="test-quote-img">
-								<img class="img-fluid" src="{{ asset('assets/img/test-quote.svg') }}" alt="Quote">
-							</div>
-						</div>
-						<div class="review-content">
-							<p>{{ $testimonial['text'] }}</p>
-							<div class="rating">
-								@for($i = 0; $i < 4; $i++)
-								<i class="fas fa-star filled"></i>
-								@endfor
-								<i class="fas fa-star"></i>
-								<span class="average-rating">{{ $testimonial['rating'] }}</span>
-							</div>
-						</div>
-					</div>
-				</div>
-				@endforeach
-			</div>
-		</div>
-	</section>
+    <!-- Testimonials -->
+    <section class="testimonials section-bordered">
+        <div class="container">
+            <div class="row justify-center">
+                <div class="lg:col-6 mb-14 text-center">
+                    <h2 class="section-title mb-0">Hear from our <span>clients</span></h2>
+                </div>
+                <div class="lg:col-11 xl:col-10">
+                    <div class="swiper testimonials-slider">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide">
+                                <div class="testimonial-card">
+                                    <div class="pb-6 mb-6 border-b border-border">
+                                        <span class="inline-block mb-7">
+                                            <img src="{{ asset('assets/images/svgs/quote.svg') }}" alt="">
+                                        </span>
+                                        <p class="text-lg">But I must explain to you how all
+                                            this mistaken idea of denouncing of a pleasure and praising pain was born
+                                        </p>
+                                    </div>
+                                    <a class="avatar" href="#">
+                                        <img src="{{ asset('assets/images/svgs/quote.svg') }}" alt="">
+                                        <span>
+                                            <img src="{{ asset('assets/images/linkedin.png') }}" alt="">
+                                        </span>
+                                    </a>
+                                    <h4 class="font-primary font-medium">Dianne Russell</h4>
+                                    <p class="text-lg italic text-[#85888C]">content analizer</p>
+                                </div>
+                            </div>
+                            <div class="swiper-slide">
+                                <div class="testimonial-card">
+                                    <div class="pb-6 mb-6 border-b border-border">
+                                        <span class="inline-block mb-7">
+                                            <img src="{{ asset('assets/images/svgs/quote.svg') }}" alt="">
+                                        </span>
+                                        <p class="text-lg">But I must explain to you how all
+                                            this mistaken idea of denouncing of a pleasure and praising pain was born
+                                        </p>
+                                    </div>
+                                    <a class="avatar" href="#">
+                                        <img src="{{ asset('assets/images/client-1.png') }}" alt="">
+                                        <span>
+                                            <img src="{{ asset('assets/images/linkedin.png') }}" alt="">
+                                        </span>
+                                    </a>
+                                    <h4 class="font-primary font-medium">Dianne Russell</h4>
+                                    <p class="text-lg italic text-[#85888C]">content analizer</p>
+                                </div>
+                            </div>
+                            <div class="swiper-slide">
+                                <div class="testimonial-card">
+                                    <div class="pb-6 mb-6 border-b border-border">
+                                        <span class="inline-block mb-7">
+                                            <img src="{{ asset('assets/images/svgs/quote.svg') }}" alt="">
+                                        </span>
+                                        <p class="text-lg">But I must explain to you how all
+                                            this mistaken idea of denouncing of a pleasure and praising pain was born
+                                        </p>
+                                    </div>
+                                    <a class="avatar" href="#">
+                                        <img src="{{ asset('assets/images/client-1.png') }}" alt="">
+                                        <span>
+                                            <img src="{{ asset('assets/images/linkedin.png') }}" alt="">
+                                        </span>
+                                    </a>
+                                    <h4 class="font-primary font-medium">Dianne Russell</h4>
+                                    <p class="text-lg italic text-[#85888C]">content analizer</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="swiper-bullets testimonials-pagination text-center"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- end Testimonials -->
 
-	<section class="section projects">
-		<div class="container">
-			<div class="row">
-				<div class="col-12 col-md-12 mx-auto">
-					<div class="section-header text-center aos" data-aos="fade-up">
-						<h2 class="header-title">Trusted by Leading Organizations</h2>
-						<p>Public and private sector partners rely on NextHire for professional recruitment</p>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12 text-center">
-					<div class="best-company aos" data-aos="fade-up">
-						<ul class="mb-0">
-							@for($i = 1; $i <= 6; $i++)
-							<li>
-								<div class="company-bestimg">
-									<img src="{{ asset('assets/img/company/theme-'.$i.'.png') }}" alt="Partner organization {{ $i }}">
-								</div>
-							</li>
-							@endfor
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+    <!-- Systems -->
+    <section class="systems section-bordered">
+        <div class="container">
+            <div class="relative row justify-center">
+                <div class="absolute left-0 top-0 h-full w-full grained-bg opacity-[0.16]">
+                    <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
+                </div>
+                <div class="lg:col-6 mb-14 text-center">
+                    <h2 class="section-title mb-0"><span>find</span> Which system is <br>
+                        right for you</h2>
+                </div>
+                <div class="lg:col-11 xl:col-10">
+                    <div class="row gy-4">
+                        <div class="md:col-6 lg:col-4">
+                            <div
+                                class="px-8 py-10 text-center rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow">
+                                <span class="inline-block mb-6">
+                                    <img src="{{ asset('assets/images/svgs/chat.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-6 capitalize">total talent
+                                    management</h5>
+                                <p class="text-lg">Lorem ipsum dolor sit amet, consect
+                                    adipisci elit, sed eiusmod tempor incidunt
+                                    ut labore et dolore magna aliqua.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 lg:col-4">
+                            <div
+                                class="px-8 py-10 text-center bg-white/40 rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow">
+                                <span class="inline-block mb-6">
+                                    <img src="{{ asset('assets/images/svgs/display.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-6 capitalize">diversity in
+                                    system</h5>
+                                <p class="text-lg">Lorem ipsum dolor sit amet, consect
+                                    adipisci elit, sed eiusmod tempor incidunt
+                                    ut labore et dolore magna aliqua.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 lg:col-4">
+                            <div
+                                class="px-8 py-10 text-center bg-white/40 rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow">
+                                <span class="inline-block mb-6">
+                                    <img src="{{ asset('assets/images/svgs/control-forward.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-6 capitalize">shift management system</h5>
+                                <p class="text-lg">Lorem ipsum dolor sit amet, consect
+                                    adipisci elit, sed eiusmod tempor incidunt
+                                    ut labore et dolore magna aliqua.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 lg:col-4">
+                            <div
+                                class="px-8 py-10 text-center bg-white/40 rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow">
+                                <span class="inline-block mb-6">
+                                    <img src="{{ asset('assets/images/svgs/lock.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-6 capitalize">Vendor Management
+                                    System</h5>
+                                <p class="text-lg">Lorem ipsum dolor sit amet, consect
+                                    adipisci elit, sed eiusmod tempor incidunt
+                                    ut labore et dolore magna aliqua.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 lg:col-4">
+                            <div
+                                class="px-8 py-10 text-center bg-white/40 rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow">
+                                <span class="inline-block mb-6">
+                                    <img src="{{ asset('assets/images/svgs/magnet.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-6 capitalize">Direct Sourcing and
+                                    Talent Pools</h5>
+                                <p class="text-lg">Lorem ipsum dolor sit amet, consect
+                                    adipisci elit, sed eiusmod tempor incidunt
+                                    ut labore et dolore magna aliqua.</p>
+                            </div>
+                        </div>
+                        <div class="md:col-6 lg:col-4">
+                            <div
+                                class="px-8 py-10 text-center bg-white/40 rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow">
+                                <span class="inline-block mb-6">
+                                    <img src="{{ asset('assets/images/svgs/link.svg') }}" alt="">
+                                </span>
+                                <h5 class="mb-6 capitalize">Statement of
+                                    all Work</h5>
+                                <p class="text-lg">Lorem ipsum dolor sit amet, consect
+                                    adipisci elit, sed eiusmod tempor incidunt
+                                    ut labore et dolore magna aliqua.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ./end Systems -->
 
-	@include('partials.public-cta')
+    <!-- faqs -->
+
+    <!-- Faqs -->
+    <section class="section-bordered faqs">
+        <div class="container">
+            <div class="row justify-center">
+                <div class="col-12 lg:col-6 text-center">
+                    <h2 class="section-title">Popular questions <br>
+                        <span>answered</span>
+                    </h2>
+                </div>
+                <div class="lg:col-11 xl:col-10">
+                    <div class="grid md:grid-cols-2 gap">
+                        <div class="faqs-col">
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    Hyper-personalize, engage, and convert candidates
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    Develop and retain your employees with intelligence
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    Improve recruiter productivity through automation
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    Hire more talent, faster with Al
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="faqs-col">
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    How Can I Manage Transactions?
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    How Many Should I Pay?
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    How does app work?
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    How can I manage income?
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="accordion">
+                                <div class="accordion-header" data-accordion>
+                                    How to invest using this app?
+                                    <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
+                                        xmlspace="preserve">
+                                        <path fill="currentColor"
+                                            d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="accordion-content">
+                                    <p>
+                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                        quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                        officiis asperiores, unde quo magni repudiandae impedit iusto
+                                        voluptatum eos, aliquam, consectetur aliquid.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- end faqs -->
+
+    <!-- Call to Action -->
+    <section class="cta section-bordered">
+        <div class="container">
+            <div class="row mx-0 relative justify-center">
+                <div class="col-12">
+                    <img class="absolute -z-[1] top-0 left-0 w-full h-full" src="{{ asset('assets/images/cta-bg.png') }}" alt="">
+                </div>
+                <div class="lg:col-10 text-center">
+                    <div class="shadow rounded-xl bg-white/40 py-20 border border-border">
+                        <div class="md:max-w-[588px] mx-auto">
+                            <h2 class="mb-6 highlighted">Do you want to be a part <br>
+                                of our <span>team</span>?</h2>
+                            <p class="mb-6">All our premium themes are designed elegantly with blazing speed
+                                themes even score above% in Google page speed.</p>
+                            <a href="#" class="btn btn-primary">Start journey</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal -->
+    <section>
+        <div class="container">
+            <div class="row mb-10">
+                <div class="col-12">
+                    <!--modal open button -->
+                    <!-- <button id="modal-open-button" class="rounded bg-primary py-2 px-4 font-bold text-white hover:bg-primary/80">
+                    Open Modal
+                </button> -->
+                    <!-- modal container -->
+                    <div id="modal-container"
+                        class="fixed inset-0 z-50 hidden h-screen w-screen bg-theme-dark bg-opacity-75"></div>
+                    <!-- modal -->
+                    <div id="modal"
+                        class="fixed top-1/2 left-1/2 z-50 hidden -translate-x-1/2 -translate-y-1/2 transform rounded p-6 shadow-lg bg-transparent w-full max-w-[650px]">
+                        <div class="rounded-xl overflow-hidden">
+                            <iframe class="w-full" width="650" height="450"
+                                src="https://www.youtube.com/embed/ResipmZmpDU" title="YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen></iframe>
+                        </div>
+                        <button id="modal-close-button"
+                            class="border absolute -top-1.5 -right-1.5 text-primary w-8 h-8 rounded-full border-primary inline-flex items-center justify-center text-xl">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </x-app>
