@@ -16,14 +16,12 @@
     ];
     $perPageOptions = $perPageOptions ?? [15, 25, 50, 100];
 
-   $sortIcon = fn ($column) => $sortColumn === $column
-    ? ($sortDirection === 'asc' ? '↑' : '↓')
-    : '↕';
+    $sortIcon = fn($column) => $sortColumn === $column ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕';
 
-$sortUrl = fn ($column) => request()->fullUrlWithQuery([
-    'sort' => $column,
-    'direction' => $sortColumn === $column && $sortDirection === 'asc' ? 'desc' : 'asc',
-]);
+    $sortUrl = fn($column) => request()->fullUrlWithQuery([
+        'sort' => $column,
+        'direction' => $sortColumn === $column && $sortDirection === 'asc' ? 'desc' : 'asc',
+    ]);
 @endphp
 
 <div class="page-header subscribe-head">
@@ -64,17 +62,18 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                             <div class="input-group">
                                 <span class="input-group-text"><i class="feather-search"></i></span>
                                 <input class="form-control" name="search" type="search"
-                                    placeholder="Name, username, email, phone..."
-                                    value="{{ $filterValues['search'] }}">
+                                    placeholder="Name, username, email, phone..." value="{{ $filterValues['search'] }}">
                             </div>
                         </div>
                         <div class="col-lg-2 col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ $filterValues['email'] }}">
+                            <input type="email" name="email" class="form-control"
+                                value="{{ $filterValues['email'] }}">
                         </div>
                         <div class="col-lg-2 col-md-6">
                             <label class="form-label">Phone</label>
-                            <input type="text" name="phone" class="form-control" value="{{ $filterValues['phone'] }}">
+                            <input type="text" name="phone" class="form-control"
+                                value="{{ $filterValues['phone'] }}">
                         </div>
                         @unless ($roleConstraint)
                             <div class="col-lg-2 col-md-6">
@@ -137,7 +136,8 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                         <h5 class="mb-1">{{ $pageTitle }}</h5>
                         @if ($users->count())
                             <span class="text-muted">
-                                Showing {{ number_format($users->firstItem()) }}-{{ number_format($users->lastItem()) }}
+                                Showing
+                                {{ number_format($users->firstItem()) }}-{{ number_format($users->lastItem()) }}
                                 of {{ number_format($users->total()) }}
                             </span>
                         @else
@@ -200,9 +200,11 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                                                 src="{{ $user->profileImageUrl() }}" alt="{{ $user->first_name }}"
                                                 width="40" height="40" style="object-fit: cover;">
                                             <div>
-                                                <h6 class="mb-0">{{ $user->first_name }} {{ $user->last_name }}</h6>
+                                                <h6 class="mb-0">{{ $user->first_name }} {{ $user->last_name }}
+                                                </h6>
                                                 <small class="text-muted">{{ '@' . $user->username }}</small>
-                                                <small class="text-muted d-md-none d-block">{{ $user->email }}</small>
+                                                <small
+                                                    class="text-muted d-md-none d-block">{{ $user->email }}</small>
                                             </div>
                                         </div>
                                     </td>
@@ -210,7 +212,8 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                                     <td class="d-none d-lg-table-cell">{{ $user->phone ?: 'Not provided' }}</td>
                                     <td class="d-none d-xl-table-cell">{{ $user->role->label() }}</td>
                                     <td>
-                                        <span class="badge {{ $statusClasses[$user->status->value] ?? 'bg-secondary' }}">
+                                        <span
+                                            class="badge {{ $statusClasses[$user->status->value] ?? 'bg-secondary' }}">
                                             {{ $user->status->label() }}
                                         </span>
                                     </td>
@@ -231,15 +234,15 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                                                     </li>
                                                 @endif
                                                 <li>
-                                                    <button class="dropdown-item" type="button" data-bs-toggle="modal"
+                                                    <button class="dropdown-item" type="button"
+                                                        data-bs-toggle="modal"
                                                         data-bs-target="#edit-user-{{ $user->id }}">
                                                         <i data-feather="edit" class="me-2"></i> Edit
                                                     </button>
                                                 </li>
                                                 <li>
                                                     <form action="{{ route('admin.users.password-reset', $user) }}"
-                                                        method="POST" class="d-grid"
-                                                        data-confirm
+                                                        method="POST" class="d-grid" data-confirm
                                                         data-confirm-title="Send password reset?"
                                                         data-confirm-text="A reset link will be emailed to this user."
                                                         data-confirm-button="Send Link">
@@ -252,8 +255,7 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                                                 @if (!$user->is(auth()->user()) && !$user->isSuspended())
                                                     <li>
                                                         <form action="{{ route('admin.users.suspend', $user) }}"
-                                                            method="POST" class="d-grid"
-                                                            data-confirm
+                                                            method="POST" class="d-grid" data-confirm
                                                             data-confirm-title="Suspend user?"
                                                             data-confirm-text="This user will lose access until reactivated."
                                                             data-confirm-button="Suspend">
@@ -268,8 +270,7 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                                                 @if ($user->isSuspended())
                                                     <li>
                                                         <form action="{{ route('admin.users.activate', $user) }}"
-                                                            method="POST" class="d-grid"
-                                                            data-confirm
+                                                            method="POST" class="d-grid" data-confirm
                                                             data-confirm-title="Activate user?"
                                                             data-confirm-text="This user will be allowed to access the system."
                                                             data-confirm-button="Activate">
@@ -323,14 +324,10 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                     <button type="button" class="close" data-bs-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <form
-                        action="{{ route('admin.users.store') }}"
-                        method="POST"
-                        data-confirm
+                    <form action="{{ route('admin.users.store') }}" method="POST" data-confirm
                         data-confirm-title="Create user?"
                         data-confirm-text="A new user account will be created with these details."
-                        data-confirm-button="Create User"
-                    >
+                        data-confirm-button="Create User">
                         @csrf
                         <div class="row">
                             <div class="col-md-6">
@@ -357,8 +354,11 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                         <div class="form-group">
                             <label>Password</label>
                             <div class="position-relative">
-                                <input type="password" name="password" class="form-control" required minlength="8" placeholder="Use at least 8 characters">
-                                <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y me-2" data-password-toggle="password" aria-label="Show password">
+                                <input type="password" name="password" class="form-control" required minlength="8"
+                                    placeholder="Use at least 8 characters">
+                                <button type="button"
+                                    class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y me-2"
+                                    data-password-toggle="password" aria-label="Show password">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -366,8 +366,11 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                         <div class="form-group">
                             <label>Confirm Password</label>
                             <div class="position-relative">
-                                <input type="password" name="password_confirmation" class="form-control" required minlength="8" placeholder="Re-enter password">
-                                <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y me-2" data-password-toggle="password_confirmation" aria-label="Show password">
+                                <input type="password" name="password_confirmation" class="form-control" required
+                                    minlength="8" placeholder="Re-enter password">
+                                <button type="button"
+                                    class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y me-2"
+                                    data-password-toggle="password_confirmation" aria-label="Show password">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -409,14 +412,10 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                     <button type="button" class="close" data-bs-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <form
-                        action="{{ route('admin.users.update', $user) }}"
-                        method="POST"
-                        data-confirm
+                    <form action="{{ route('admin.users.update', $user) }}" method="POST" data-confirm
                         data-confirm-title="Update user?"
                         data-confirm-text="This user's role and status will be updated."
-                        data-confirm-button="Save Changes"
-                    >
+                        data-confirm-button="Save Changes">
                         @csrf
                         @method('PUT')
                         <div class="row">
@@ -493,14 +492,10 @@ $sortUrl = fn ($column) => request()->fullUrlWithQuery([
                         <div class="modal-btn delete-action">
                             <div class="row">
                                 <div class="col-6">
-                                    <form
-                                        action="{{ route('admin.users.destroy', $user) }}"
-                                        method="POST"
-                                        data-confirm
-                                        data-confirm-title="Delete user?"
+                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
+                                        data-confirm data-confirm-title="Delete user?"
                                         data-confirm-text="This user account will be permanently removed."
-                                        data-confirm-button="Delete User"
-                                    >
+                                        data-confirm-button="Delete User">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
