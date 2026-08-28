@@ -22,45 +22,78 @@ class EmployerDashboardService
      */
     public function getOverview(Request $request, User $employer): array
     {
-        $dateRange = AdminDashboardDateRange::fromRequest($request);
-
-        $jobsQuery = Job::query()
-            ->where('employer_id', $employer->id)
-            ->whereBetween('created_at', [$dateRange->start, $dateRange->end]);
-
-        $applicationsQuery = ApplicationForm::query()
-            ->forEmployer($employer)
-            ->whereBetween('submitted_at', [$dateRange->start, $dateRange->end]);
+        $analytics = $this->analytics($employer, $request->input('period', '12_months'));
+        $dateRange = $this->analyticsDateRange($request->input('period', '12_months'));
 
         return [
             'dateRange' => $dateRange,
-            'filterValues' => $dateRange->filterValues(),
-            'metrics' => $this->metrics($applicationsQuery, $jobsQuery),
+            'filterValues' => ['period' => $request->input('period', '12_months')],
+            'metrics' => $this->metrics($employer),
             'charts' => [
-                'applicationsOverTime' => $this->applicationsOverTime($applicationsQuery, $dateRange),
-                'jobsOverTime' => $this->jobsOverTime($jobsQuery, $dateRange),
-                'applicationStatus' => $this->applicationStatusDistribution($applicationsQuery),
+                'applicationsOverTime' => [
+                    'label' => $analytics['series'][1]['name'],
+                    'categories' => $analytics['categories'],
+                    'series' => $analytics['series'][1]['data'],
+                ],
+                'jobsOverTime' => [
+                    'label' => $analytics['series'][0]['name'],
+                    'categories' => $analytics['categories'],
+                    'series' => $analytics['series'][0]['data'],
+                ],
+                'applicationStatus' => $analytics['applicationStatus'],
             ],
-            'mostAppliedJobs' => $this->mostAppliedJobs($applicationsQuery),
-            'recentApplications' => $this->recentApplications($applicationsQuery),
+            'mostAppliedJobs' => $this->mostAppliedJobs($employer),
+            'recentApplications' => $this->recentApplications($employer),
         ];
     }
 
     /**
-     * @param  Builder<Model>  $applicationsQuery
-     * @param  Builder<Model>  $jobsQuery
+     * @return array<string, mixed>
+     */
+    public function analytics(User $employer, string $period = '12_months'): array
+    {
+        $dateRange = $this->analyticsDateRange($period);
+        $jobs = $this->jobsOverTime($employer, $dateRange);
+        $applications = $this->applicationsOverTime($employer, $dateRange);
+
+        return [
+            'period' => $period,
+            'label' => $dateRange->label(),
+            'categories' => $jobs['categories'],
+            'series' => [
+                [
+                    'name' => $jobs['label'],
+                    'data' => $jobs['series'],
+                ],
+                [
+                    'name' => $applications['label'],
+                    'data' => $applications['series'],
+                ],
+            ],
+            'totals' => [
+                'jobs' => array_sum($jobs['series']),
+                'applicants' => array_sum($applications['series']),
+            ],
+            'empty' => array_sum($jobs['series']) + array_sum($applications['series']) === 0,
+            'applicationStatus' => $this->applicationStatusDistribution($employer, $dateRange),
+        ];
+    }
+
+    /**
      * @return array<string, int>
      */
-    private function metrics(Builder $applicationsQuery, Builder $jobsQuery): array
+    private function metrics(User $employer): array
     {
-        $applicationCounts = (clone $applicationsQuery)
+        $applicationsQuery = ApplicationForm::query()->forEmployer($employer);
+
+        $applicationCounts = $applicationsQuery
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
         return [
-            'total_jobs' => (int) (clone $jobsQuery)->count(),
-            'total_applicants' => (int) (clone $applicationsQuery)->distinct('user_id')->count('user_id'),
+            'total_jobs' => Job::query()->where('employer_id', $employer->id)->count(),
+            'total_applicants' => ApplicationForm::query()->forEmployer($employer)->distinct('user_id')->count('user_id'),
             'total_applications' => (int) $applicationCounts->sum(),
             'approved_candidates' => (int) ($applicationCounts[ApplicationStatus::Approved->value] ?? 0),
             'rejected_candidates' => (int) ($applicationCounts[ApplicationStatus::Rejected->value] ?? 0),
@@ -69,36 +102,47 @@ class EmployerDashboardService
     }
 
     /**
-     * @param  Builder<Model>  $applicationsQuery
      * @return array<string, mixed>
      */
-    private function applicationsOverTime(Builder $applicationsQuery, AdminDashboardDateRange $dateRange): array
+    private function applicationsOverTime(User $employer, AdminDashboardDateRange $dateRange): array
     {
         $interval = $this->chartInterval($dateRange);
-        $counts = $this->groupedCounts($applicationsQuery, 'submitted_at', $interval);
+        $counts = $this->groupedCounts(
+            ApplicationForm::query()
+                ->forEmployer($employer)
+                ->whereBetween('submitted_at', [$dateRange->start, $dateRange->end]),
+            'submitted_at',
+            $interval,
+        );
 
         return $this->buildTimeSeries($dateRange, $interval, $counts, 'Applications Received');
     }
 
     /**
-     * @param  Builder<Model>  $jobsQuery
      * @return array<string, mixed>
      */
-    private function jobsOverTime(Builder $jobsQuery, AdminDashboardDateRange $dateRange): array
+    private function jobsOverTime(User $employer, AdminDashboardDateRange $dateRange): array
     {
         $interval = $this->chartInterval($dateRange);
-        $counts = $this->groupedCounts($jobsQuery, 'created_at', $interval);
+        $counts = $this->groupedCounts(
+            Job::query()
+                ->where('employer_id', $employer->id)
+                ->whereBetween('created_at', [$dateRange->start, $dateRange->end]),
+            'created_at',
+            $interval,
+        );
 
         return $this->buildTimeSeries($dateRange, $interval, $counts, 'Jobs Posted');
     }
 
     /**
-     * @param  Builder<Model>  $applicationsQuery
      * @return array<string, mixed>
      */
-    private function applicationStatusDistribution(Builder $applicationsQuery): array
+    private function applicationStatusDistribution(User $employer, AdminDashboardDateRange $dateRange): array
     {
-        $counts = (clone $applicationsQuery)
+        $counts = ApplicationForm::query()
+            ->forEmployer($employer)
+            ->whereBetween('submitted_at', [$dateRange->start, $dateRange->end])
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -107,13 +151,13 @@ class EmployerDashboardService
         $series = [];
         $colors = [];
 
-        foreach (ApplicationStatus::cases() as $status) {
+        foreach ([ApplicationStatus::Approved, ApplicationStatus::Pending, ApplicationStatus::Rejected] as $status) {
             $labels[] = $status->label();
             $series[] = (int) ($counts[$status->value] ?? 0);
             $colors[] = match ($status) {
-                ApplicationStatus::Pending => '#ffc107',
-                ApplicationStatus::Approved => '#28a745',
-                ApplicationStatus::Rejected => '#dc3545',
+                ApplicationStatus::Approved => '#3641f5',
+                ApplicationStatus::Pending => '#7592ff',
+                ApplicationStatus::Rejected => '#dde9ff',
             };
         }
 
@@ -125,12 +169,12 @@ class EmployerDashboardService
     }
 
     /**
-     * @param  Builder<Model>  $applicationsQuery
      * @return list<array<string, mixed>>
      */
-    private function mostAppliedJobs(Builder $applicationsQuery): array
+    private function mostAppliedJobs(User $employer): array
     {
-        return (clone $applicationsQuery)
+        return ApplicationForm::query()
+            ->forEmployer($employer)
             ->select('application_forms.job_id', 'job_posts.title', 'job_posts.company')
             ->join('job_posts', 'application_forms.job_id', '=', 'job_posts.id')
             ->groupBy('application_forms.job_id', 'job_posts.title', 'job_posts.company')
@@ -147,16 +191,39 @@ class EmployerDashboardService
     }
 
     /**
-     * @param  Builder<Model>  $applicationsQuery
      * @return Collection<int, ApplicationForm>
      */
-    private function recentApplications(Builder $applicationsQuery): Collection
+    private function recentApplications(User $employer): Collection
     {
-        return (clone $applicationsQuery)
+        return ApplicationForm::query()
+            ->forEmployer($employer)
             ->with(['job:id,title', 'applicant:id,first_name,last_name'])
             ->latest('submitted_at')
             ->limit(5)
             ->get(['id', 'reference', 'job_id', 'user_id', 'status', 'submitted_at']);
+    }
+
+    private function analyticsDateRange(?string $period): AdminDashboardDateRange
+    {
+        $now = now();
+
+        return match ($period) {
+            '30_days' => new AdminDashboardDateRange(
+                period: \App\Enums\DashboardPeriod::Custom,
+                start: $now->copy()->subDays(29)->startOfDay(),
+                end: $now->copy()->endOfDay(),
+            ),
+            '7_days' => new AdminDashboardDateRange(
+                period: \App\Enums\DashboardPeriod::Custom,
+                start: $now->copy()->subDays(6)->startOfDay(),
+                end: $now->copy()->endOfDay(),
+            ),
+            default => new AdminDashboardDateRange(
+                period: \App\Enums\DashboardPeriod::Custom,
+                start: $now->copy()->subMonths(11)->startOfMonth(),
+                end: $now->copy()->endOfDay(),
+            ),
+        };
     }
 
     /**
