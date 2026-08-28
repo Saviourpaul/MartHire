@@ -44,6 +44,17 @@ class DashboardController extends Controller
         return response()->json($this->adminDashboardService->analytics($period));
     }
 
+    public function employerAnalytics(Request $request): JsonResponse
+    {
+        abort_unless($request->user()?->isEmployer(), 403);
+
+        $period = $request->validate([
+            'period' => ['nullable', 'in:12_months,30_days,7_days'],
+        ])['period'] ?? '12_months';
+
+        return response()->json($this->employerDashboardService->analytics($request->user(), $period));
+    }
+
     public function adminActiveUsers(Request $request): JsonResponse
     {
         abort_unless($request->user()?->isAdmin(), 403);

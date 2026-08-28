@@ -61,7 +61,11 @@ class EmployerApplicationController extends Controller
     private function candidateTable(Request $request, ?ApplicationStatus $status, string $title, string $routeName, string $viewName): View
     {
         $applications = ApplicationForm::query()
-            ->with(['job', 'applicant', 'documents'])
+            ->with(['job:id,title,company', 'applicant:id,first_name,last_name,email'])
+            ->withCount([
+                'documents',
+                'documents as approved_documents_count' => fn ($query) => $query->where('status', ApplicationStatus::Approved),
+            ])
             ->forEmployer($request->user())
             ->when($status, fn ($query) => $query->status($status))
             ->when($request->filled('job_id'), fn ($query) => $query->where('job_id', $request->integer('job_id')))

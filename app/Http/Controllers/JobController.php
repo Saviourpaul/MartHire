@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\JobStatus;
 use App\Models\Job;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -32,17 +33,18 @@ class JobController extends Controller
                 });
             })
             ->orderBy($sortColumn, $sortDirection)
-            ->paginate(15)
+            ->withCount('applications')
+            ->paginate(10)
             ->withQueryString();
 
-        return view('admin.Jobs', [
+        return view('employer.jobs.index', [
             'jobs' => $jobs,
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate($this->rules($request));
 
@@ -54,12 +56,19 @@ class JobController extends Controller
 
         $request->user()->jobs()->create($data);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Job submitted for admin review.',
+                'redirect' => route('jobs'),
+            ]);
+        }
+
         return redirect()
             ->route('jobs')
             ->with('success', 'Job submitted for admin review.');
     }
 
-    public function update(Request $request, Job $job): RedirectResponse
+    public function update(Request $request, Job $job): RedirectResponse|JsonResponse
     {
         $this->ensureEmployerOwnsJob($request, $job);
 
@@ -76,21 +85,46 @@ class JobController extends Controller
 
         $job->update($data);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Job updated and submitted for admin review.',
+                'redirect' => $request->input('redirect_to', route('jobs')),
+            ]);
+        }
+
         return redirect()
             ->route('jobs')
             ->with('success', 'Job updated and submitted for admin review.');
     }
 
-    public function destroy(Request $request, Job $job): RedirectResponse
+    public function destroy(Request $request, Job $job): RedirectResponse|JsonResponse
     {
         $this->ensureEmployerOwnsJob($request, $job);
 
         $this->deleteStoredLogo($job);
         $job->delete();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Job deleted successfully.',
+                'redirect' => route('jobs'),
+            ]);
+        }
+
         return redirect()
             ->route('jobs')
             ->with('success', 'Job deleted successfully.');
+    }
+
+    public function employerShow(Request $request, Job $job): View
+    {
+        $this->ensureEmployerOwnsJob($request, $job);
+
+        $job->loadCount('applications');
+
+        return view('employer.jobs.show', [
+            'job' => $job,
+        ]);
     }
 
     public function show(Request $request, Job $job): View

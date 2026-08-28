@@ -60,9 +60,8 @@ class JobManagementController extends Controller
             ? $request->input('sort')
             : 'created_at';
         $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
-        $perPageOptions = [15, 25, 50, 100];
-        $perPage = (int) $request->input('per_page', 15);
-        $perPage = in_array($perPage, $perPageOptions, true) ? $perPage : 15;
+        $perPageOptions = [10];
+        $perPage = 10;
         $search = trim((string) $request->input('search', ''));
         $statusFilter = $this->statusFilter($request, $statusConstraint);
 
