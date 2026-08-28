@@ -5,7 +5,6 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ApplicationDocumentDownloadController;
 use App\Http\Controllers\ApplicationDocumentPreviewController;
-use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployerApplicationController;
 use App\Http\Controllers\EmployerApplicationDocumentController;
@@ -17,36 +16,11 @@ use App\Models\Job;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $jobs = Job::active()->latest()->take(3)->get();
 
-    return view('Home', [
-        'jobs' => $jobs,
-    ]);
+    return view('Home');
 })->name('home');
 
-Route::get('find-jobs', function () {
-    $jobs = Job::active()
-        ->when(request()->filled('search'), function ($query) {
-            $search = '%'.request()->string('search')->trim().'%';
 
-            $query->where(function ($query) use ($search) {
-                $query->where('title', 'like', $search)
-                    ->orWhere('company', 'like', $search)
-                    ->orWhere('category', 'like', $search)
-                    ->orWhere('description', 'like', $search);
-            });
-        })
-        ->when(request()->filled('category'), function ($query) {
-            $query->where('category', request('category'));
-        })
-        ->latest()
-        ->paginate(12)
-        ->withQueryString();
-
-    return view('Jobs', [
-        'jobs' => $jobs,
-    ]);
-})->name('jobs.public');
 
 Route::get('job-details/{job}', [JobController::class, 'show'])->name('job-details');
 Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])
