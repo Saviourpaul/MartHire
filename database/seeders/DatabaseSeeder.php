@@ -22,24 +22,21 @@ class DatabaseSeeder extends Seeder
         User::factory()->admin()->create([
             'first_name' => 'Admin',
             'last_name' => 'User',
-            'username' => 'admin',
-            'email' => 'admin@example.com',
+            'email' => 'adminstrators@example.com',
         ]);
 
         // Create test employer
         User::factory()->employer()->create([
             'first_name' => 'Test',
             'last_name' => 'Employer',
-            'username' => 'test-employer',
-            'email' => 'test@example.com',
+            'email' => 'tests@example.com',
         ]);
 
         // Create test applicant
         User::factory()->create([
             'first_name' => 'Test',
             'last_name' => 'Applicant',
-            'username' => 'test-applicant',
-            'email' => 'applicant@example.com',
+            'email' => 'applicants@example.com',
         ]);
 
         // Run the job seeder
