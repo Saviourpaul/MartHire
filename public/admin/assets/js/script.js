@@ -1,6 +1,6 @@
 /*
 Author       : Dreamguys
-Template Name: NextHire - Bootstrap Admin Template
+Template Name: MartHire - Bootstrap Admin Template
 Version      : 1.0
 */
 

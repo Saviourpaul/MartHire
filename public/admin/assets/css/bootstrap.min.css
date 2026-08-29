@@ -458,7 +458,7 @@ caption {
 
 th {
     text-align: inherit;
-    text-align: -webkit-match-parent
+    text-align: webkit-match-parent;
 }
 
 tbody,
@@ -5344,7 +5344,7 @@ fieldset:disabled .btn {
     float: left;
     padding-right: var(--bs-breadcrumb-item-padding-x);
     color: var(--bs-breadcrumb-divider-color);
-    content: var(--bs-breadcrumb-divider, "https://NextHire.dreamstechnologies.com/")
+    content: var(--bs-breadcrumb-divider, "https://MartHire.dreamstechnologies.com/")
 }
 
 .breadcrumb-item.active {

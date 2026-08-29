@@ -468,7 +468,9 @@
 
         renderLineChart(analyticsElement, initialAnalytics);
         renderDonutChart(statusElement, initialAnalytics.applicationStatus || config.applicationStatus);
-        renderAreaChart(activeUsersElement, config.activeUsersTrend || {});
+        if (activeUsersElement) {
+            renderAreaChart(activeUsersElement, config.activeUsersTrend || {});
+        }
         updateAnalyticsSummary(initialAnalytics);
 
         document.querySelectorAll('[data-analytics-period]').forEach((button) => {
@@ -477,7 +479,9 @@
             });
         });
 
-        loadActiveUsers();
-        window.setInterval(loadActiveUsers, 30000);
+        if (config.activeUsersUrl) {
+            loadActiveUsers();
+            window.setInterval(loadActiveUsers, 30000);
+        }
     });
 })();
