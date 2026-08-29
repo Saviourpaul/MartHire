@@ -1,12 +1,12 @@
-# NextHire Technical Documentation
+# MartHire Technical Documentation
 
 Last reviewed: 2026-07-21
 
-This document describes the current NextHire implementation in this repository. It is intended for developers who need to install, run, maintain, secure, test, and scale the application in local and production environments.
+This document describes the current MartHire implementation in this repository. It is intended for developers who need to install, run, maintain, secure, test, and scale the application in local and production environments.
 
 ## Project Overview And Architecture
 
-NextHire is a Laravel-based recruitment portal that connects applicants, employers, and administrators.
+MartHire is a Laravel-based recruitment portal that connects applicants, employers, and administrators.
 
 Primary capabilities:
 
@@ -484,7 +484,7 @@ _token=csrf-token
 &phone=08012345678
 &subject=Employer+partnership
 &inquiry_type=employer
-&message=We+would+like+to+post+roles+on+NextHire.
+&message=We+would+like+to+post+roles+on+MartHire.
 ```
 
 Successful response:
@@ -636,8 +636,8 @@ Content-Type: multipart/form-data
 
 _token=csrf-token
 title=Senior Laravel Developer
-description=Build and maintain NextHire services.
-company=NextHire
+description=Build and maintain MartHire services.
+company=MartHire
 category=Technology
 logo=@logo.png
 start_date=2026-08-01
