@@ -6,6 +6,7 @@ use App\Enums\JobStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -40,7 +41,7 @@ class JobManagementController extends Controller
         ]);
     }
 
-    public function review(Request $request, Job $job): RedirectResponse
+    public function review(Request $request, Job $job): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'status' => ['required', Rule::in(JobStatus::values())],
@@ -50,7 +51,57 @@ class JobManagementController extends Controller
         $job->status = $status;
         $job->save();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Job marked as '.$status->label().'.',
+                'status' => $status->value,
+            ]);
+        }
+
         return back()->with('success', 'Job marked as '.$status->label().'.');
+    }
+
+    public function update(Request $request, Job $job): RedirectResponse|JsonResponse
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'company' => ['required', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'start_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'description' => ['required', 'string'],
+            'status' => ['required', Rule::in(JobStatus::values())],
+        ]);
+
+        $data['status'] = JobStatus::from($data['status']);
+        $job->update($data);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Job updated successfully.',
+                'status' => $data['status']->value,
+            ]);
+        }
+
+        return back()->with('success', 'Job updated successfully.');
+    }
+
+    public function destroy(Request $request, Job $job): RedirectResponse|JsonResponse
+    {
+        $job->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Job deleted successfully.',
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.jobs.index')
+            ->with('success', 'Job deleted successfully.');
     }
 
     private function listing(Request $request, ?JobStatus $statusConstraint, string $title): View
