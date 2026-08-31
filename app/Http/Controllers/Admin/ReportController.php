@@ -24,7 +24,7 @@ class ReportController extends Controller
     public function export(AdminReportRequest $request): StreamedResponse
     {
         $report = $this->reports->getReport($request);
-        $filename = 'nexhire-admin-report-'.$report['dateRange']->start->toDateString().'-'.$report['dateRange']->end->toDateString().'.csv';
+        $filename = 'MartHire-report-'.$report['dateRange']->start->toDateString().'-'.$report['dateRange']->end->toDateString().'.csv';
 
         return response()->streamDownload(function () use ($report): void {
             $handle = fopen('php://output', 'w');

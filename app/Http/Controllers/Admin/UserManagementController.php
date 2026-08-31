@@ -41,6 +41,7 @@ class UserManagementController extends Controller
         );
     }
 
+   /*
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -64,14 +65,14 @@ class UserManagementController extends Controller
         $user->save();
 
         return back()->with('success', 'User created successfully.');
-    }
+    } */
 
     public function update(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user)],
+            //'first_name' => ['required', 'string', 'max:255'],
+            //'last_name' => ['required', 'string', 'max:255'],
+           // 'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user)],
             'role' => ['required', Rule::in($this->getAllowedRoles())],
             'status' => ['required', Rule::in(UserStatus::values())],
         ]);
@@ -84,9 +85,9 @@ class UserManagementController extends Controller
         }
 
         $user->fill([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
+            //'first_name' => $data['first_name'],
+           // 'last_name' => $data['last_name'],
+           // 'email' => $data['email'],
             'role' => $role,
         ]);
 
@@ -148,7 +149,7 @@ class UserManagementController extends Controller
         ?UserStatus $status = null,
         bool $showCreate = true,
     ): View {
-        $sortableColumns = ['first_name', 'last_name',  'email', 'phone', 'created_at'];
+        $sortableColumns = ['first_name', 'last_name', 'email', 'phone', 'created_at'];
         $sortColumn = $request->input('sort') && in_array($request->input('sort'), $sortableColumns, true)
             ? $request->input('sort')
             : 'created_at';
@@ -171,13 +172,13 @@ class UserManagementController extends Controller
                 'approved_at',
                 'suspended_at',
             ])
-            ->when($role, fn ($query) => $query->role($role))
-            ->when($status, fn ($query) => $query->status($status))
+            ->when($role, fn($query) => $query->role($role))
+            ->when($status, fn($query) => $query->status($status))
             ->when($search !== '', function ($query) use ($search) {
                 collect(preg_split('/\s+/', $search) ?: [])
                     ->filter()
                     ->each(function (string $term) use ($query) {
-                        $term = '%'.$term.'%';
+                        $term = '%' . $term . '%';
 
                         $query->where(function ($query) use ($term) {
                             $query->where('first_name', 'like', $term)
@@ -197,18 +198,18 @@ class UserManagementController extends Controller
                 $query->whereDate('created_at', '<=', $request->input('created_to'));
             })
             ->when($request->filled('email'), function ($query) use ($request) {
-                $query->where('email', 'like', '%'.$request->string('email')->trim().'%');
+                $query->where('email', 'like', '%' . $request->string('email')->trim() . '%');
             })
             ->when($request->filled('phone'), function ($query) use ($request) {
-                $query->where('phone', 'like', '%'.$request->string('phone')->trim().'%');
+                $query->where('phone', 'like', '%' . $request->string('phone')->trim() . '%');
             })
-            ->when(! $role && $request->filled('role'), function ($query) use ($request) {
+            ->when(!$role && $request->filled('role'), function ($query) use ($request) {
                 if (in_array($request->input('role'), UserRole::values(), true)) {
                     $query->role($request->input('role'));
                 }
 
             })
-            ->when(! $status && $request->filled('status'), function ($query) use ($request) {
+            ->when(!$status && $request->filled('status'), function ($query) use ($request) {
                 if (in_array($request->input('status'), UserStatus::values(), true)) {
                     $query->status($request->input('status'));
                 }
@@ -262,7 +263,7 @@ class UserManagementController extends Controller
     private function protectedAdminError(User $actingUser, User $targetUser, UserRole $targetRole, UserStatus $targetStatus): ?string
     {
         if ($targetUser->is($actingUser) && ($targetRole !== $targetUser->role || $targetStatus !== $targetUser->status)) {
-            return 'You cannot suspend or demote your own administrator account.';
+            return 'You cannot suspend  or demote your own administrator account.';
         }
 
         if ($this->wouldRemoveLastActiveAdmin($targetUser, $targetRole, $targetStatus)) {

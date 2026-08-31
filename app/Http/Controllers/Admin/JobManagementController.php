@@ -41,26 +41,7 @@ class JobManagementController extends Controller
         ]);
     }
 
-    public function review(Request $request, Job $job): RedirectResponse|JsonResponse
-    {
-        $data = $request->validate([
-            'status' => ['required', Rule::in(JobStatus::values())],
-        ]);
 
-        $status = JobStatus::from($data['status']);
-        $job->status = $status;
-        $job->save();
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'ok' => true,
-                'message' => 'Job marked as '.$status->label().'.',
-                'status' => $status->value,
-            ]);
-        }
-
-        return back()->with('success', 'Job marked as '.$status->label().'.');
-    }
 
     public function update(Request $request, Job $job): RedirectResponse|JsonResponse
     {
@@ -125,12 +106,15 @@ class JobManagementController extends Controller
             ->when($request->filled('category'), function ($query) use ($request) {
                 $query->where('category', $request->input('category'));
             })
+
+            /*
             ->when($request->filled('submitted_from'), function ($query) use ($request) {
                 $query->whereDate('job_posts.created_at', '>=', $request->input('submitted_from'));
             })
             ->when($request->filled('submitted_to'), function ($query) use ($request) {
                 $query->whereDate('job_posts.created_at', '<=', $request->input('submitted_to'));
-            })
+            })  */
+
             ->when($search !== '', function ($query) use ($search) {
                 collect(preg_split('/\s+/', $search) ?: [])
                     ->filter()
@@ -178,8 +162,8 @@ class JobManagementController extends Controller
                 'search' => $search,
                 'status' => $statusFilter?->value,
                 'category' => $request->input('category'),
-                'submitted_from' => $request->input('submitted_from'),
-                'submitted_to' => $request->input('submitted_to'),
+                //'submitted_from' => $request->input('submitted_from'),
+                //'submitted_to' => $request->input('submitted_to'),
                 'per_page' => $perPage,
             ],
         ]);
