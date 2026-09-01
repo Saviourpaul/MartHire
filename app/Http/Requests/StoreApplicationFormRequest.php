@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\JobStatus;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\NigeriaState;
@@ -42,7 +41,7 @@ class StoreApplicationFormRequest extends FormRequest
 
         return $job instanceof Job
             && $user?->isApplicant()
-            && $job->status === JobStatus::Approved;
+            && $job->isAcceptingApplications();
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\JobStatus;
 use App\Http\Requests\StoreApplicationFormRequest;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
@@ -32,7 +31,7 @@ class JobApplicationController extends Controller
 
     public function create(Request $request, Job $job): View|RedirectResponse
     {
-        abort_unless($job->status === JobStatus::Approved, 404);
+        abort_unless($job->isAcceptingApplications(), 404);
 
         $user = $request->user();
 
@@ -40,8 +39,8 @@ class JobApplicationController extends Controller
             $request->session()->put('url.intended', route('applications.create', $job));
 
             return redirect()
-                ->route('register')
-                ->with('info', 'Create an applicant account to continue your job application.');
+                ->route('login')
+                ->with('info', 'Log in with an applicant account to continue your job application.');
         }
 
         abort_unless($user->isApplicant(), 403);

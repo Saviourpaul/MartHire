@@ -24,11 +24,21 @@ class Job extends Model
         'description',
         'company',
         'category',
+        'location',
+        'employment_type',
         'logo',
         'start_date',
         'due_date',
         'status',
     ];
+    public const EMPLOYMENT_TYPES = [
+        'full_time' => 'Full-time',
+        'part_time' => 'Part-time',
+        'contract' => 'Contract',
+        'internship' => 'Internship',
+        'freelance' => 'Freelance',
+    ];
+
 
     /**
      * @var array<string, mixed>
@@ -56,6 +66,14 @@ class Job extends Model
         return $this->hasMany(ApplicationForm::class);
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public static function employmentTypeOptions(): array
+    {
+        return self::EMPLOYMENT_TYPES;
+    }
+
     public function scopeStatus(Builder $query, JobStatus|string $status): Builder
     {
         return $query->where('status', $status instanceof JobStatus ? $status->value : $status);
@@ -71,9 +89,21 @@ class Job extends Model
         return $query->approved();
     }
 
+    public function scopeAcceptingApplications(Builder $query): Builder
+    {
+        return $query
+            ->approved()
+            ->whereDate('due_date', '>=', now()->toDateString());
+    }
+
     public function isApproved(): bool
     {
         return $this->status === JobStatus::Approved;
+    }
+
+    public function isAcceptingApplications(): bool
+    {
+        return $this->isApproved() && ! $this->due_date?->isBefore(today());
     }
 
     public function isPending(): bool
@@ -86,9 +116,14 @@ class Job extends Model
         return $this->status === JobStatus::Rejected;
     }
 
+    public function employmentTypeLabel(): string
+    {
+        return self::EMPLOYMENT_TYPES[$this->employment_type] ?? 'Not specified';
+    }
+
     public function logoUrl(): string
     {
-        $defaultLogo = 'assets/img/default-logo.svg';
+        $defaultLogo = 'assets/images/brands/company-logo-1.png';
 
         if (! $this->logo) {
             return asset($defaultLogo);
@@ -138,3 +173,10 @@ class Job extends Model
         return Storage::disk('public')->exists($path) ? $path : null;
     }
 }
+
+
+
+
+
+
+

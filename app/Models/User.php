@@ -40,7 +40,6 @@ class User extends Authenticatable
         'nationality',
         'state_of_origin',
         'local_government_area',
-        'zipcode',
     ];
 
     /**
@@ -132,7 +131,6 @@ class User extends Authenticatable
             'nationality' => 'Nationality',
             'state_of_origin' => 'State of origin',
             'local_government_area' => 'Local government area',
-            'zipcode' => 'Zipcode',
         ];
     }
 

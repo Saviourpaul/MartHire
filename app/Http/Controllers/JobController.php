@@ -8,13 +8,61 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class JobController extends Controller
 {
+    public function listings(Request $request): View
+    {
+        $search = trim((string) $request->input('search', ''));
+        $user = $request->user();
+        $appliedJobIds = collect();
+
+        if ($user?->isApplicant()) {
+            $appliedJobIds = $user->applications()
+                ->pluck('job_id');
+        }
+
+        $jobs = Job::query()
+            ->acceptingApplications()
+            ->with(['employer:id,first_name,last_name,email'])
+            ->withCount('applications')
+            ->when($search !== '', function ($query) use ($search) {
+                collect(preg_split('/\s+/', $search) ?: [])
+                    ->filter()
+                    ->each(function (string $term) use ($query) {
+                        $term = '%'.$term.'%';
+
+                        $query->where(function ($query) use ($term) {
+                            $query->where('title', 'like', $term)
+                                ->orWhere('company', 'like', $term)
+                                ->orWhere('category', 'like', $term)
+                                ->orWhere('location', 'like', $term)
+                                ->orWhere('employment_type', 'like', $term)
+                                ->orWhere('description', 'like', $term)
+                                ->orWhereHas('employer', function ($query) use ($term) {
+                                    $query->where('first_name', 'like', $term)
+                                        ->orWhere('last_name', 'like', $term)
+                                        ->orWhere('email', 'like', $term);
+                                });
+                        });
+                    });
+            })
+            ->latest('created_at')
+            ->paginate(6)
+            ->withQueryString();
+
+        return view('client.jobs-listings', [
+            'jobs' => $jobs,
+            'appliedJobIds' => $appliedJobIds,
+            'search' => $search,
+        ]);
+    }
+
     public function index(Request $request): View
     {
-        $sortableColumns = ['title', 'company', 'category', 'start_date', 'due_date', 'created_at'];
+        $sortableColumns = ['title', 'company', 'category', 'location', 'employment_type', 'start_date', 'due_date', 'created_at'];
         $sortColumn = $request->input('sort') && in_array($request->input('sort'), $sortableColumns, true)
             ? $request->input('sort')
             : 'created_at';
@@ -29,6 +77,8 @@ class JobController extends Controller
                     $query->where('title', 'like', $search)
                         ->orWhere('company', 'like', $search)
                         ->orWhere('category', 'like', $search)
+                        ->orWhere('location', 'like', $search)
+                        ->orWhere('employment_type', 'like', $search)
                         ->orWhere('description', 'like', $search);
                 });
             })
@@ -129,7 +179,10 @@ class JobController extends Controller
 
     public function show(Request $request, Job $job): View
     {
-        if (! $job->isApproved()) {
+        $job->loadMissing(['employer:id,first_name,last_name,email'])
+            ->loadCount('applications');
+
+        if (! $job->isAcceptingApplications()) {
             $user = $request->user();
 
             abort_unless(
@@ -146,7 +199,11 @@ class JobController extends Controller
                 ->first();
         }
 
-        return view('job-details', [
+        $view = $request->user()?->isApplicant()
+            ? 'client.job-details'
+            : 'job-details';
+
+        return view($view, [
             'job' => $job,
             'existingApplication' => $existingApplication,
         ]);
@@ -162,6 +219,8 @@ class JobController extends Controller
             'description' => ['required', 'string'],
             'company' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
+            'location' => ['required', 'string', 'max:255'],
+            'employment_type' => ['required', 'string', Rule::in(array_keys(Job::employmentTypeOptions()))],
             'logo' => $request->hasFile('logo')
                 ? ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048']
                 : ['nullable', 'string', 'max:2048'],
