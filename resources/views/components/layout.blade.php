@@ -21,7 +21,7 @@
 $currentUser = auth()->user();
 		$searchRoute = match(true) {
 			request()->routeIs('dashboard') => route('dashboard'),
-			default => ($currentUser->isAdmin() ? route('dashboard') : ($currentUser->isApplicant() ? route('dashboard') : route('dashboard'))),
+			default => route('dashboard'),
 		};
         $recentNotifications = $currentUser ? $currentUser->notifications()->latest()->limit(4)->get() : collect();
         $unreadNotificationCount = $currentUser ? $currentUser->unreadNotifications()->count() : 0; @endphp
@@ -47,11 +47,15 @@ $currentUser = auth()->user();
                     <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
                         <img class="dark:hidden"src="{{ asset('assets/images/logo.png') }}" alt="Logo"
                             width="150" height="100" />
+                        <img class="hidden dark:block" src="{{asset("assets/images/logo2.png")}}" alt="Logo" width="150" height="100"/>
                     </span>
+                      <img class="logo-icon" :class="sidebarToggle ? 'xl:block' : 'hidden'" src="{{ asset ("assets/images/4.png") }} " width="50" height="80"
+                     alt="Logo" />
+        
                 </a>
             </div>
             <!-- SIDEBAR HEADER -->
-            <br>
+          
             
             <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
                 <!-- Sidebar Menu -->
@@ -524,7 +528,7 @@ $currentUser = auth()->user();
 
 
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
-                                            Manage Applicants
+                                            Manage Candidates
                                         </span>
 
                                         <svg class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
@@ -541,13 +545,13 @@ $currentUser = auth()->user();
 
                                     <!-- Dropdown Menu Start -->
                                     <div class="translate transform overflow-hidden"
-                                        :class="(selected === 'Applications') ? 'block' : 'hidden'">
+                                        :class="(selected === 'Manage Applicants') ? 'block' : 'hidden'">
                                         <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'"
                                             class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                             <li>
                                                 <a href="{{ route('employer.Applied-Candidates') }}"
                                                     class="menu-dropdown-item group"
-                                                    :class="page === 'Adoption Applications' ? 'menu-dropdown-item-active' :
+                                                    :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
                                                         'menu-dropdown-item-inactive'">
                                                     Applied Candidates
                                                 </a>
@@ -555,7 +559,7 @@ $currentUser = auth()->user();
                                             <li>
                                                 <a href="{{ route('employer.Approved-Candidates') }}"
                                                     class="menu-dropdown-item group"
-                                                    :class="page === 'Pending Applications' ? 'menu-dropdown-item-active' :
+                                                    :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
                                                         'menu-dropdown-item-inactive'">
                                                     Approved Candidates
                                                 </a>
@@ -563,7 +567,7 @@ $currentUser = auth()->user();
                                             <li>
                                                 <a href="{{ route('employer.Rejected-Candidate') }}"
                                                     class="menu-dropdown-item group"
-                                                    :class="page === 'Approved Applications' ? 'menu-dropdown-item-active' :
+                                                    :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
                                                         'menu-dropdown-item-inactive'">
                                                     Rejected Candidates
                                                 </a>
@@ -658,16 +662,11 @@ $currentUser = auth()->user();
                                     <a href="{{ route('profile.edit') }}"
                                         @click="selected = (selected === 'Profile' ? '':'Profile')"
                                         class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-circle-user-icon lucide-circle-user">
-                                            <circle cx="12" cy="12" r="10" />
-                                            <circle cx="12" cy="10" r="3" />
-                                            <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
-                                        </svg>
+                                       <svg :class="page === 'profile' ? 'text-gray-800 dark:text-white/90' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white/90'" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white/90">
+                                        <path d="M16.2501 16.1996C16.2501 16.1996 16.355 10.783 10.0001 10.783C3.64524 10.783 3.75011 16.1996 3.75011 16.1996M13.0515 5.28724C13.0515 6.94161 11.7104 8.28273 10.056 8.28273C8.40167 8.28273 7.06055 6.94161 7.06055 5.28724C7.06055 3.63288 8.40167 2.29175 10.056 2.29175C11.7104 2.29175 13.0515 3.63288 13.0515 5.28724Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
 
-                                        <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
+                                        <span class=" text-gray-800 dark:text-white/90" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Profile
                                         </span>
                                     </a>
@@ -710,7 +709,7 @@ $currentUser = auth()->user();
                                 </li>
                                 <!---Jobs-->
                                 <li>
-                                    <a href="{{ route('client.jobs') }}" class="menu-item group">
+                                    <a href="{{ route('client.jobs-listings') }}" class="menu-item group">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -728,7 +727,7 @@ $currentUser = auth()->user();
                                 </li>
                                 <!-- Notification -->
                                 <li>
-                                    <a href="{{ route('client.notifications') }}" class="menu-item group"
+                                    <a href="{{ route('notifications') }}" class="menu-item group"
                                         :class="(selected === 'notifications') && (page === 'notifications') ?
                                         'menu-item-active' :
                                         'menu-item-inactive'">
@@ -748,7 +747,7 @@ $currentUser = auth()->user();
                                 </li>
                                 <!--Settings -->
                                 <li>
-                                    <a href="{{ route('client.settings') }}"
+                                    <a href=""
                                         @click="selected = (selected === 'Task' ? '':'Task')" class="menu-item group">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -768,10 +767,27 @@ $currentUser = auth()->user();
 
 
                                 </li>
+                               
                             @endif
 
 
                         </ul>
+                         <!-- Promo Box -->
+                            <div class="pb-20" :class="sidebarToggle ? 'xl:hidden' : ''">
+                            <div class="mx-auto mb-10 w-full max-w-60 rounded-2xl bg-gray-50 px-4 py-5 text-center dark:bg-white/[0.03]">
+                                <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">
+                                #Subscription
+                                </h3>
+                                <p class="text-theme-sm mb-4 text-gray-500 dark:text-gray-400">
+                                Access all jobs and Features
+                                </p>
+                                <a href="https://tailadmin.com/pricing" target="_blank" rel="nofollow"
+                                class="bg-brand-500 text-theme-sm hover:bg-brand-600 flex items-center justify-center rounded-lg p-3 font-medium text-white">
+                                Purchase Plan
+                                </a>
+                            </div>
+                            </div>
+                        <!-- Promo Box -->
                     </div>
 
                     <!-- Support Group -->
@@ -1004,17 +1020,18 @@ $currentUser = auth()->user();
                         <!-- Notification Area -->
 
                         <!-- User Area -->
+                        @auth
                         <div class="relative" x-data="{ dropdownOpen: false }" @click.outside="dropdownOpen = false">
                             <a class="flex items-center text-gray-700 dark:text-gray-400" href="#"
                                 @click.prevent="dropdownOpen = ! dropdownOpen">
                                 <span class="mr-3 h-11 w-11 overflow-hidden rounded-full">
-                                    <img src="{{ auth()->user()->profileImageUrl() }}"
-                                        alt="{{ auth()->user()->first_name }}">
+                                    <img src="{{ $currentUser->profileImageUrl() }}"
+                                        alt="{{ $currentUser->first_name }}">
 
                                 </span>
 
-                                <span class="text-theme-sm mr-1 block font-medium">{{ auth()->user()->first_name }}
-                                    {{ auth()->user()->last_name }}</span>
+                                <span class="text-theme-sm mr-1 block font-medium">{{ $currentUser->first_name }}
+                                    {{ $currentUser->last_name }}</span>
 
                                 <svg :class="dropdownOpen && 'rotate-180'"
                                     class="stroke-gray-500 dark:stroke-gray-400" width="18" height="20"
@@ -1030,9 +1047,8 @@ $currentUser = auth()->user();
                                 <div>
 
                                     <span class="text-theme-xs mt-0.5 block text-gray-500 dark:text-gray-400">
-                                        <a href="cdn-cgi/l/email-protection.html" class="__cf_email__"
-                                            data-cfemail="493b28272d26243c3a2c3b093920242326672a2624">
-                                            {{ auth()->user()->email }}</a>
+                                        <a href="#" class="__cf_email__">
+                                            {{ $currentUser->email }}</a>
                                     </span>
                                 </div>
 
@@ -1099,6 +1115,12 @@ $currentUser = auth()->user();
                             </div>
                             <!-- Dropdown End -->
                         </div>
+                        @else
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('login') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Login</a>
+                                <a href="{{ route('register') }}" class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Register</a>
+                            </div>
+                        @endauth
                         <!-- User Area -->
                     </div>
                 </div>
@@ -1119,6 +1141,10 @@ $currentUser = auth()->user();
     @include('components.sweet-alerts')
     <script src="{{ asset('assets/js/sweetalert.js') }}"></script>
     <script src="{{ asset('assets/js/app-alerts.js') }}"></script>
+    <script src="{{ asset('assets/js/table-refresh.js') }}"></script>
 </body>
 
 </html>
+
+
+
