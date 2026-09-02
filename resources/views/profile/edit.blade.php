@@ -21,7 +21,6 @@
             'nationality' => $user->nationality,
             'state_of_origin' => $user->state_of_origin,
             'local_government_area' => $user->local_government_area,
-            'zipcode' => $user->zipcode,
             'profile_image_src' => $user->profileImageUrl(),
             'profile_image_path' => $user->profile_image_path,
         ];

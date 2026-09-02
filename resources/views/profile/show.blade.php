@@ -32,7 +32,6 @@
                             <p><strong>Nationality:</strong> {{ $user->nationality ?: 'Not provided' }}</p>
                             <p><strong>State of Origin:</strong> {{ $user->state_of_origin ?: 'Not provided' }}</p>
                             <p><strong>LGA:</strong> {{ $user->local_government_area ?: 'Not provided' }}</p>
-                            <p><strong>Zipcode:</strong> {{ $user->zipcode ?: 'Not provided' }}</p>
                         </div>
                     </div>
                 </div>
