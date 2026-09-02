@@ -1,6 +1,6 @@
 @use('App\Http\Requests\StoreApplicationFormRequest')
 
-<x-admin-layout title="Job Application">
+<x-layout title="Job Application">
     @php
         $wizardSteps = ['Personal Information', 'Identification', 'Educational Qualification', 'Application Summary'];
 
@@ -29,176 +29,7 @@
         $documentMaxMb = StoreApplicationFormRequest::DOCUMENT_MAX_KB / 1024;
     @endphp
 
-    @push('styles')
-        <style>
-            .application-wizard-shell {
-                max-width: 1120px;
-                margin: 0 auto;
-            }
-
-            .application-wizard-progress {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 12px;
-                padding: 0;
-                margin: 0 0 20px;
-            }
-
-            .application-wizard-progress li {
-                list-style: none;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                min-height: 58px;
-                padding: 12px;
-                border: 1px solid #dbe4ef;
-                border-radius: 8px;
-                background: #fff;
-                color: #64748b;
-            }
-
-            .application-wizard-progress li.is-active,
-            .application-wizard-progress li.is-complete {
-                border-color: #0073b1;
-                color: #16324f;
-                background: #f2f9fd;
-            }
-
-            .application-wizard-progress-number {
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                flex: 0 0 32px;
-                background: #eef2f6;
-                font-weight: 700;
-            }
-
-            .application-wizard-progress li.is-active .application-wizard-progress-number,
-            .application-wizard-progress li.is-complete .application-wizard-progress-number {
-                background: #0073b1;
-                color: #fff;
-            }
-
-            .application-wizard-progress-label {
-                line-height: 1.2;
-                font-weight: 600;
-                overflow-wrap: anywhere;
-            }
-
-            .application-wizard-step[hidden] {
-                display: none;
-            }
-
-            .application-form-panel {
-                border: 1px solid #eef2f6;
-                border-radius: 8px;
-                padding: 18px;
-                background: #fbfdff;
-                margin-bottom: 18px;
-            }
-
-            .application-form-panel:last-child {
-                margin-bottom: 0;
-            }
-
-            .qualification-document {
-                border: 1px solid #e3ebf4;
-                border-radius: 8px;
-                padding: 16px;
-                background: #fff;
-                margin-bottom: 14px;
-            }
-
-            .profile-upload-preview {
-                display: flex;
-                align-items: center;
-                gap: 18px;
-                flex-wrap: wrap;
-            }
-
-            .profile-preview-status {
-                min-height: 20px;
-                font-size: 13px;
-                color: #64748b;
-            }
-
-            .profile-preview-status.is-valid {
-                color: #198754;
-            }
-
-            .profile-preview-status.is-invalid {
-                color: #dc3545;
-            }
-
-            .validation-feedback {
-                display: none;
-                width: 100%;
-                margin-top: 0.25rem;
-                font-size: .875em;
-                color: #dc3545;
-            }
-
-            .is-invalid~.validation-feedback,
-            .validation-feedback.is-visible {
-                display: block;
-            }
-
-            .application-summary-list {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 14px;
-                margin: 0;
-            }
-
-            .application-summary-list div {
-                border: 1px solid #e3ebf4;
-                border-radius: 8px;
-                padding: 14px;
-                background: #fff;
-            }
-
-            .application-summary-list dt {
-                color: #64748b;
-                font-size: 13px;
-                font-weight: 600;
-                margin-bottom: 4px;
-            }
-
-            .application-summary-list dd {
-                color: #1f2937;
-                font-weight: 700;
-                margin: 0;
-                overflow-wrap: anywhere;
-            }
-
-            .wizard-actions {
-                display: flex;
-                justify-content: space-between;
-                gap: 12px;
-                margin-top: 20px;
-            }
-
-            @media (max-width: 767.98px) {
-
-                .application-wizard-progress,
-                .application-summary-list {
-                    grid-template-columns: 1fr;
-                }
-
-                .wizard-actions {
-                    flex-direction: column-reverse;
-                }
-
-                .wizard-actions .btn {
-                    justify-content: center;
-                    width: 100%;
-                }
-            }
-        </style>
-    @endpush
+   
 
     <div class="application-wizard-shell">
         <div class="page-header">
@@ -207,12 +38,15 @@
                     <h3 class="page-title">Apply for {{ $job->title }}</h3>
                     <p class="text-muted mb-0">{{ $job->company }}</p>
                 </div>
-                <div class="col-auto">
-                    <a href="{{ route('job-details', $job) }}" class="btn btn-outline-secondary">
-                        <i data-feather="arrow-left"></i>
-                        Back to Job
-                    </a>
-                </div>
+    
+                 <div>
+                <a href="{{ route('job-details', $job) }}" class="mb-3 inline-flex items-center gap-2 text-theme-sm font-medium text-gray-500 hover:text-brand-500 dark:text-gray-400">
+                    <svg class="fill-current" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.7908 5.23017C13.0837 5.52306 13.0837 5.99794 12.7908 6.29083L9.08167 10L12.7908 13.7092C13.0837 14.0021 13.0837 14.4769 12.7908 14.7698C12.4979 15.0627 12.0231 15.0627 11.7302 14.7698L7.49017 10.5298C7.19728 10.2369 7.19728 9.76206 7.49017 9.46917L11.7302 5.23017C12.0231 4.93728 12.4979 4.93728 12.7908 5.23017Z" />
+                    </svg>
+                    Back to jobs
+                </a>
+            </div>
             </div>
         </div>
 
@@ -1278,4 +1112,4 @@
             })();
         </script>
     @endpush
-</x-admin-layout>
+</x-layout>
