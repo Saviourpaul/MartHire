@@ -1,229 +1,133 @@
-<x-admin-layout title="Review Application">
-    <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col">
-                <h3 class="page-title">Review Application</h3>
-                <p class="text-muted mb-0">{{ $application->reference }} - {{ $application->job->title }}</p>
-            </div>
-            <div class="col-auto">
-                <a href="{{ route('employer.Applied-Candidates') }}" class="btn btn-outline-secondary">Back to
-                    Candidates</a>
-            </div>
-        </div>
-    </div>
+﻿<x-layout>
+    @php
+        $statusClass = function (string $status): string {
+            return match (strtolower($status)) {
+                'approved' => 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400',
+                'rejected' => 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400',
+                default => 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400',
+            };
+        };
+        $fieldClass = 'h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-theme-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90';
+    @endphp
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 flex-wrap mb-4">
-                        <img class="rounded-circle" src="{{ $application->applicant->profileImageUrl() }}"
-                            alt="Profile image" width="120" height="120" style="object-fit: cover;">
-                        <div>
-                            <h5 class="card-title mb-1">{{ $application->first_name }} {{ $application->last_name }}
-                            </h5>
-                            <p class="mb-1">{{ $application->email }} - {{ $application->phone }}</p>
-                            <span
-                                class="badge {{ $application->status->badgeClass() }}">{{ $application->status->label() }}</span>
-                            <a class="ms-2"
-                                href="{{ route('applicants.profile.show', $application->applicant) }}">View linked
-                                profile</a>
-                        </div>
-                    </div>
-
-                    <h5 class="mb-3">Application Profile</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Middle Name:</strong> {{ $application->middle_name ?: 'Not provided' }}</p>
-                            <p><strong>Date of Birth:</strong>
-                                {{ $application->date_of_birth?->format('M d, Y') ?: 'Not provided' }}</p>
-                            <p><strong>Gender:</strong>
-                                {{ $application->gender ? ucfirst($application->gender) : 'Not provided' }}</p>
-                            <p><strong>Marital Status:</strong>
-                                {{ $application->marital_status ? ucfirst($application->marital_status) : 'Not provided' }}
-                            </p>
-                            <p><strong>Nationality:</strong> {{ $application->nationality ?: 'Not provided' }}</p>
-                            <p><strong>State of Origin:</strong> {{ $application->state_of_origin ?: 'Not provided' }}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>LGA:</strong> {{ $application->local_government_area ?: 'Not provided' }}</p>
-                            <p><strong>Address:</strong> {{ $application->address ?: 'Not provided' }}</p>
-                            <p><strong>Zipcode:</strong> {{ $application->zipcode ?: 'Not provided' }}</p>
-                        </div>
-                    </div>
+    <main x-data="{ previewOpen: false, previewUrl: 'about:blank', previewTitle: 'Document Preview', downloadUrl: '#' }">
+        <div class="mx-auto max-w-(--breakpoint-2xl) p-4 pb-20 md:p-6 md:pb-6">
+            <div class="mb-6 flex flex-col justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-5 sm:flex-row sm:items-center dark:border-gray-800 dark:bg-white/[0.03]">
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-800 dark:text-white/90">Review Application</h1>
+                    <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">{{ $application->reference }} - {{ $application->job->title }}</p>
                 </div>
+                <a href="{{ route('employer.Applied-Candidates') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Back to Candidates</a>
             </div>
 
-            <div class="card ">
-                <div class="card-body">
-                    <h5 class="card-title">Uploaded Documents</h5>
-                    <div class="table-responsive ">
-                        <table class="table table-center table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Document</th>
-                                    <th>Number</th>
-                                    <th>Status</th>
-                                    <th>File</th>
-                                    <th>Review</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($application->documents as $document)
-                                    <tr>
-                                        <td>
-                                            <div class="fw-semibold">{{ $document->document_name }}</div>
-                                            <div class="text-muted small">{{ $document->original_name }}</div>
-                                        </td>
-                                        <td>{{ $document->maskedDocumentNumber() ?: 'N/A' }}</td>
-                                        <td><span
-                                                class="badge {{ $document->status->badgeClass() }}">{{ $document->status->label() }}</span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                @if ($document->canPreviewInline())
-                                                    <a href="{{ $document->previewUrl() }}"
-                                                        class="btn btn-sm btn-outline-primary" data-document-preview
-                                                        data-preview-url="{{ $document->previewUrl() }}"
-                                                        data-preview-title="{{ $document->document_name }} - {{ $document->original_name }}"
-                                                        data-download-url="{{ $document->downloadUrl() }}">
-                                                        Preview
-                                                    </a>
-                                                @endif
-                                                <a href="{{ $document->downloadUrl() }}"
-                                                    class="btn btn-sm btn-outline-secondary">Download</a>
-                                            </div>
-                                        </td>
-                                        <td style="min-width: 260px;">
-                                            <form
-                                                action="{{ route('employer.application-documents.review', $document) }}"
-                                                method="POST" class="d-flex flex-column gap-2" data-confirm
-                                                data-confirm-title="Update document review?"
-                                                data-confirm-text="This document status will be saved."
-                                                data-confirm-button="Update Document">
-                                                @csrf
-                                                @method('PATCH')
-                                                <select name="status" class="form-control form-control-sm">
-                                                    @foreach (\App\Enums\ApplicationStatus::cases() as $status)
-                                                        <option value="{{ $status->value }}"
-                                                            @selected($document->status === $status)>{{ $status->label() }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-primary">Update
-                                                    Document</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+            @if (session('success'))
+                <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 5000)" class="mb-6 rounded-lg border border-success-500/30 bg-success-50 px-4 py-3 text-sm font-medium text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-400">{{ session('success') }}</div>
+            @endif
 
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Application Decision</h5>
-                    <form action="{{ route('employer.applications.review', $application) }}" method="POST"
-                        class="d-flex flex-column gap-3" data-confirm data-confirm-title="Save application decision?"
-                        data-confirm-text="The applicant's application status will be updated."
-                        data-confirm-button="Save Decision">
-                        @csrf
-                        @method('PATCH')
-                        <div>
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-control">
-                                @foreach (\App\Enums\ApplicationStatus::cases() as $status)
-                                    <option value="{{ $status->value }}" @selected($application->status === $status)>
-                                        {{ $status->label() }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+            @if ($errors->any())
+                <div class="mb-6 rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-sm font-medium text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">Please review the highlighted fields and try again.</div>
+            @endif
 
-                        <button type="submit" class="btn btn-primary">Save Decision</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Audit Trail</h5>
-                    <div class="list-group">
-                        @forelse ($application->statusHistories->sortByDesc('created_at') as $history)
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <strong>{{ $history->to_status->label() }}</strong>
-                                    <small>{{ $history->created_at->diffForHumans() }}</small>
+            <div class="grid grid-cols-12 gap-4 md:gap-6">
+                <div class="col-span-12 space-y-6 xl:col-span-8">
+                    <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+                            <img src="{{ $application->applicant->profileImageUrl() }}" alt="{{ $application->first_name }} {{ $application->last_name }}" class="size-24 rounded-full object-cover">
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ $application->first_name }} {{ $application->last_name }}</h2>
+                                <p class="text-theme-sm text-gray-500 dark:text-gray-400">{{ $application->email }} - {{ $application->phone }}</p>
+                                <div class="mt-3 flex flex-wrap items-center gap-3">
+                                    <span class="rounded-full px-2.5 py-1 text-theme-xs font-medium {{ $statusClass($application->status->label()) }}">{{ $application->status->label() }}</span>
+                                    <a href="{{ route('applicants.profile.show', $application->applicant) }}" class="text-theme-sm font-medium text-brand-500 hover:text-brand-600">View linked profile</a>
                                 </div>
-                                <p class="mb-1 text-muted small">
-                                    From {{ $history->from_status?->label() ?: 'New' }} by
-                                    {{ $history->changedBy?->first_name ?: 'System' }}
-                                </p>
-
                             </div>
-                        @empty
-                            <div class="list-group-item text-muted">No status history yet.</div>
-                        @endforelse
-                    </div>
+                        </div>
+
+                        <h3 class="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">Application Profile</h3>
+                        <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            @foreach ([
+                                'Middle Name' => $application->middle_name ?: 'Not provided',
+                                'Date of Birth' => $application->date_of_birth?->format('M d, Y') ?: 'Not provided',
+                                'Gender' => $application->gender ? ucfirst($application->gender) : 'Not provided',
+                                'Marital Status' => $application->marital_status ? ucfirst($application->marital_status) : 'Not provided',
+                                'Nationality' => $application->nationality ?: 'Not provided',
+                                'State of Origin' => $application->state_of_origin ?: 'Not provided',
+                                'LGA' => $application->local_government_area ?: 'Not provided',
+                            ] as $label => $value)
+                                <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">{{ $label }}</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $value }}</dd></div>
+                            @endforeach
+                            <div class="sm:col-span-2"><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">Address</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $application->address ?: 'Not provided' }}</dd></div>
+                        </dl>
+                    </section>
+
+                    <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div class="mb-4 px-6"><h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Uploaded Documents</h3></div>
+                        <div class="custom-scrollbar max-w-full overflow-x-auto">
+                            <table class="w-full min-w-[900px]">
+                                <thead><tr class="border-t border-gray-100 dark:border-gray-800"><th class="px-6 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Document</th><th class="px-6 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Number</th><th class="px-6 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Status</th><th class="px-6 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">File</th><th class="px-6 py-3 text-left text-theme-xs font-medium text-gray-500 dark:text-gray-400">Review</th></tr></thead>
+                                <tbody>
+                                    @forelse ($application->documents as $document)
+                                        <tr class="border-t border-gray-100 dark:border-gray-800">
+                                            <td class="px-6 py-3.5"><p class="font-medium text-gray-800 text-theme-sm dark:text-white/90">{{ $document->document_name }}</p><p class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $document->original_name }}</p></td>
+                                            <td class="px-6 py-3.5 text-theme-sm text-gray-500 dark:text-gray-400">{{ $document->maskedDocumentNumber() ?: 'N/A' }}</td>
+                                            <td class="px-6 py-3.5"><span class="rounded-full px-2.5 py-1 text-theme-xs font-medium {{ $statusClass($document->status->label()) }}">{{ $document->status->label() }}</span></td>
+                                            <td class="px-6 py-3.5"><div class="flex flex-wrap gap-2">@if ($document->canPreviewInline())<button type="button" @click="previewOpen = true; previewUrl = @js($document->previewUrl()); previewTitle = @js($document->document_name.' - '.$document->original_name); downloadUrl = @js($document->downloadUrl())" class="inline-flex h-9 items-center rounded-lg border border-gray-300 bg-white px-3 text-theme-xs font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Preview</button>@endif<a href="{{ $document->downloadUrl() }}" class="inline-flex h-9 items-center rounded-lg border border-gray-300 bg-white px-3 text-theme-xs font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Download</a></div></td>
+                                            <td class="px-6 py-3.5">
+                                                <form action="{{ route('employer.application-documents.review', $document) }}" method="POST" class="flex min-w-64 flex-col gap-2" data-confirm data-confirm-title="Update document review?" data-confirm-text="This document status will be saved." data-confirm-button="Update Document">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <select name="status" class="{{ $fieldClass }}">
+                                                        @foreach (\App\Enums\ApplicationStatus::cases() as $status)
+                                                            <option value="{{ $status->value }}" @selected($document->status === $status)>{{ $status->label() }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <textarea name="remarks" rows="2" maxlength="2000" placeholder="Remarks" class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-theme-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('remarks', $document->employer_remarks) }}</textarea>
+                                                    <button type="submit" class="inline-flex h-9 items-center justify-center rounded-lg bg-brand-500 px-3 text-theme-xs font-medium text-white shadow-theme-xs hover:bg-brand-600">Update Document</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr class="border-t border-gray-100 dark:border-gray-800"><td colspan="5" class="px-6 py-10 text-center text-theme-sm text-gray-500 dark:text-gray-400">No documents uploaded.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
+
+                <aside class="col-span-12 space-y-6 xl:col-span-4">
+                    <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                        <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Application Decision</h3>
+                        <form action="{{ route('employer.applications.review', $application) }}" method="POST" class="space-y-4" data-confirm data-confirm-title="Save application decision?" data-confirm-text="The applicant's application status will be updated." data-confirm-button="Save Decision">
+                            @csrf
+                            @method('PATCH')
+                            <div><label class="mb-1.5 block text-theme-xs font-medium text-gray-700 dark:text-gray-400">Status</label><select name="status" class="{{ $fieldClass }}">@foreach (\App\Enums\ApplicationStatus::cases() as $status)<option value="{{ $status->value }}" @selected($application->status === $status)>{{ $status->label() }}</option>@endforeach</select></div>
+                            <div><label class="mb-1.5 block text-theme-xs font-medium text-gray-700 dark:text-gray-400">Remarks</label><textarea name="remarks" rows="4" maxlength="2000" class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-theme-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('remarks', $application->employer_remarks) }}</textarea></div>
+                            <button type="submit" class="inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Save Decision</button>
+                        </form>
+                    </section>
+
+                    <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                        <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Audit Trail</h3>
+                        <div class="space-y-3">
+                            @forelse ($application->statusHistories->sortByDesc('created_at') as $history)
+                                <div class="rounded-lg border border-gray-100 p-4 dark:border-gray-800"><div class="flex justify-between gap-3"><strong class="text-theme-sm text-gray-800 dark:text-white/90">{{ $history->to_status->label() }}</strong><span class="text-theme-xs text-gray-500 dark:text-gray-400">{{ $history->created_at->diffForHumans() }}</span></div><p class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">From {{ $history->from_status?->label() ?: 'New' }} by {{ $history->changedBy?->first_name ?: 'System' }}</p></div>
+                            @empty
+                                <div class="rounded-lg bg-gray-50 p-4 text-theme-sm text-gray-500 dark:bg-gray-900 dark:text-gray-400">No status history yet.</div>
+                            @endforelse
+                        </div>
+                    </section>
+                </aside>
             </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="document-preview-modal" tabindex="-1" aria-labelledby="document-preview-title"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="document-preview-title">Document Preview</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <iframe id="document-preview-frame" title="Document preview" src="about:blank"
-                        style="width: 100%; height: 75vh; border: 0;"></iframe>
-                </div>
-                <div class="modal-footer">
-                    <a id="document-preview-download" href="#" class="btn btn-outline-secondary">Download</a>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
-                </div>
+        <div x-show="previewOpen" x-cloak class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto p-4 sm:p-5">
+            <div class="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"></div>
+            <div @click.outside="previewOpen = false; previewUrl = 'about:blank'" class="relative flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white dark:bg-gray-900">
+                <div class="flex items-center justify-between border-b border-gray-100 p-4 dark:border-gray-800"><h3 class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="previewTitle"></h3><button type="button" @click="previewOpen = false; previewUrl = 'about:blank'" class="flex size-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-white/[0.05] dark:text-gray-400">x</button></div>
+                <iframe title="Document preview" :src="previewUrl" class="h-[70vh] w-full border-0"></iframe>
+                <div class="flex justify-end gap-3 border-t border-gray-100 p-4 dark:border-gray-800"><a :href="downloadUrl" class="inline-flex h-10 items-center rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Download</a><button type="button" @click="previewOpen = false; previewUrl = 'about:blank'" class="inline-flex h-10 items-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Done</button></div>
             </div>
         </div>
-    </div>
-
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const previewModal = document.getElementById('document-preview-modal');
-                const previewFrame = document.getElementById('document-preview-frame');
-                const previewTitle = document.getElementById('document-preview-title');
-                const previewDownload = document.getElementById('document-preview-download');
-
-                if (!previewModal || !previewFrame || !window.bootstrap) {
-                    return;
-                }
-
-                const modal = new bootstrap.Modal(previewModal);
-
-                document.querySelectorAll('[data-document-preview]').forEach((trigger) => {
-                    trigger.addEventListener('click', function(event) {
-                        event.preventDefault();
-
-                        previewFrame.src = trigger.dataset.previewUrl;
-                        previewTitle.textContent = trigger.dataset.previewTitle || 'Document Preview';
-                        previewDownload.href = trigger.dataset.downloadUrl || trigger.href;
-
-                        modal.show();
-                    });
-                });
-
-                previewModal.addEventListener('hidden.bs.modal', function() {
-                    previewFrame.src = 'about:blank';
-                });
-            });
-        </script>
-    @endpush
-</x-admin-layout>
+    </main>
+</x-layout>

@@ -35,10 +35,18 @@
                         <span class="rounded-full px-2.5 py-1 text-theme-xs font-medium {{ $statusClass }}">{{ $job->status->label() }}</span>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4 border-y border-gray-100 py-5 sm:grid-cols-3 dark:border-gray-800">
+                    <div class="grid grid-cols-1 gap-4 border-y border-gray-100 py-5 sm:grid-cols-2 lg:grid-cols-5 dark:border-gray-800">
                         <div>
                             <p class="text-theme-xs text-gray-500 dark:text-gray-400">Category</p>
                             <p class="mt-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $job->category ?: 'Uncategorized' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-theme-xs text-gray-500 dark:text-gray-400">Location</p>
+                            <p class="mt-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $job->location ?: 'Not specified' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-theme-xs text-gray-500 dark:text-gray-400">Employment Type</p>
+                            <p class="mt-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $job->employmentTypeLabel() }}</p>
                         </div>
                         <div>
                             <p class="text-theme-xs text-gray-500 dark:text-gray-400">Start Date</p>
@@ -196,3 +204,4 @@
     </script>
     </div>
 </x-layout>
+

@@ -23,6 +23,23 @@
     </div>
 
     <div>
+        <label class="{{ $labelClass }}" for="{{ $prefix }}_location">Location</label>
+        <input id="{{ $prefix }}_location" type="text" name="location" value="{{ old('location', $job?->location) }}" placeholder="City, state, country or remote" class="{{ $inputClass }}" required>
+        <p class="mt-1 hidden text-theme-xs text-error-500" data-field-error="location"></p>
+    </div>
+
+    <div>
+        <label class="{{ $labelClass }}" for="{{ $prefix }}_employment_type">Employment Type</label>
+        <select id="{{ $prefix }}_employment_type" name="employment_type" class="{{ $inputClass }}" required>
+            <option value="">Select employment type</option>
+            @foreach (\App\Models\Job::employmentTypeOptions() as $value => $label)
+                <option value="{{ $value }}" @selected(old('employment_type', $job?->employment_type) === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <p class="mt-1 hidden text-theme-xs text-error-500" data-field-error="employment_type"></p>
+    </div>
+
+    <div>
         <label class="{{ $labelClass }}" for="{{ $prefix }}_start_date">Start Date</label>
         <input id="{{ $prefix }}_start_date" type="date" name="start_date" value="{{ old('start_date', $job?->start_date?->format('Y-m-d')) }}" class="{{ $inputClass }}" required>
         <p class="mt-1 hidden text-theme-xs text-error-500" data-field-error="start_date"></p>
@@ -52,3 +69,4 @@
         <p class="mt-1 hidden text-theme-xs text-error-500" data-field-error="description"></p>
     </div>
 </div>
+

@@ -1,3 +1,3 @@
-<x-admin-layout :title="$title">
+﻿<x-layout>
     @include('employer.partials.candidates-table')
-</x-admin-layout>
+</x-layout>
