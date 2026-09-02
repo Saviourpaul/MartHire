@@ -1,9 +1,5 @@
 @php
     $pageTitle = 'All ' . $title;
-    $statusClasses = [
-        'active' => 'bg-success-light',
-        'suspended' => 'bg-danger-light',
-    ];
     $filterValues = $filterValues ?? [
         'search' => request('search', request('name')),
         'email' => request('email'),
@@ -213,7 +209,7 @@
                                     <td class="d-none d-xl-table-cell">{{ $user->role->label() }}</td>
                                     <td>
                                         <span
-                                            class="badge {{ $statusClasses[$user->status->value] ?? 'bg-secondary' }}">
+                                            class="badge {{ $user->status->badgeClass() }}">
                                             {{ $user->status->label() }}
                                         </span>
                                     </td>

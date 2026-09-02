@@ -1,6 +1,6 @@
 <div class="p-6">
     <div class="px-2 pr-14">
-        <h2 class="text-lg font-medium text-gray-900">Edit User</h2>
+        <h2 class="mb-6 text-lg font-medium text-gray-800 dark:text-white/90">Edit User</h2>
         <p class="mt-1 text-sm text-gray-500">Update the user's role, status, and account details.</p>
     </div>
 
@@ -11,21 +11,21 @@
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="first_name" value="First Name" />
-                <x-text-input id="first_name" name="first_name" type="text" class="mt-1 block w-full"
+                <x-text-input id="first_name" name="first_name" type="text" class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     :value="old('first_name', $user->first_name)" readonly />
                 <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
             </div>
 
             <div>
                 <x-input-label for="last_name" value="Last Name" />
-                <x-text-input id="last_name" name="last_name" type="text" class="mt-1 block w-full" :value="old('last_name', $user->last_name)"
+                <x-text-input id="last_name" name="last_name" type="text" class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" :value="old('last_name', $user->last_name)"
                     readonly />
                 <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
             </div>
 
             <div class="sm:col-span-2">
                 <x-input-label for="email" value="Email" />
-                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)"
+                <x-text-input id="email" name="email" type="email" class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" :value="old('email', $user->email)"
                     readonly />
                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
             </div>
@@ -62,7 +62,7 @@
 
             <div class="sm:col-span-2">
                 <x-input-label for="password" value="New Password (leave blank to keep current)" />
-                <x-text-input id="password" name="password" type="password" class="mt-1 block w-full"
+                <x-text-input id="password" name="password" type="password" class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     autocomplete="new-password" />
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
@@ -70,7 +70,7 @@
             <div class="sm:col-span-2">
                 <x-input-label for="password_confirmation" value="Confirm Password" />
                 <x-text-input id="password_confirmation" name="password_confirmation" type="password"
-                    class="mt-1 block w-full" autocomplete="new-password" />
+                    class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" autocomplete="new-password" />
             </div>
         </div>
 

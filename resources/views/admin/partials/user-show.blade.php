@@ -21,7 +21,9 @@
         </div>
         <div>
             <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">Status</dt>
-            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->status->label() }}</dd>
+            <dd class="mt-1">
+                <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $user->status->badgeClass() }}">{{ $user->status->label() }}</span>
+            </dd>
         </div>
         <div>
             <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">Phone</dt>

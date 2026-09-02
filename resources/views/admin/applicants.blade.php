@@ -33,27 +33,7 @@
         <!-- DataTable -->
         <div data-table-refresh-region data-table-refresh-id="admin-applicants" class="overflow-hidden rounded-xl border border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="mb-4 flex flex-col gap-2 px-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-gray-500 dark:text-gray-400">Show</span>
-                    <form method="GET" action="{{ url()->current() }}" class="relative flex items-center">
-                        <input type="hidden" name="search" value="{{ request('search') }}">
-                        <input type="hidden" name="role" value="{{ request('role') }}">
-                        <input type="hidden" name="status" value="{{ request('status') }}">
-                        <select
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-9 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none py-2 pr-8 pl-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                            onchange="this.form.submit()"
-                            name="per_page">
-                            <option value="10" selected>10</option>
-                        </select>
-                        <span class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                            <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </span>
-                    </form>
-                    <span class="text-gray-500 dark:text-gray-400">entries</span>
-                </div>
-
+                
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <button type="button" data-table-refresh-button class="shadow-theme-xs inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                         <svg data-table-refresh-icon class="fill-current" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.75 6.667a.75.75 0 0 1-.75.75h-3.333a.75.75 0 0 1 0-1.5h1.516A5.25 5.25 0 0 0 5.02 7.553a.75.75 0 1 1-1.372-.606 6.75 6.75 0 0 1 11.602-1.9V3.75a.75.75 0 0 1 1.5 0v2.917ZM3.25 13.333a.75.75 0 0 1 .75-.75h3.333a.75.75 0 0 1 0 1.5H5.817a5.25 5.25 0 0 0 9.163-1.636.75.75 0 1 1 1.372.606 6.75 6.75 0 0 1-11.602 1.9v1.297a.75.75 0 0 1-1.5 0v-2.917Z"/></svg>
@@ -71,7 +51,7 @@
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-4 pl-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden xl:w-[300px] dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     </div>
 
-                    <select name="role" onchange="this.form.submit()" class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <select name="role" data-table-auto-submit class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                         <option value="">All Roles</option>
                         @foreach($roles as $role)
                             <option value="{{ $role->value }}" {{ request('role') == $role->value ? 'selected' : '' }}>
@@ -80,7 +60,7 @@
                         @endforeach
                     </select>
 
-                    <select name="status" onchange="this.form.submit()" class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <select name="status" data-table-auto-submit class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                         <option value="">All Statuses</option>
                         @foreach($statuses as $status)
                             <option value="{{ $status->value }}" {{ request('status') == $status->value ? 'selected' : '' }}>
@@ -93,6 +73,10 @@
                         class="shadow-theme-xs flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-[11px] text-sm font-medium text-gray-700 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                         Filter
                     </button>
+                    <a href="{{ url()->current() }}" data-table-reset-link
+                        class="shadow-theme-xs flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-[11px] text-sm font-medium text-gray-700 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                        Reset
+                    </a>
                 </form>
                 </div>
             </div>
@@ -154,7 +138,7 @@
                                 <p class="text-theme-sm text-gray-700 dark:text-gray-400">{{ $user->role->label() }}</p>
                             </div>
                             <div class="col-span-1 flex items-center border-r border-gray-100 px-4 py-3 dark:border-gray-800">
-                                <p class="text-theme-sm text-success-600 {{ $user->status->label() }}">
+                                <p class="text-theme-xs rounded-full px-2 py-0.5 font-medium {{ $user->status->badgeClass() }}">
                                     {{ $user->status->label() }}
                                 </p>
                             </div>
@@ -267,4 +251,3 @@
         </div>
     </div>
 </x-layout>
-
