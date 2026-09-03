@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Override;
+
+
 
 class Job extends Model
 {
@@ -55,6 +59,29 @@ class Job extends Model
             'status' => JobStatus::class,
         ];
     }
+
+    protected static function booted(): void
+    {
+        static::creating(fn (Job $job) => $job->slug ??= static::generateUniqueSlug($job->title));
+    }
+
+    protected static function generateUniqueSlug(string $title): string
+    {
+        $slug = $base = Str::slug($title);
+        $i = 1;
+
+        while (static::where('slug', $slug)->exists()) {
+            $slug = "{$base}-" . $i++;
+        }
+
+        return $slug;
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+   
 
     public function employer(): BelongsTo
     {
@@ -172,6 +199,9 @@ class Job extends Model
 
         return Storage::disk('public')->exists($path) ? $path : null;
     }
+
+
+   
 }
 
 

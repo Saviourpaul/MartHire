@@ -47,6 +47,7 @@ class ApplicationForm extends Model
             'submitted_at' => 'datetime',
             'date_of_birth' => 'date',
             'reviewed_at' => 'datetime',
+            
         ];
     }
 
