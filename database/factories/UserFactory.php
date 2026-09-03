@@ -44,7 +44,6 @@ class UserFactory extends Factory
             'nationality' => null,
             'state_of_origin' => null,
             'local_government_area' => null,
-            'zipcode' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -94,7 +93,6 @@ class UserFactory extends Factory
             'nationality' => 'Nigeria',
             'state_of_origin' => 'Lagos',
             'local_government_area' => 'Ikeja',
-            'zipcode' => fake()->postcode(),
         ]);
     }
 
