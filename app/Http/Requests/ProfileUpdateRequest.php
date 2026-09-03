@@ -25,14 +25,7 @@ class ProfileUpdateRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                Rule::in([$this->user()->email]),
-            ],
+
             'profile_image' => [
                 ...$imageRule,
                 File::image()
@@ -48,7 +41,6 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::exists('nigeria_states', 'name'),
             ],
             'local_government_area' => $profileFieldRule,
-            'zipcode' => $profileFieldRule,
         ];
     }
 
