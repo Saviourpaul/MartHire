@@ -29,7 +29,6 @@ function validApplicationPayload(array $overrides = []): array
         'state_of_origin' => 'Lagos',
         'local_government_area' => 'Ikeja',
         'address' => '12 Market Road',
-        'zipcode' => '100001',
         'nin_number' => '12345678901',
         'nin_document' => UploadedFile::fake()->create('nin.pdf', 100, 'application/pdf'),
         'bvn_number' => '22345678901',
