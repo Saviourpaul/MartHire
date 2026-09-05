@@ -446,15 +446,9 @@ $currentUser = auth()->user();
                                 <!--jobs-->
                                 <li>
                                     <a href="{{ route('jobs') }}"
-                                        @click="selected = (selected === 'Task' ? '':'Task')" class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-settings-icon lucide-settings">
-                                            <path
-                                                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
+                                        class="menu-item group"
+                                        :class="(selected === 'job management') ? 'menu-item-active' : 'menu-item-inactive'">
+                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-briefcase-business"><path d="M12 12h.01"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M22 13a18.15 18.15 0 0 1-20 0"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
 
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Jobs
@@ -467,18 +461,7 @@ $currentUser = auth()->user();
                                         @click.prevent="selected = (selected === 'Manage Applicants' ? '':'Manage Applicants')"
                                         class="menu-item group"
                                         :class="(selected === 'Manage Applicants') ? 'menu-item-active' : 'menu-item-inactive'">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-baby-icon lucide-baby">
-                                            <path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5" />
-                                            <path d="M15 12h.01" />
-                                            <path
-                                                d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1" />
-                                            <path d="M9 12h.01" />
-                                        </svg>
-
-
+                                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Manage Candidates
                                         </span>
@@ -531,15 +514,9 @@ $currentUser = auth()->user();
                                 <!---Reports-->
                                 <li>
                                     <a href="{{ route('Reports') }}"
-                                        @click="selected = (selected === 'Task' ? '':'Task')" class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-settings-icon lucide-settings">
-                                            <path
-                                                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
+                                        class="menu-item group"
+                                        :class="(selected === 'Reports') ? 'menu-item-active' : 'menu-item-inactive'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-pie"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/></svg>
 
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Reports
@@ -547,17 +524,11 @@ $currentUser = auth()->user();
                                     </a>
                                 </li>
                                 <!--Notification-->
-                                <li>
+                              <li>
                                     <a href="{{ route('notifications') }}"
-                                        @click="selected = (selected === 'Task' ? '':'Task')" class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-settings-icon lucide-settings">
-                                            <path
-                                                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
+                                        class="menu-item group"
+                                        :class="(selected === 'Notification') ? 'menu-item-active' : 'menu-item-inactive'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
 
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Notifications
@@ -570,16 +541,7 @@ $currentUser = auth()->user();
                                         @click.prevent="selected = (selected === 'Settings' ? '':'Settings')"
                                         class="menu-item group"
                                         :class="(selected === 'Settings') ? 'menu-item-active' : 'menu-item-inactive'">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-baby-icon lucide-baby">
-                                            <path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5" />
-                                            <path d="M15 12h.01" />
-                                            <path
-                                                d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1" />
-                                            <path d="M9 12h.01" />
-                                        </svg>
+                                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Settings
                                         </span>
