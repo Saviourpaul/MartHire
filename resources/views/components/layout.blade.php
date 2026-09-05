@@ -551,8 +551,8 @@ $currentUser = auth()->user();
                             @if ($currentUser?->isApplicant())
                                 <!--Dashboard-->
                                 <li>
-                                    <a href="{{ route('dashboard') }}" class="menu-item group">
-
+                                    <a href="{{ route('dashboard') }}" class="menu-item group"  class="menu-item group"
+                                        :class="(selected === 'dashboard') ? 'menu-item-active' : 'menu-item-inactive'">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -571,32 +571,29 @@ $currentUser = auth()->user();
                                     </a>
                                 </li>
                                 <!--  Profile -->
-                                <li>
+                              <li>
                                     <a href="{{ route('profile.edit') }}"
-                                        @click="selected = (selected === 'Profile' ? '':'Profile')"
-                                        class="menu-item group">
-                                       <svg :class="page === 'profile' ? 'text-gray-800 dark:text-white/90' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white/90'" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-500 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-white/90">
-                                        <path d="M16.2501 16.1996C16.2501 16.1996 16.355 10.783 10.0001 10.783C3.64524 10.783 3.75011 16.1996 3.75011 16.1996M13.0515 5.28724C13.0515 6.94161 11.7104 8.28273 10.056 8.28273C8.40167 8.28273 7.06055 6.94161 7.06055 5.28724C7.06055 3.63288 8.40167 2.29175 10.056 2.29175C11.7104 2.29175 13.0515 3.63288 13.0515 5.28724Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                    </svg>
+                                        :class="(selected === 'profile') ? 'menu-item-active' : 'menu-item-inactive'" class="menu-item group">
+                                        
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-circle-user-icon lucide-circle-user">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <circle cx="12" cy="10" r="3" />
+                                            <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
+                                        </svg>
 
-                                        <span class=" text-gray-800 dark:text-white/90" :class="sidebarToggle ? 'xl:hidden' : ''">
+                                        <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Profile
                                         </span>
                                     </a>
                                 </li>
                                 <!-- Application -->
                                 <li>
-                                    <a href="{{ route('Client.Application') }}" class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-file-user-icon lucide-file-user">
-                                            <path
-                                                d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
-                                            <path d="M14 2v5a1 1 0 0 0 1 1h5" />
-                                            <path d="M16 22a4 4 0 0 0-8 0" />
-                                            <circle cx="12" cy="15" r="3" />
-                                        </svg>
+                                    <a href="{{ route('Client.Application') }}" class="menu-item group" 
+                                     :class="(selected === 'Client.Application') ? 'menu-item-active' : 'menu-item-inactive'">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dock"><path d="M2 8h20"/><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 16h12"/></svg>
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Applications
                                         </span>
@@ -604,17 +601,9 @@ $currentUser = auth()->user();
                                 </li>
                                 <!--Document-->
                                 <li>
-                                    <a href="{{ route('client.documents') }}" class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-file-user-icon lucide-file-user">
-                                            <path
-                                                d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
-                                            <path d="M14 2v5a1 1 0 0 0 1 1h5" />
-                                            <path d="M16 22a4 4 0 0 0-8 0" />
-                                            <circle cx="12" cy="15" r="3" />
-                                        </svg>
+                                    <a href="{{ route('client.documents') }}" class="menu-item group"
+                                    :class="(selected === 'Client.documents') ? 'menu-item-active' : 'menu-item-inactive'">
+                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Documents
                                         </span>
@@ -622,17 +611,8 @@ $currentUser = auth()->user();
                                 </li>
                                 <!---Jobs-->
                                 <li>
-                                    <a href="{{ route('client.jobs-listings') }}" class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-file-user-icon lucide-file-user">
-                                            <path
-                                                d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
-                                            <path d="M14 2v5a1 1 0 0 0 1 1h5" />
-                                            <path d="M16 22a4 4 0 0 0-8 0" />
-                                            <circle cx="12" cy="15" r="3" />
-                                        </svg>
+                                    <a href="{{ route('client.jobs-listings') }}" class="menu-item group":class="(selected === 'Client.jobs-listings') ? 'menu-item-active' : 'menu-item-inactive'" >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-briefcase-business"><path d="M12 12h.01"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M22 13a18.15 18.15 0 0 1-20 0"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Jobs
                                         </span>
@@ -658,27 +638,16 @@ $currentUser = auth()->user();
                                         </span>
                                     </a>
                                 </li>
-                                <!--Settings -->
+                                  <!--Settings-->
                                 <li>
                                     <a href=""
-                                        @click="selected = (selected === 'Task' ? '':'Task')" class="menu-item group">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-settings-icon lucide-settings">
-                                            <path
-                                                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-
+                                        class="menu-item group"
+                                        :class="(selected === 'settings') ? 'menu-item-active' : 'menu-item-inactive'">
+                                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
                                         <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">
                                             Settings
                                         </span>
-
-
                                     </a>
-
-
                                 </li>
                                
                             @endif
