@@ -31,10 +31,23 @@
                 const fields = step => [...step.querySelectorAll('input, select, textarea')];
                 const labelFor = field => (field.id ? form.querySelector(`label[for="${field.id}"]`) : field.closest('div')
                     ?.querySelector('label'))?.textContent?.replace('*', '').trim() || 'This field';
-                const errorFor = field => field.closest('div')?.querySelector('[data-validation-message]');
+                const errorFor = field => field.closest('[data-field]')?.querySelector('[data-validation-message]') ||
+                    field.closest('div')?.querySelector('[data-validation-message]');
+                const documentDropzoneFor = field => field.closest('[data-document-dropzone]');
+                const updateDocumentDropzone = field => {
+                    const dropzone = documentDropzoneFor(field),
+                        fileName = dropzone?.querySelector('[data-document-file-name]'),
+                        file = field.files?.[0];
+
+                    if (!dropzone || !fileName) return;
+
+                    fileName.textContent = file ? `${file.name} selected` : '';
+                    fileName.classList.toggle('hidden', !file);
+                };
                 const showError = (field, message) => {
                     field.classList.add('border-error-500');
                     field.setAttribute('aria-invalid', 'true');
+                    documentDropzoneFor(field)?.classList.add('border-error-500', 'bg-error-50/50', 'dark:bg-error-500/5');
                     const error = errorFor(field);
                     if (error) {
                         error.textContent = message;
@@ -45,6 +58,7 @@
                 const clearError = field => {
                     field.classList.remove('border-error-500');
                     field.removeAttribute('aria-invalid');
+                    documentDropzoneFor(field)?.classList.remove('border-error-500', 'bg-error-50/50', 'dark:bg-error-500/5');
                     const error = errorFor(field);
                     if (error) {
                         error.textContent = '';
@@ -258,9 +272,42 @@
                         row.querySelector('[data-document-type-label]')?.setAttribute('for', type.id);
                         row.querySelector('[data-document-file-label]')?.setAttribute('for', file.id);
                         row.querySelector('[data-remove-document]').hidden = rows.length === 1;
+                        bindDocumentDropzone(row.querySelector('[data-document-dropzone]'));
+                        updateDocumentDropzone(file);
                     });
                     addDoc.disabled = rows.length >= 10;
                     updateSummary();
+                }
+                function bindDocumentDropzone(dropzone) {
+                    if (!dropzone || dropzone.dataset.bound === 'true') return;
+
+                    const input = dropzone.querySelector('[data-document-file]'),
+                        selectFiles = files => {
+                            if (!files?.length || !input) return;
+                            const transfer = new DataTransfer();
+                            transfer.items.add(files[0]);
+                            input.files = transfer.files;
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        };
+
+                    dropzone.dataset.bound = 'true';
+                    dropzone.addEventListener('click', event => {
+                        if (event.target !== input) input?.click();
+                    });
+                    dropzone.addEventListener('keydown', event => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        input?.click();
+                    });
+                    ['dragenter', 'dragover'].forEach(eventName => dropzone.addEventListener(eventName, event => {
+                        event.preventDefault();
+                        dropzone.classList.add('border-brand-500', 'bg-brand-50/60', 'dark:bg-brand-500/10');
+                    }));
+                    ['dragleave', 'drop'].forEach(eventName => dropzone.addEventListener(eventName, event => {
+                        event.preventDefault();
+                        dropzone.classList.remove('border-brand-500', 'bg-brand-50/60', 'dark:bg-brand-500/10');
+                    }));
+                    dropzone.addEventListener('drop', event => selectFiles(event.dataTransfer?.files));
                 }
                 async function populateLgas(selected = '') {
                     const url = state?.selectedOptions[0]?.dataset.lgaUrl || '';
@@ -310,7 +357,10 @@
                     delete form.dataset.validationPassed;
                     delete form.dataset.confirmed;
                     if (event.target === state) populateLgas();
-                    if (event.target.matches('input, select, textarea')) await validateField(event.target);
+                    if (event.target.matches('input, select, textarea')) {
+                        if (event.target.matches('[data-document-file]')) updateDocumentDropzone(event.target);
+                        await validateField(event.target);
+                    }
                     updateSummary();
                 });
                 addDoc?.addEventListener('click', () => {
