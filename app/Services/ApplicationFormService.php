@@ -80,15 +80,6 @@ class ApplicationFormService
                     $storedFiles
                 );
 
-                $this->createDocument(
-                    $application,
-                    $data['bvn_document'],
-                    ApplicationDocumentType::Bvn,
-                    ApplicationDocumentType::Bvn->label(),
-                    $data['bvn_number'],
-                    $storedFiles
-                );
-
                 foreach ($data['education_documents'] as $document) {
                     $this->createDocument(
                         $application,
