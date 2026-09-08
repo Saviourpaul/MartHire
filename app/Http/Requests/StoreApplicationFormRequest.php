@@ -85,12 +85,6 @@ class StoreApplicationFormRequest extends FormRequest
                 'required',
                 File::types(self::DOCUMENT_TYPES)->max(self::DOCUMENT_MAX_KB),
             ],
-            'bvn_number' => ['bail', 'required', 'digits:11'],
-            'bvn_document' => [
-                'bail',
-                'required',
-                File::types(self::DOCUMENT_TYPES)->max(self::DOCUMENT_MAX_KB),
-            ],
             'education_documents' => ['bail', 'required', 'array', 'min:1', 'max:10'],
             'education_documents.*.type' => [
                 'bail',
@@ -121,7 +115,6 @@ class StoreApplicationFormRequest extends FormRequest
             'date_of_birth.before' => 'The date of birth must be before today.',
             'zipcode.regex' => 'The zipcode may only contain letters, numbers, spaces, and hyphens.',
             'nin_number.digits' => 'The NIN number must be exactly 11 numeric digits.',
-            'bvn_number.digits' => 'The BVN number must be exactly 11 numeric digits.',
             'profile_image.dimensions' => sprintf(
                 'The profile photo must be between %dx%d and %dx%d pixels.',
                 self::PROFILE_IMAGE_MIN_WIDTH,
@@ -150,8 +143,6 @@ class StoreApplicationFormRequest extends FormRequest
             'local_government_area' => 'local government area',
             'nin_number' => 'NIN number',
             'nin_document' => 'NIN document',
-            'bvn_number' => 'BVN number',
-            'bvn_document' => 'BVN document',
             'education_documents' => 'education documents',
             'education_documents.*.type' => 'education document type',
             'education_documents.*.file' => 'education document file',
