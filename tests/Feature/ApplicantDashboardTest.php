@@ -42,7 +42,7 @@ test('applicant section pages render', function () {
     $sections = [
         ['client.profile', 'My Profile'],
         ['client.documents', 'Documents'],
-        ['client.jobs', 'Jobs'],
+        ['client.jobs-listings', 'Jobs'],
         ['client.notifications', 'Notifications'],
     ];
 
