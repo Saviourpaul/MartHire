@@ -1,6 +1,4 @@
-
 <x-app>
-
       <section class="pt-28 lg:pt-[206px] pb-12 lg:pb-20 relative">
         <div class="grained-bg absolute top-0 left-0 w-full h-full opacity-[0.36]">
             <img src="{{ asset('assets/images/hp-banner.png') }}" alt="">

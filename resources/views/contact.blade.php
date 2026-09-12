@@ -1,132 +1,252 @@
-<x-app title="Contact Us - NextHire" bodyClass="bg-one">
-	@include('partials.public-breadcrumb', ['title' => 'Contact Us'])
-	<section class="section">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-5">
-					<div class="widget-box location-widget mb-4 aos" data-aos="fade-up">
-						<div class="profile-head">
-							<h4 class="pro-title">Get in Touch</h4>
-						</div>
-						<div class="profile-overview">
-							<p>Have a question about NextHire, need support with your account, or want to discuss recruitment solutions for your organization? We are here to help.</p>
-							<ul class="latest-posts">
-								<li>
-									<h6><i class="fas fa-envelope me-2 text-primary"></i> Email</h6>
-									<p><a href="mailto:support@nexhire.com">support@nexhire.com</a></p>
-								</li>
-								<li>
-									<h6><i class="fas fa-phone me-2 text-primary"></i> Phone</h6>
-									<p><a href="tel:+2348000000000">+234 800 000 0000</a></p>
-								</li>
-								<li>
-									<h6><i class="fas fa-map-marker-alt me-2 text-primary"></i> Office Address</h6>
-									<p>12 Recruitment Avenue, Central Business District, Portharcourt, Nigeria</p>
-								</li>
-							</ul>
-						</div>
-					</div>	
-				</div>
-				<div class="col-lg-7">
-					<div class="widget-box aos" data-aos="fade-up">
-						<div class="profile-head">
-							<h4 class="pro-title">Send Us a Message</h4>
-						</div>
-						<div class="contact-btn">
-							@if (session('success'))
-								<div class="alert alert-success" role="alert">
-									{{ session('success') }}
-								</div>
-							@endif
-							<form method="POST" action="{{ route('contact.store') }}">
-								@csrf
-								<div class="row">
-									<div class="col-md-6">
-										<div class="form-group">
-											<label for="name">Full Name <span class="text-danger">*</span></label>
-											<input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
-											@error('name')
-												<div class="invalid-feedback">{{ $message }}</div>
-											@enderror
-										</div>
-									</div>
-									<div class="col-md-6">
-										<div class="form-group">
-											<label for="email">Email Address <span class="text-danger">*</span></label>
-											<input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
-											@error('email')
-												<div class="invalid-feedback">{{ $message }}</div>
-											@enderror
-										</div>
-									</div>
-									<div class="col-md-6">
-										<div class="form-group">
-											<label for="phone">Phone Number</label>
-											<input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}">
-											@error('phone')
-												<div class="invalid-feedback">{{ $message }}</div>
-											@enderror
-										</div>
-									</div>
-									<div class="col-md-6">
-										<div class="form-group">
-											<label for="inquiry_type">Inquiry Type <span class="text-danger">*</span></label>
-											<select class="form-control @error('inquiry_type') is-invalid @enderror" id="inquiry_type" name="inquiry_type" required>
-												<option value="">Select inquiry type</option>
-												<option value="job_seeker" @selected(old('inquiry_type') === 'job_seeker')>Job Seeker</option>
-												<option value="employer" @selected(old('inquiry_type') === 'employer')>Employer</option>
-												<option value="government" @selected(old('inquiry_type') === 'government')>Government / Organization</option>
-												<option value="general" @selected(old('inquiry_type') === 'general')>General Inquiry</option>
-											</select>
-											@error('inquiry_type')
-												<div class="invalid-feedback">{{ $message }}</div>
-											@enderror
-										</div>
-									</div>
-									<div class="col-md-12">
-										<div class="form-group">
-											<label for="subject">Subject <span class="text-danger">*</span></label>
-											<input type="text" class="form-control @error('subject') is-invalid @enderror" id="subject" name="subject" value="{{ old('subject') }}" required>
-											@error('subject')
-												<div class="invalid-feedback">{{ $message }}</div>
-											@enderror
-										</div>
-									</div>
-									<div class="col-md-12">
-										<div class="form-group">
-											<label for="message">Message <span class="text-danger">*</span></label>
-											<textarea class="form-control @error('message') is-invalid @enderror" id="message" name="message" rows="5" required>{{ old('message') }}</textarea>
-											@error('message')
-												<div class="invalid-feedback">{{ $message }}</div>
-											@enderror
-										</div>
-									</div>
-									<div class="col-md-12">
-										<button type="submit" class="btn btn-primary">
-											<i class="fas fa-paper-plane"></i> Send Message
-										</button>
-									</div>
-								</div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-	<section class="section pt-0" id="office-location">
-		<div class="container">
-			<div class="row">
-				<div class="col-12">
-					<div class="widget-box map-location aos" data-aos="fade-up">
-						<div class="profile-head">
-							<h4 class="pro-title">Our Office Location</h4>
-						</div>
-						<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3975.6159073417384!2d7.011289974739778!3d4.835830295139733!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1069cde6cbf3e971%3A0x97322eb45a4c74bb!2sRIVERS%20STATE%20ICT%20DEPARTMENT!5e0!3m2!1sen!2sus!4v1782916362639!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-	@include('partials.public-cta')
+<x-app >
+	 <section class="relative pt-28 lg:pt-[206px] mb-10 lg:mb-0 overflow-hidden">
+    <div class="grained-bg absolute top-0 left-0 w-full h-full opacity-[0.36]">
+        <img src="{{ asset('assets/images/banner.png') }}" alt="">
+    </div>
+    <div class="container">
+        <div class="row justify-center mx-0">
+            <div class="lg:col-6 text-center mb-14">
+                <h1 class="h1-lg mb-6 highlighted">Get in <span>touch</span> with us</h1>
+                <p>Lorem ipsum dolor sit amet . The graphic and typographic operators <br>
+                    know this well, in reality all the professions</p>
+            </div>
+            <div class="lg:col-11 xl:col-10 row bg-white/40 py-8 lg:py-14 px-4 lg:px-10 xl:px-[78px] justify-between items-center border border-border shadow rounded-2xl">
+                <div class="lg:col-6 lg:pr-10 mb-10 lg:mb-0">
+                    <h2 class="h3 mb-4">Contact Information</h2>
+                    <p class="mb-8">Email, call, or complete the form learn how Kion
+                        management and governance challenges.</p>
+                        <ul>
+                            <li class="mb-6 relative pl-7">
+                                <i class="absolute left-0 top-1 fa fa-location-dot text-primary"></i>
+                                <h4 class="h5 mb-2">Find US :</h4>
+                                4517 Washington Ave. Manchester, Kentucky 39495
+                            </li>
+                            <li class="mb-6 relative pl-7">
+                                <i class="absolute left-0 top-1 fa-solid fa-phone text-primary"></i>
+                                <h4 class="h5 mb-2">Call Us :</h4>
+                                (629) 555-0129
+                            </li>
+                            <li class="mb-6 relative pl-7">
+                                <i class="absolute left-0 top-1 fa-solid fa-envelope text-primary"></i>
+                                <h4 class="h5 mb-2">Chat support :</h4>
+                                datasource@gmail.com
+                            </li>
+                            <li>
+                                <h4 class="h5 mb-2">Follow Us</h4>
+                                <ul class="social-icons">
+                                    <li class="my-1.5">
+                                        <a class="text-xl" href="#">
+                                            <i class="fa-brands fa-facebook-f"></i>
+                                        </a>
+                                    </li>
+                                    <li class="my-1.5">
+                                        <a class="text-xl" href="#">
+                                            <i class="fa-brands fa-instagram"></i>
+                                        </a>
+                                    </li>
+                                    <li class="my-1.5">
+                                        <a class="text-xl" href="#">
+                                            <i class="fa-brands fa-twitter"></i>
+                                        </a>
+                                    </li>
+                                    <li class="my-1.5">
+                                        <a class="text-xl" href="#">
+                                            <i class="fa-brands fa-linkedin-in"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                </div>
+                <div class="lg:col-6 xl:col-6 lg:bg-white py-10 lg:py-14 lg:px-10 lg:shadow lg:rounded-xl">
+                    <form action="#">
+                        <div class="form-group">
+                            <input class="form-input" placeholder="Your Name" type="text">
+                        </div>
+                        <div class="form-group">
+                            <input class="form-input" placeholder="Your Email" type="email">
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-textarea min-h-[177px]" id="comment" cols="30" rows="10" placeholder="Message"></textarea>
+                        </div>
+                        <div class="form-group relative">
+                            <input class="absolute left-0 top-1.5" type="checkbox" id="policy">
+                            <label class="ml-2 px-5 block" for="policy">Save my name, email, and website in this browser for the next time I comment.</label>
+                        </div>
+                        <button class="btn btn-primary block w-full" type="submit">
+                            Submit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Faqs -->
+<section class="section-bordered faqs">
+    <div class="container">
+        <div class="row justify-center">
+            <div class="col-12 lg:col-6 text-center">
+                <h2 class="section-title">Popular questions <br>
+                    <span>answered</span>
+                </h2>
+            </div>
+            <div class="lg:col-11 xl:col-10">
+                <div class="grid md:grid-cols-2 gap">
+                    <div class="faqs-col">
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                Hyper-personalize, engage, and convert candidates
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                Develop and retain your employees with intelligence
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                Improve recruiter productivity through automation
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                Hire more talent, faster with Al
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faqs-col">
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                How Can I Manage Transactions?
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                How Many Should I Pay?
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                How does app work?
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                How can I manage income?
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="accordion">
+                            <div class="accordion-header" data-accordion>
+                                How to invest using this app?
+                                <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
+                                    <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
+                                </svg>
+                            </div>
+                            <div class="accordion-content">
+                                <p>
+                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
+                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
+                                    officiis asperiores, unde quo magni repudiandae impedit iusto
+                                    voluptatum eos, aliquam, consectetur aliquid.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 </x-app>
