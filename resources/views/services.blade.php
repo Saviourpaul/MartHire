@@ -1,159 +1,293 @@
-<x-app title="Services - NextHire">
-	@include('partials.public-breadcrumb', ['title' => 'Our Services'])
+<x-app>
+	    <section class="pt-28 lg:pt-[206px] pb-12 lg:pb-20 relative">
+    <div class="grained-bg absolute top-0 left-0 w-full h-full opacity-[0.36]">
+        <img src="{{ asset('assets/images/banner.png') }}" alt="">
+    </div>
+    <div class="container">
+        <div class="row justify-center">
+            <div class="row lg:col-11 xl:col-10 items-center lg:gx-5">
+                <div class="lg:col-7 lg:order-2 mb-6 lg:mb-0">
+                    <img class="w-full rounded-xl shadow max-h-[474px] object-cover" src="{{ asset('assets/images/service-banner.png') }}" alt="">
+                </div>
+                <div class="lg:col-5 lg:order-1">
+                    <h1 class="h2 mb-4 highlighted">Optimize your entire
+                        <span>hiring</span> process</h1>
+                    <p class="mb-10">A discovery that has given greater importance to the Lorem
+                        ipsum which has remained on the crest of the wave since
+                        500, that is when, according to Professor Richard McClintock</p>
+                    <a href="#" class="btn btn-outline-primary btn-sm">Stay in Touch</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-	<section class="section about">
-		<div class="container">
-			<div class="row justify-content-center">
-				<div class="col-lg-10 text-center aos" data-aos="fade-up">
-					<div class="about-content">
-						<h2>Recruitment Solutions for Every Sector</h2>
-						<p>NextHire delivers tailored recruitment services for government agencies, private organizations, employers, and job seekers. Our platform supports permanent, contract, and freelance hiring models with the same level of professionalism and transparency.</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+<!-- Integration -->
+<section class="section-bordered mt-0">
+    <div class="container">
+        <div class="row justify-center">
+            <div class="row lg:col-11 xl:col-10 justify-center">
+                <div class="lg:col-10 xl:col-8 mb-14 text-center">
+                    <h2 class="section-title">Integrate with the systems <br>
+                        you care <span>about</span></h2>
+                    <p class="mb-12">Lorem ipsum dolor sit amet, consectetur adipisci elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua.
+                        Ut enim ad minim veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid
+                        ex ea commodi consequatur. Quis aute iure reprehenderit in voluptate velit esse cillum dolore.</p>
+                    <a href="#" class="btn btn-primary">learn more</a>
+                </div>
+                <div class="lg:col-11 xl:col-10">
+                    <img class="mx-auto max-w-[946px] w-full rounded-xl" src="{{ asset('assets/images/service-img-2.png') }}" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- end Integration -->
 
-	<section class="section projects" id="government">
-		<div class="container">
-			<div class="row align-items-center">
-				<div class="col-lg-6 aos" data-aos="fade-up">
-					<div class="demand-professional">
-						<h2>Government & Public Sector Recruitment</h2>
-						<p>Manage public sector hiring with structured workflows designed for transparency, compliance, and accountability.</p>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Publish approved vacancies with defined eligibility criteria and application deadlines.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Review applications with document verification and structured candidate profiles.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Maintain audit-ready records of every stage in the recruitment process.</p></div>
-					</div>
-				</div>
-				<div class="col-lg-6 aos" data-aos="zoom-in">
-					<img src="{{ asset('assets/img/blog/aboutus.jpg') }}" class="img-fluid rounded" alt="Government recruitment services">
-				</div>
-			</div>
-		</div>
-	</section>
+<!-- Solutions -->
+<section class="section-bordered relative">
+    <div class="grained-bg absolute top-0 left-0 w-full h-full opacity-[0.16]">
+        <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
+    </div>
+    <div class="container">
+        <div class="row justify-center">
+            <div class="lg:col-6 text-center mb-14">
+                <h2 class="section-title mb-0">Our team creates special <span>solutions</span>
+                    to solve your problems</h2>
+            </div>
+            <div class="row lg:col-11 xl:col-10 gy-4 -mt-6">
+                <div class="md:col-6 lg:col-4">
+                    <div class="px-8 py-10 text-center rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow group relative">
+                        <h5 class="mb-4 capitalize">Vendor Management
+                            System (VMS)</h5>
+                        <p class="mb-6">Lorem ipsum dolor sit amet, consectetur
+                            adipisci elit, sed eiusmod tempor incidunt
+                            ut labore et dolore magna aliqua. Ut enim
+                            ad minim veniam, quis nostrum</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm group-hover:bg-primary group-hover:text-white stretched-link">
+                            Read more
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="md:col-6 lg:col-4">
+                    <div class="px-8 py-10 text-center rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow group relative">
+                        <h5 class="mb-4 capitalize">Purchase-to-Pay with FMS
+                            HRIS Integration Extensions</h5>
+                        <p class="mb-6">Lorem ipsum dolor sit amet, consectetur
+                            adipisci elit, sed eiusmod tempor incidunt
+                            ut labore et dolore magna aliqua. Ut enim
+                            ad minim veniam, quis nostrum</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm group-hover:bg-primary group-hover:text-white stretched-link">
+                            Read more
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="md:col-6 lg:col-4">
+                    <div class="px-8 py-10 text-center rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow group relative">
+                        <h5 class="mb-4 capitalize">Code Testing /VMS
+                            Enhancements</h5>
+                        <p class="mb-6">Lorem ipsum dolor sit amet, consectetur
+                            adipisci elit, sed eiusmod tempor incidunt
+                            ut labore et dolore magna aliqua. Ut enim
+                            ad minim veniam, quis nostrum</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm group-hover:bg-primary group-hover:text-white stretched-link">
+                            Read more
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="md:col-6 lg:col-4">
+                    <div class="px-8 py-10 text-center rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow group relative">
+                        <h5 class="mb-4 capitalize">Statement of Work (SOW)</h5>
+                        <p class="mb-6">Lorem ipsum dolor sit amet, consectetur
+                            adipisci elit, sed eiusmod tempor incidunt
+                            ut labore et dolore magna aliqua. Ut enim
+                            ad minim veniam, quis nostrum</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm group-hover:bg-primary group-hover:text-white stretched-link">
+                            Read more
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="md:col-6 lg:col-4">
+                    <div class="px-8 py-10 text-center rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow group relative">
+                        <h5 class="mb-4 capitalize">Job Board / Gig Portal</h5>
+                        <p class="mb-6">Lorem ipsum dolor sit amet, consectetur
+                            adipisci elit, sed eiusmod tempor incidunt
+                            ut labore et dolore magna aliqua. Ut enim
+                            ad minim veniam, quis nostrum</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm group-hover:bg-primary group-hover:text-white stretched-link">
+                            Read more
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="md:col-6 lg:col-4">
+                    <div class="px-8 py-10 text-center rounded-xl border border-border h-full hover:bg-white transition-all duration-300 hover:shadow group relative">
+                        <h5 class="mb-4 capitalize">Market Intelligence (MI)</h5>
+                        <p class="mb-6">Lorem ipsum dolor sit amet, consectetur
+                            adipisci elit, sed eiusmod tempor incidunt
+                            ut labore et dolore magna aliqua. Ut enim
+                            ad minim veniam, quis nostrum</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm group-hover:bg-primary group-hover:text-white stretched-link">
+                            Read more
+                            <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- end Solutions -->
 
-	<section class="section review" id="private">
-		<div class="container">
-			<div class="row align-items-center flex-row-reverse">
-				<div class="col-lg-6 aos" data-aos="fade-up">
-					<div class="demand-professional">
-						<h2>Private Organization Hiring</h2>
-						<p>Scale your workforce with access to a verified talent pool and tools that simplify every stage of private sector recruitment.</p>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Post and manage job listings across departments and business units.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Shortlist, approve, or reject candidates with clear status communication.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Reduce time-to-hire with centralized application management and notifications.</p></div>
-					</div>
-				</div>
-				<div class="col-lg-6 aos" data-aos="zoom-in">
-					<img src="{{ asset('assets/img/work1.jpg') }}" class="img-fluid rounded" alt="Private sector hiring">
-				</div>
-			</div>
-		</div>
-	</section>
+<!-- latest jobs -->
+<section class="section-bordered">
+    <div class="container">
+        <div class="row mx-0 border border-border rounded-2xl justify-center">
+            <div class="lg:col-11 xl:col-10">
+                <div class="text-center mb-14">
+                    <h2 class="section-title mb-5">
+                        <span>Latest Jobs</span>
+                    </h2>
+                    <p>Job Recommendations for You</p>
+                </div>
+                <div class="swiper jobs-carousel pr-[1px]">
+                    <div class="swiper-wrapper">
+                        <div class="swiper-slide h-auto relative">
+                            <div class="px-8 py-10 hover:bg-white rounded-xl border border-border h-full hover:shadow transition-all duration-300">
+                                <h5 class="mb-4 capitalize">Senior Governance Risk
+                                    & Compliance (GRC)</h5>
+                                <ul>
+                                    <li class="flex items-center mb-2">
+                                        <img class="mr-1.5" src="{{ asset('assets/images/svgs/location-pin.svg') }}" alt="">
+                                        Netherlands
+                                    </li>
+                                    <li class="flex items-center">
+                                        <img class="mr-1.5" src="{{ asset('assets/images/svgs/clock.svg') }}" alt="">
+                                        Full Time
+                                    </li>
+                                </ul>
+                                <div class="text-end -mt-4">
+                                    <a class="w-8 h-8 rounded-full bg-primary/5 text-primary inline-flex items-center justify-center stretched-link" href="#">
+                                    <i class="fa fa-arrow-right"></i>
+                                </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="swiper-slide h-auto">
+                            <div class="px-8 py-10 hover:bg-white rounded-xl border border-border h-full hover:shadow transition-all duration-300">
+                                <h5 class="mb-4 capitalize">Financial Administrative
+                                    Assistant</h5>
+                                <ul>
+                                    <li class="flex items-center mb-2">
+                                        <img class="mr-1.5" src="{{ asset('assets/images/svgs/location-pin.svg') }}" alt="">
+                                        Hyderabad, Telangana, India
+                                    </li>
+                                    <li class="flex items-center">
+                                        <img class="mr-1.5" src="{{ asset('assets/images/svgs/clock.svg') }}" alt="">
+                                        Full Time
+                                    </li>
+                                </ul>
+                                <div class="text-end -mt-4">
+                                    <a class="w-8 h-8 rounded-full bg-primary/5 text-primary inline-flex items-center justify-center stretched-link" href="#">
+                                    <i class="fa fa-arrow-right"></i>
+                                </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="swiper-slide h-auto">
+                            <div class="px-8 py-10 hover:bg-white rounded-xl border border-border h-full hover:shadow transition-all duration-300">
+                                <h5 class="mb-4 capitalize">Associate Project general
+                                    sourcing manager</h5>
+                                <ul>
+                                    <li class="flex items-center mb-2">
+                                        <img class="mr-1.5" src="{{ asset('assets/images/svgs/location-pin.svg') }}" alt="">
+                                        Netherlands
+                                    </li>
+                                    <li class="flex items-center">
+                                        <img class="mr-1.5" src="{{ asset('assets/images/svgs/clock.svg') }}" alt="">
+                                        Full Time
+                                    </li>
+                                </ul>
+                                <div class="text-end -mt-4">
+                                    <a class="w-8 h-8 rounded-full bg-primary/5 text-primary inline-flex items-center justify-center stretched-link" href="#">
+                                    <i class="fa fa-arrow-right"></i>
+                                </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-bullets jobs-carousel-pagination text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- end latest jobs -->
 
-	<section class="section projects" id="employers">
-		<div class="container">
-			<div class="row align-items-center">
-				<div class="col-lg-6 aos" data-aos="fade-up">
-					<div class="demand-professional">
-						<h2>Employer Services</h2>
-						<p>Empower your HR team with a dedicated employer dashboard for end-to-end vacancy and candidate management.</p>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Create and publish job postings with detailed descriptions and requirements.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Review applied, approved, and rejected candidates from a single dashboard.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Access applicant profiles and supporting documents for informed decisions.</p></div>
-					</div>
-				</div>
-				<div class="col-lg-6 aos" data-aos="zoom-in">
-					<img src="{{ asset('assets/img/work2.jpg') }}" class="img-fluid rounded" alt="Employer recruitment dashboard">
-				</div>
-			</div>
-		</div>
-	</section>
+<!-- benefits -->
+<section class="section-bordered relative">
+    <div class="grained-bg absolute top-0 left-0 w-full h-full opacity-[0.16]">
+        <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
+    </div>
+    <div class="container">
+        <div class="row justify-center">
+            <div class="lg:col-6 text-center mb-14">
+                <h2 class="section-title">DataSource <span>Benefits</span></h2>
+                <p>Our benefits help you to find balance between work and life.</p>
+            </div>
+            <div class="lg:col-11 xl:col-10">
+                <div class="swiper benefits-slider pr-[1px]">
+                    <div class="swiper-wrapper">
+                        <div class="border border-border rounded-xl swiper-slide px-10 py-12 h-auto text-center hover:bg-white hover:shadow transition-all duration-300">
+                            <img class="mb-6 mx-auto w-12 h-12" src="{{ asset('assets/images/svgs/beating-heart.svg') }}" alt="">
+                            <h3 class="h4">Your Health</h3>
+                        </div>
+                        <div class="border border-border rounded-xl swiper-slide px-10 py-12 h-auto text-center hover:bg-white hover:shadow transition-all duration-300">
+                            <img class="mb-6 mx-auto w-12 h-12" src="{{ asset('assets/images/svgs/family.svg') }}" alt="">
+                            <h3 class="h4">Your Family
+                                Life</h3>
+                        </div>
+                        <div class="border border-border rounded-xl swiper-slide px-10 py-12 h-auto text-center hover:bg-white hover:shadow transition-all duration-300">
+                            <img class="mb-6 mx-auto w-12 h-12" src="{{ asset('assets/images/svgs/reward.svg') }}" alt="">
+                            <h3 class="h4">Total Rewards</h3>
+                        </div>
+                        <div class="border border-border rounded-xl swiper-slide px-10 py-12 h-auto text-center hover:bg-white hover:shadow transition-all duration-300">
+                            <img class="mb-6 mx-auto w-12 h-12" src="{{ asset('assets/images/svgs/recharge.svg') }}" alt="">
+                            <h3 class="h4">Your Time to
+                                Recharge</h3>
+                        </div>
+                    </div>
+                    <div class="benefits-slider-pagination swiper-bullets text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- end benefits -->
 
-	<section class="section review" id="job-seekers">
-		<div class="container">
-			<div class="row align-items-center flex-row-reverse">
-				<div class="col-lg-6 aos" data-aos="fade-up">
-					<div class="demand-professional">
-						<h2>Job Seeker Services</h2>
-						<p>Take control of your career with a professional applicant portal designed to simplify job discovery and application tracking.</p>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Browse verified job openings from government and private sector employers.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Submit applications with a guided profile and document upload workflow.</p></div>
-					</div>
-					<div class="demand-post-job align-items-start">
-						<div class="demand-post-img"><img src="{{ asset('assets/img/icon/checks.svg') }}" alt="Check" class="img-fluid"></div>
-						<div class="demand-content"><p>Track application status and receive notifications at every stage.</p></div>
-					</div>
-				</div>
-				<div class="col-lg-6 aos" data-aos="zoom-in">
-					<img src="{{ asset('assets/img/work3.jpg') }}" class="img-fluid rounded" alt="Job seeker using NextHire">
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<section class="section projects" id="contract">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-10 mx-auto text-center aos" data-aos="fade-up">
-					<div class="section-header">
-						<h2 class="header-title">Contract & Freelance Recruitment</h2>
-						<p>NextHire also supports contract-based and freelance hiring, giving organizations flexibility to engage professionals for project-specific and short-term engagements.</p>
-					</div>
-				</div>
-			</div>
-			<div class="row row-gap mt-4">
-				@foreach([
-					['title' => 'Contract Roles', 'text' => 'Post fixed-term and project-based vacancies with clear scope, duration, and deliverables.'],
-					['title' => 'Freelance Opportunities', 'text' => 'Connect with skilled professionals available for consultancy and freelance engagements.'],
-					['title' => 'Flexible Hiring Models', 'text' => 'Adapt recruitment workflows to permanent, contract, or hybrid employment arrangements.'],
-				] as $index => $service)
-				<div class="col-md-4 aos d-flex" data-aos="zoom-in" data-aos-duration="{{ 1000 + ($index * 500) }}">
-					<div class="feature-items d-flex align-items-center justify-content-center flex-column w-100">
-						<div class="feature-content course-count text-center">
-							<h3>{{ $service['title'] }}</h3>
-							<p>{{ $service['text'] }}</p>
-						</div>
-					</div>
-				</div>
-				@endforeach
-			</div>
-		</div>
-	</section>
-
-	@include('partials.public-cta')
+<!-- Call to Action -->
+<section class="cta section-bordered">
+    <div class="container">
+        <div class="row mx-0 relative justify-center">
+            <div class="col-12">
+                <img class="absolute -z-[1] top-0 left-0 w-full h-full" src="{{ asset('assets/images/cta-bg.png') }}" alt="">
+            </div>
+            <div class="lg:col-10 text-center">
+                <div class="shadow rounded-xl bg-white/40 py-20 border border-border">
+                    <div class="md:max-w-[588px] mx-auto">
+                        <h2 class="mb-6 highlighted">Do you want to be a part <br>
+                            of our <span>team</span>?</h2>
+                        <p class="mb-6">All our premium themes are designed elegantly with blazing speed
+                            themes even score above% in Google page speed.</p>
+                        <a href="#" class="btn btn-primary">Start journey</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 </x-app>
