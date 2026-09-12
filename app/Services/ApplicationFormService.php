@@ -80,15 +80,6 @@ class ApplicationFormService
                     $storedFiles
                 );
 
-                $this->createDocument(
-                    $application,
-                    $data['bvn_document'],
-                    ApplicationDocumentType::Bvn,
-                    ApplicationDocumentType::Bvn->label(),
-                    $data['bvn_number'],
-                    $storedFiles
-                );
-
                 foreach ($data['education_documents'] as $document) {
                     $this->createDocument(
                         $application,
@@ -181,6 +172,52 @@ class ApplicationFormService
 
             return $document->fresh(['applicationForm.job', 'reviewer']);
         });
+    }
+
+    public function reviewDocuments(ApplicationForm $application, User $reviewer, ApplicationStatus $status, ?string $remarks = null): int
+    {
+        $changedDocuments = DB::transaction(function () use ($application, $reviewer, $status, $remarks): array {
+            $application->loadMissing(['applicant', 'job', 'documents']);
+
+            if ($application->documents->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'documents' => 'This application has no submitted documents to review.',
+                ]);
+            }
+
+            $changedDocuments = [];
+
+            foreach ($application->documents as $document) {
+                $previousStatus = $document->status;
+
+                $document->update([
+                    'status' => $status,
+                    'reviewed_by' => $reviewer->id,
+                    'reviewed_at' => now(),
+                    'employer_remarks' => $remarks,
+                ]);
+
+                $document->statusHistories()->create([
+                    'from_status' => $previousStatus,
+                    'to_status' => $status,
+                    'changed_by' => $reviewer->id,
+                    'remarks' => $remarks,
+                    'created_at' => now(),
+                ]);
+
+                if ($previousStatus !== $status) {
+                    $changedDocuments[] = $document;
+                }
+            }
+
+            return $changedDocuments;
+        });
+
+        foreach ($changedDocuments as $document) {
+            $application->applicant->notify(new ApplicationDocumentStatusChanged($document->load('applicationForm.job'), $remarks));
+        }
+
+        return $application->documents->count();
     }
 
     /**

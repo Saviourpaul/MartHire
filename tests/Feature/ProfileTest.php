@@ -33,7 +33,7 @@ function validApplicantProfilePayload(array $overrides = []): array
         'nationality' => 'Nigeria',
         'state_of_origin' => 'Lagos',
         'local_government_area' => 'Ikeja',
-        'zipcode' => '100001',
+        
     ], $overrides);
 }
 
@@ -156,7 +156,7 @@ test('applicants must provide setup fields before saving profile changes', funct
             'nationality',
             'state_of_origin',
             'local_government_area',
-            'zipcode',
+            
         ]);
 });
 
