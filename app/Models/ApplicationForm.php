@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use Database\Factories\ApplicationFormFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class ApplicationForm extends Model
 {
@@ -43,11 +44,11 @@ class ApplicationForm extends Model
     protected function casts(): array
     {
         return [
-            'status' => ApplicationStatus::class,
+            'status' => CandidatePipelineStage::class,
             'submitted_at' => 'datetime',
             'date_of_birth' => 'date',
             'reviewed_at' => 'datetime',
-            
+
         ];
     }
 
@@ -76,14 +77,43 @@ class ApplicationForm extends Model
         return $this->hasMany(ApplicationStatusHistory::class);
     }
 
+    public function profileImageUrl(): string
+    {
+        $fallback = asset('admin/assets/images/Avatar.png');
+
+        if (! $this->profile_image_path) {
+            return $this->applicant?->profileImageUrl() ?? $fallback;
+        }
+
+        $path = ltrim($this->profile_image_path, '/');
+
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
+
+        if (str_starts_with($path, 'public/')) {
+            $path = substr($path, strlen('public/'));
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return asset('storage/'.$path);
+        }
+
+        return $this->applicant?->profileImageUrl() ?? $fallback;
+    }
+
     public function scopeForEmployer(Builder $query, User $employer): Builder
     {
         return $query->whereHas('job', fn (Builder $jobQuery) => $jobQuery->where('employer_id', $employer->id));
     }
 
-    public function scopeStatus(Builder $query, ApplicationStatus|string $status): Builder
+    public function scopeStatus(Builder $query, CandidatePipelineStage|string $status): Builder
     {
-        return $query->where('status', $status instanceof ApplicationStatus ? $status->value : $status);
+        return $query->where('status', $status instanceof CandidatePipelineStage ? $status->value : $status);
     }
 
     public function scopeSearch(Builder $query, ?string $search): Builder

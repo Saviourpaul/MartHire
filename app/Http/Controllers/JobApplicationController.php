@@ -10,6 +10,7 @@ use App\Models\NigeriaState;
 use App\Services\ApplicationFormService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Throwable;
 
@@ -79,7 +80,7 @@ class JobApplicationController extends Controller
 
     public function show(Request $request, ApplicationForm $applicationForm): View
     {
-        abort_unless($applicationForm->user_id === $request->user()->id, 403);
+        Gate::forUser($request->user())->authorize('view', $applicationForm);
 
         return view('client.application-show', [
             'application' => $applicationForm->load(['job', 'documents.statusHistories.changedBy', 'statusHistories.changedBy']),

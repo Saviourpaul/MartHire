@@ -183,6 +183,58 @@ class ApplicationFormService
         });
     }
 
+    public function reviewDocuments(ApplicationForm $application, User $reviewer, ApplicationStatus $status, ?string $remarks = null): int
+    {
+        [$reviewedDocuments, $changedDocuments] = DB::transaction(function () use ($application, $reviewer, $status, $remarks): array {
+            $application->loadMissing(['applicant', 'job']);
+            $documents = $application->documents()->lockForUpdate()->get();
+
+            if ($documents->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'documents' => 'This application has no submitted documents to review.',
+                ]);
+            }
+
+            $changedDocuments = [];
+            $reviewedAt = now();
+
+            foreach ($documents as $document) {
+                $previousStatus = $document->status;
+
+                $document->update([
+                    'status' => $status,
+                    'reviewed_by' => $reviewer->id,
+                    'reviewed_at' => $reviewedAt,
+                    'employer_remarks' => $remarks,
+                ]);
+
+                $document->statusHistories()->create([
+                    'from_status' => $previousStatus,
+                    'to_status' => $status,
+                    'changed_by' => $reviewer->id,
+                    'remarks' => $remarks,
+                    'created_at' => $reviewedAt,
+                ]);
+
+                if ($previousStatus !== $status) {
+                    $changedDocuments[] = $document;
+                }
+            }
+
+            return [$documents, $changedDocuments];
+        });
+
+        foreach ($changedDocuments as $document) {
+            DB::afterCommit(function () use ($application, $document, $remarks): void {
+                $application->applicant->notify(
+                    new ApplicationDocumentStatusChanged($document->load('applicationForm.job'), $remarks)
+                );
+            });
+        }
+
+        return $reviewedDocuments->count();
+    }
+
     /**
      * @param  array<string, mixed>  $data
      */

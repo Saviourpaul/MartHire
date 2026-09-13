@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ApplicationDocumentType;
 use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
@@ -274,7 +273,7 @@ it('lets only the owning employer review applications and notifies the applicant
         ->assertSee('Approved');
 });
 
-it('tracks document review status separately and enforces ownership', function () {
+it('updates all document statuses together and enforces employer ownership', function () {
     $owner = User::factory()->employer()->create();
     $otherEmployer = User::factory()->employer()->create();
     $applicant = User::factory()->applicant()->create();
@@ -283,34 +282,40 @@ it('tracks document review status separately and enforces ownership', function (
         ->for($job, 'job')
         ->for($applicant, 'applicant')
         ->create();
-    $document = ApplicationDocument::factory()
+    $documents = ApplicationDocument::factory()
         ->for($application, 'applicationForm')
-        ->type(ApplicationDocumentType::Nin)
+        ->count(2)
         ->create();
 
     $this->actingAs($otherEmployer)
-        ->patch(route('employer.application-documents.review', $document), [
+        ->patch(route('employer.applications.documents.review', $application), [
             'status' => 'rejected',
             'remarks' => 'Unreadable.',
         ])
         ->assertForbidden();
 
     $this->actingAs($owner)
-        ->patch(route('employer.application-documents.review', $document), [
+        ->from(route('employer.applications.show', $application))
+        ->patch(route('employer.applications.documents.review', $application), [
+            'status' => 'invalid',
+        ])
+        ->assertRedirect(route('employer.applications.show', $application))
+        ->assertSessionHasErrors('status');
+
+    $this->actingAs($owner)
+        ->patch(route('employer.applications.documents.review', $application), [
             'status' => 'rejected',
             'remarks' => 'Unreadable.',
         ])
-        ->assertRedirect();
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Document status updated for 2 submitted document(s).');
 
-    $document->refresh();
+    $documents->each->refresh();
 
-    expect($document->status)->toBe(ApplicationStatus::Rejected)
-        ->and($document->reviewed_by)->toBe($owner->id)
-        ->and($document->statusHistories()->count())->toBe(1);
-
-    $this->actingAs($applicant)
-        ->get(route('client.documents'))
-        ->assertOk()
-        ->assertSee('Rejected')
-        ->assertSee('Unreadable.');
+    expect($documents->every(fn (ApplicationDocument $document) => $document->status === ApplicationStatus::Rejected))
+        ->toBeTrue()
+        ->and($documents->every(fn (ApplicationDocument $document) => $document->reviewed_by === $owner->id))
+        ->toBeTrue()
+        ->and($documents->every(fn (ApplicationDocument $document) => $document->statusHistories()->count() === 1))
+        ->toBeTrue();
 });
