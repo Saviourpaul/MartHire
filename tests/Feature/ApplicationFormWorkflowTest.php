@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ApplicationDocumentType;
 use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
@@ -268,7 +267,11 @@ it('lets only the owning employer review applications and notifies the applicant
         ->assertSee('Approved');
 });
 
+<<<<<<< HEAD
+it('updates all document statuses together and enforces employer ownership', function () {
+=======
 it('lets an employer update every submitted document with one status and enforces ownership', function () {
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
     $owner = User::factory()->employer()->create();
     $otherEmployer = User::factory()->employer()->create();
     $applicant = User::factory()->applicant()->create();
@@ -278,6 +281,8 @@ it('lets an employer update every submitted document with one status and enforce
         ->for($applicant, 'applicant')
         ->create();
     $documents = ApplicationDocument::factory()
+<<<<<<< HEAD
+=======
         ->for($application, 'applicationForm')
         ->count(2)
         ->create();
@@ -334,10 +339,44 @@ it('allows applicants to view only their own submitted application', function ()
         ->for($applicant, 'applicant')
         ->create();
     $document = ApplicationDocument::factory()
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
         ->for($application, 'applicationForm')
-        ->type(ApplicationDocumentType::Nin)
+        ->count(2)
         ->create();
 
+<<<<<<< HEAD
+    $this->actingAs($otherEmployer)
+        ->patch(route('employer.applications.documents.review', $application), [
+            'status' => 'rejected',
+            'remarks' => 'Unreadable.',
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($owner)
+        ->from(route('employer.applications.show', $application))
+        ->patch(route('employer.applications.documents.review', $application), [
+            'status' => 'invalid',
+        ])
+        ->assertRedirect(route('employer.applications.show', $application))
+        ->assertSessionHasErrors('status');
+
+    $this->actingAs($owner)
+        ->patch(route('employer.applications.documents.review', $application), [
+            'status' => 'rejected',
+            'remarks' => 'Unreadable.',
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Document status updated for 2 submitted document(s).');
+
+    $documents->each->refresh();
+
+    expect($documents->every(fn (ApplicationDocument $document) => $document->status === ApplicationStatus::Rejected))
+        ->toBeTrue()
+        ->and($documents->every(fn (ApplicationDocument $document) => $document->reviewed_by === $owner->id))
+        ->toBeTrue()
+        ->and($documents->every(fn (ApplicationDocument $document) => $document->statusHistories()->count() === 1))
+        ->toBeTrue();
+=======
     $this->actingAs($applicant)
         ->get(route('client.applications.show', $application))
         ->assertOk()
@@ -368,4 +407,5 @@ it('uses the submitted profile image and falls back to the default avatar', func
 
     expect($application->fresh()->profileImageUrl())
         ->toContain('admin/assets/images/Avatar.png');
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
 });

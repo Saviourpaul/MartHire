@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -22,8 +22,8 @@ class ApplicationStatusHistory extends Model
     protected function casts(): array
     {
         return [
-            'from_status' => ApplicationStatus::class,
-            'to_status' => ApplicationStatus::class,
+            'from_status' => CandidatePipelineStage::class,
+            'to_status' => CandidatePipelineStage::class,
             'created_at' => 'datetime',
         ];
     }

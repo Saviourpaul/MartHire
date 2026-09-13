@@ -1,4 +1,4 @@
-<x-app :title="$job->title . ' - NextHire'">
+<x-app :title="$job->title . ' - MartHire'">
 			<!-- Breadcrumb -->
 			<div class="bread-crumb-bar">
 				<div class="container">
