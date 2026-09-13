@@ -56,7 +56,7 @@
                             <dl class="mt-4 grid grid-cols-1 gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
                                 <div class="flex justify-between gap-4"><dt>Location</dt><dd class="text-right text-gray-700 dark:text-gray-300">{{ $job->location ?: 'Not specified' }}</dd></div>
                                 <div class="flex justify-between gap-4"><dt>Employment Type</dt><dd class="text-right text-gray-700 dark:text-gray-300">{{ $job->employmentTypeLabel() }}</dd></div>
-                                <div class="flex justify-between gap-4"><dt>Posted</dt><dd class="text-right text-gray-700 dark:text-gray-300">{{ $job->created_at?->format('M j, Y') }}</dd></div>
+                                <div class="flex justify-between gap-4"><dt>Posted</dt><dd class="text-right text-gray-700 dark:text-gray-300">{{ $job->created_at?->diffForHumans() }}</dd></div>
                                 <div class="flex justify-between gap-4"><dt>Deadline</dt><dd class="text-right text-gray-700 dark:text-gray-300">{{ $job->due_date?->format('M j, Y') }}</dd></div>
                             </dl>
 

@@ -42,7 +42,7 @@ test('applicant section pages render', function () {
     $sections = [
         ['client.profile', 'My Profile'],
         ['client.documents', 'Documents'],
-        ['client.jobs', 'Jobs'],
+        ['client.jobs-listings', 'Jobs'],
         ['client.notifications', 'Notifications'],
     ];
 
@@ -66,7 +66,7 @@ test('user model calculates applicant profile completion', function () {
         'nationality',
         'state_of_origin',
         'local_government_area',
-        'zipcode',
+        
     ])
         ->and($user->applicantProfileCompletionPercentage())->toBe(25)
         ->and($user->hasCompletedApplicantProfile())->toBeFalse()

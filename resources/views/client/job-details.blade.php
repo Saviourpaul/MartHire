@@ -56,7 +56,7 @@
                     <div class="grid grid-cols-1 border-b border-gray-100 dark:border-gray-800 sm:grid-cols-2 lg:grid-cols-4">
                         <div class="border-b border-gray-100 p-5 dark:border-gray-800 sm:border-r lg:border-b-0">
                             <p class="text-theme-xs font-medium text-gray-500 dark:text-gray-400">Posted Date</p>
-                            <p class="mt-1 text-theme-sm font-semibold text-gray-800 dark:text-white/90">{{ $job->created_at?->format('M j, Y') }}</p>
+                            <p class="mt-1 text-theme-sm font-semibold text-gray-800 dark:text-white/90">{{ $job->created_at?->diffForHumans() }}</p>
                         </div>
                         
                         <div class="border-b border-gray-100 p-5 dark:border-gray-800 sm:border-r sm:border-b-0">

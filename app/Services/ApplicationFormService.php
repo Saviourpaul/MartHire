@@ -80,15 +80,6 @@ class ApplicationFormService
                     $storedFiles
                 );
 
-                $this->createDocument(
-                    $application,
-                    $data['bvn_document'],
-                    ApplicationDocumentType::Bvn,
-                    ApplicationDocumentType::Bvn->label(),
-                    $data['bvn_number'],
-                    $storedFiles
-                );
-
                 foreach ($data['education_documents'] as $document) {
                     $this->createDocument(
                         $application,
@@ -185,26 +176,42 @@ class ApplicationFormService
 
     public function reviewDocuments(ApplicationForm $application, User $reviewer, ApplicationStatus $status, ?string $remarks = null): int
     {
+<<<<<<< HEAD
         [$reviewedDocuments, $changedDocuments] = DB::transaction(function () use ($application, $reviewer, $status, $remarks): array {
             $application->loadMissing(['applicant', 'job']);
             $documents = $application->documents()->lockForUpdate()->get();
 
             if ($documents->isEmpty()) {
+=======
+        $changedDocuments = DB::transaction(function () use ($application, $reviewer, $status, $remarks): array {
+            $application->loadMissing(['applicant', 'job', 'documents']);
+
+            if ($application->documents->isEmpty()) {
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
                 throw ValidationException::withMessages([
                     'documents' => 'This application has no submitted documents to review.',
                 ]);
             }
 
             $changedDocuments = [];
+<<<<<<< HEAD
             $reviewedAt = now();
 
             foreach ($documents as $document) {
+=======
+
+            foreach ($application->documents as $document) {
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
                 $previousStatus = $document->status;
 
                 $document->update([
                     'status' => $status,
                     'reviewed_by' => $reviewer->id,
+<<<<<<< HEAD
                     'reviewed_at' => $reviewedAt,
+=======
+                    'reviewed_at' => now(),
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
                     'employer_remarks' => $remarks,
                 ]);
 
@@ -213,7 +220,11 @@ class ApplicationFormService
                     'to_status' => $status,
                     'changed_by' => $reviewer->id,
                     'remarks' => $remarks,
+<<<<<<< HEAD
                     'created_at' => $reviewedAt,
+=======
+                    'created_at' => now(),
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
                 ]);
 
                 if ($previousStatus !== $status) {
@@ -221,6 +232,7 @@ class ApplicationFormService
                 }
             }
 
+<<<<<<< HEAD
             return [$documents, $changedDocuments];
         });
 
@@ -233,6 +245,16 @@ class ApplicationFormService
         }
 
         return $reviewedDocuments->count();
+=======
+            return $changedDocuments;
+        });
+
+        foreach ($changedDocuments as $document) {
+            $application->applicant->notify(new ApplicationDocumentStatusChanged($document->load('applicationForm.job'), $remarks));
+        }
+
+        return $application->documents->count();
+>>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
     }
 
     /**
