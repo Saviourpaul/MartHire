@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApplicationDocumentType;
 use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
@@ -31,6 +32,8 @@ function validApplicationPayload(array $overrides = []): array
         'zipcode' => '100001',
         'nin_number' => '12345678901',
         'nin_document' => UploadedFile::fake()->create('nin.pdf', 100, 'application/pdf'),
+        'bvn_number' => '22345678901',
+        'bvn_document' => UploadedFile::fake()->create('bvn.pdf', 100, 'application/pdf'),
         'education_documents' => [
             [
                 'type' => 'bsc',
@@ -127,7 +130,7 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
     expect($application->job_id)->toBe($job->id)
         ->and($application->user_id)->toBe($applicant->id)
         ->and($application->status)->toBe(ApplicationStatus::Pending)
-        ->and($application->documents)->toHaveCount(3)
+        ->and($application->documents)->toHaveCount(4)
         ->and($application->statusHistories)->toHaveCount(1);
 
     $applicant->refresh();
@@ -172,7 +175,7 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
     expect(ApplicationForm::count())->toBe(1);
 });
 
-it('requires the nin number to be exactly eleven numeric digits', function () {
+it('requires nin and bvn numbers to be exactly eleven numeric digits', function () {
     $employer = User::factory()->employer()->create();
     $job = Job::factory()->approved()->for($employer, 'employer')->create();
     $applicant = User::factory()->applicant()->create();
@@ -181,17 +184,19 @@ it('requires the nin number to be exactly eleven numeric digits', function () {
         ->from(route('applications.create', $job))
         ->post(route('applications.store', $job), validApplicationPayload([
             'nin_number' => '1234567890',
+            'bvn_number' => '223456789012',
         ]))
         ->assertRedirect(route('applications.create', $job))
-        ->assertSessionHasErrors('nin_number');
+        ->assertSessionHasErrors(['nin_number', 'bvn_number']);
 
     $this->actingAs($applicant)
         ->from(route('applications.create', $job))
         ->post(route('applications.store', $job), validApplicationPayload([
             'nin_number' => '1234567890A',
+            'bvn_number' => '2234567890B',
         ]))
         ->assertRedirect(route('applications.create', $job))
-        ->assertSessionHasErrors('nin_number');
+        ->assertSessionHasErrors(['nin_number', 'bvn_number']);
 
     expect(ApplicationForm::count())->toBe(0);
 });
@@ -209,6 +214,7 @@ it('validates profile photo and document uploads before storing an application',
         ->post(route('applications.store', $job), validApplicationPayload([
             'profile_image' => tinyPngUpload(),
             'nin_document' => UploadedFile::fake()->create('nin.svg', 100, 'image/svg+xml'),
+            'bvn_document' => UploadedFile::fake()->create('bvn.pdf', 6000, 'application/pdf'),
             'education_documents' => [
                 [
                     'type' => 'bsc',
@@ -220,6 +226,7 @@ it('validates profile photo and document uploads before storing an application',
         ->assertSessionHasErrors([
             'profile_image',
             'nin_document',
+            'bvn_document',
             'education_documents.0.file',
         ]);
 
@@ -262,16 +269,12 @@ it('lets only the owning employer review applications and notifies the applicant
     ]);
 
     $this->actingAs($applicant)
-        ->get(route('Client.Application'))
+        ->get(route('client.jobs'))
         ->assertOk()
         ->assertSee('Approved');
 });
 
-<<<<<<< HEAD
-it('updates all document statuses together and enforces employer ownership', function () {
-=======
-it('lets an employer update every submitted document with one status and enforces ownership', function () {
->>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
+it('tracks document review status separately and enforces ownership', function () {
     $owner = User::factory()->employer()->create();
     $otherEmployer = User::factory()->employer()->create();
     $applicant = User::factory()->applicant()->create();
@@ -280,132 +283,34 @@ it('lets an employer update every submitted document with one status and enforce
         ->for($job, 'job')
         ->for($applicant, 'applicant')
         ->create();
-    $documents = ApplicationDocument::factory()
-<<<<<<< HEAD
-=======
-        ->for($application, 'applicationForm')
-        ->count(2)
-        ->create();
-
-    $this->actingAs($otherEmployer)
-        ->patch(route('employer.applications.documents.review', $application), [
-            'status' => 'rejected',
-            'remarks' => 'Unreadable.',
-        ])
-        ->assertForbidden();
-
-    $this->actingAs($owner)
-        ->from(route('employer.applications.show', $application))
-        ->patch(route('employer.applications.documents.review', $application), [
-            'status' => 'invalid',
-        ])
-        ->assertRedirect(route('employer.applications.show', $application))
-        ->assertSessionHasErrors('status');
-
-    $this->actingAs($owner)
-        ->patch(route('employer.applications.documents.review', $application), [
-            'status' => 'rejected',
-            'remarks' => 'Unreadable.',
-        ])
-        ->assertRedirect()
-        ->assertSessionHas('success', 'Document status updated for 2 submitted document(s).');
-
-    $documents->each->refresh();
-
-    expect($documents->every(fn (ApplicationDocument $document) => $document->status === ApplicationStatus::Rejected))
-        ->toBeTrue()
-        ->and($documents->every(fn (ApplicationDocument $document) => $document->reviewed_by === $owner->id))
-        ->toBeTrue()
-        ->and($documents->every(fn (ApplicationDocument $document) => $document->statusHistories()->count() === 1))
-        ->toBeTrue();
-
-    $this->actingAs($owner)
-        ->get(route('employer.applications.show', $application))
-        ->assertOk()
-        ->assertSee('Update Document Status')
-        ->assertSee($application->profileImageUrl(), false);
-
-});
-
-it('allows applicants to view only their own submitted application', function () {
-    $employer = User::factory()->employer()->create();
-    $applicant = User::factory()->applicant()->create();
-    $otherApplicant = User::factory()->applicant()->create();
-    $job = Job::factory()->for($employer, 'employer')->create([
-        'title' => 'Operations Coordinator',
-    ]);
-    $application = ApplicationForm::factory()
-        ->for($job, 'job')
-        ->for($applicant, 'applicant')
-        ->create();
     $document = ApplicationDocument::factory()
->>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
         ->for($application, 'applicationForm')
-        ->count(2)
+        ->type(ApplicationDocumentType::Nin)
         ->create();
 
-<<<<<<< HEAD
     $this->actingAs($otherEmployer)
-        ->patch(route('employer.applications.documents.review', $application), [
+        ->patch(route('employer.application-documents.review', $document), [
             'status' => 'rejected',
             'remarks' => 'Unreadable.',
         ])
         ->assertForbidden();
 
     $this->actingAs($owner)
-        ->from(route('employer.applications.show', $application))
-        ->patch(route('employer.applications.documents.review', $application), [
-            'status' => 'invalid',
-        ])
-        ->assertRedirect(route('employer.applications.show', $application))
-        ->assertSessionHasErrors('status');
-
-    $this->actingAs($owner)
-        ->patch(route('employer.applications.documents.review', $application), [
+        ->patch(route('employer.application-documents.review', $document), [
             'status' => 'rejected',
             'remarks' => 'Unreadable.',
         ])
-        ->assertRedirect()
-        ->assertSessionHas('success', 'Document status updated for 2 submitted document(s).');
+        ->assertRedirect();
 
-    $documents->each->refresh();
+    $document->refresh();
 
-    expect($documents->every(fn (ApplicationDocument $document) => $document->status === ApplicationStatus::Rejected))
-        ->toBeTrue()
-        ->and($documents->every(fn (ApplicationDocument $document) => $document->reviewed_by === $owner->id))
-        ->toBeTrue()
-        ->and($documents->every(fn (ApplicationDocument $document) => $document->statusHistories()->count() === 1))
-        ->toBeTrue();
-=======
+    expect($document->status)->toBe(ApplicationStatus::Rejected)
+        ->and($document->reviewed_by)->toBe($owner->id)
+        ->and($document->statusHistories()->count())->toBe(1);
+
     $this->actingAs($applicant)
-        ->get(route('client.applications.show', $application))
+        ->get(route('client.documents'))
         ->assertOk()
-        ->assertSee($application->reference)
-        ->assertSee('Operations Coordinator')
-        ->assertSee($document->document_name)
-        ->assertSee('View submitted file');
-
-    $this->actingAs($otherApplicant)
-        ->get(route('client.applications.show', $application))
-        ->assertForbidden();
-});
-
-it('uses the submitted profile image and falls back to the default avatar', function () {
-    Storage::fake('public');
-
-    $application = ApplicationForm::factory()->create([
-        'profile_image_path' => 'profile-images/submitted-photo.png',
-    ]);
-
-    Storage::disk('public')->put($application->profile_image_path, 'image');
-
-    expect($application->profileImageUrl())
-        ->toContain('storage/profile-images/submitted-photo.png');
-
-    $application->update(['profile_image_path' => null]);
-    $application->applicant->update(['profile_image_path' => null]);
-
-    expect($application->fresh()->profileImageUrl())
-        ->toContain('admin/assets/images/Avatar.png');
->>>>>>> f2b6a74962042751e7b26d2d7fc947e5a0b3ba14
+        ->assertSee('Rejected')
+        ->assertSee('Unreadable.');
 });

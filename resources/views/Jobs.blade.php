@@ -1,5 +1,6 @@
+@use('Illuminate\Support\Str')
 
-<x-app :title="'Jobs - MartHire'">
+<x-app :title="'Jobs - NextHire'">
 	<!-- Breadcrumb -->
 	<div class="bread-crumb-bar">
 		<div class="container">
