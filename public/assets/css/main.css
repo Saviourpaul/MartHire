@@ -4111,11 +4111,3 @@ code::after {
     background-color: rgb(251 207 232 / var(--tw-bg-opacity, 1));
   }
 }
-
-.error-image{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-
-}

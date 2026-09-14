@@ -2,7 +2,8 @@
 
 <x-layout title="Job Application">
     @php
-        $steps = ['Personal Information', 'Identification', 'Educational Qualification', 'Application Summary'];
+        $wizardSteps = ['Personal Information', 'Identification', 'Educational Qualification', 'Application Summary'];
+
         $educationDocumentTypes = [
             'ssce' => 'SSCE',
             'ond' => 'OND',
@@ -13,538 +14,1102 @@
             'phd' => 'PhD',
             'other' => 'Other',
         ];
+
         $educationRows = collect(old('education_documents', [['type' => '']]))->values();
         $educationRows = $educationRows->isEmpty() ? collect([['type' => '']]) : $educationRows;
         $selectedState = old('state_of_origin', $user->state_of_origin);
         $selectedLga = old('local_government_area', $user->local_government_area);
         $profileImageAccept = collect(StoreApplicationFormRequest::PROFILE_IMAGE_TYPES)
-            ->map(fn($type) => '.' . $type)
+            ->map(fn($type) => '.'.$type)
             ->implode(',');
         $documentAccept = collect(StoreApplicationFormRequest::DOCUMENT_TYPES)
-            ->map(fn($type) => '.' . $type)
+            ->map(fn($type) => '.'.$type)
             ->implode(',');
+        $profileImageMaxMb = StoreApplicationFormRequest::PROFILE_IMAGE_MAX_KB / 1024;
         $documentMaxMb = StoreApplicationFormRequest::DOCUMENT_MAX_KB / 1024;
-        $stepFields = [
-            [
-                'profile_image',
-                'first_name',
-                'middle_name',
-                'last_name',
-                'email',
-                'phone',
-                'date_of_birth',
-                'gender',
-                'marital_status',
-            ],
-            ['nationality', 'state_of_origin', 'local_government_area', 'address', 'zipcode'],
-            ['nin_number', 'nin_document', 'education_documents'],
-        ];
-        $initialStep = 0;
-
-        foreach ($stepFields as $stepIndex => $fieldNames) {
-            $hasErrorForStep = collect($errors->keys())->contains(function (string $errorKey) use ($fieldNames): bool {
-                return collect($fieldNames)->contains(
-                    fn(string $fieldName): bool => $errorKey === $fieldName ||
-                        str_starts_with($errorKey, $fieldName . '.'),
-                );
-            });
-
-            if ($hasErrorForStep) {
-                $initialStep = $stepIndex;
-                break;
-            }
-        }
-        $input =
-            'mt-2 block h-11 w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-900 shadow-sm outline-none transition duration-150 placeholder:text-gray-400 hover:border-gray-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:border-gray-600';
-        $file =
-            'mt-2 block w-full cursor-pointer rounded-lg border border-gray-300 bg-white text-sm text-gray-700 shadow-sm transition duration-150 hover:border-gray-400 file:mr-4 file:border-0 file:bg-gray-100 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-gray-700 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:file:bg-gray-800 dark:file:text-gray-200';
-        $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300';
-        $error = 'mt-1 hidden text-xs font-medium text-error-600 dark:text-error-400';
     @endphp
 
-    <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <div
-            class="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-                <p class="text-sm font-medium text-brand-600 dark:text-brand-400">{{ $job->company }}</p>
-                <h1 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">Apply for {{ $job->title }}</h1>
-                
+   
+
+    <div class="application-wizard-shell">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Apply for {{ $job->title }}</h3>
+                    <p class="text-muted mb-0">{{ $job->company }}</p>
+                </div>
+    
+                 <div>
+                <a href="{{ route('job-details', $job) }}" class="mb-3 inline-flex items-center gap-2 text-theme-sm font-medium text-gray-500 hover:text-brand-500 dark:text-gray-400">
+                    <svg class="fill-current" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.7908 5.23017C13.0837 5.52306 13.0837 5.99794 12.7908 6.29083L9.08167 10L12.7908 13.7092C13.0837 14.0021 13.0837 14.4769 12.7908 14.7698C12.4979 15.0627 12.0231 15.0627 11.7302 14.7698L7.49017 10.5298C7.19728 10.2369 7.19728 9.76206 7.49017 9.46917L11.7302 5.23017C12.0231 4.93728 12.4979 4.93728 12.7908 5.23017Z" />
+                    </svg>
+                    Back to jobs
+                </a>
             </div>
-            <a href="{{ route('job-details', $job) }}"
-                class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Back
-                to job</a>
+            </div>
         </div>
 
-        @if (session('success'))
-            <div class="mb-5 rounded-lg border border-success-500/30 bg-success-50 px-4 py-3 text-sm font-medium text-success-700"
-                role="status">{{ session('success') }}</div>
-        @endif
-        @if ($errors->any())
-            <div class="mb-5 rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-sm font-medium text-error-700"
-                role="alert">
-                <p>Please correct the highlighted fields. Your application has not been submitted yet.</p>
-                @error('job')
-                    <p class="mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-        @endif
+        <x-application-wizard-progress :steps="$wizardSteps" />
 
         <form action="{{ route('applications.store', $job) }}" method="POST" enctype="multipart/form-data"
             data-application-wizard data-confirm data-confirm-title="Submit application?"
             data-confirm-text="Please confirm your information and uploaded documents are correct."
-            data-confirm-icon="question" data-confirm-button="Submit Application"
-            data-initial-step="{{ $initialStep }}" data-completed-steps="{{ $initialStep }}" novalidate>
+            data-confirm-icon="question" data-confirm-button="Submit Application" novalidate>
             @csrf
 
-            <div
-                class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-                <div class="mb-5 flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900 dark:text-white">Application progress</p>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" data-progress-status
-                            aria-live="polite">
-                            Step 1 of {{ count($steps) }}</p>
-                    </div>
-                    <span
-                        class="shrink-0 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300"
-                        data-overall-percent>0%</span>
-                </div>
-                <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800" role="progressbar"
-                    aria-label="Application completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
-                    data-overall-progress>
-                    <div class="h-full rounded-full bg-brand-500 transition-[width] duration-300 ease-out"
-                        style="width:0%" data-overall-bar>
-                    </div>
-                </div>
-              
+            <div class="alert alert-danger d-none" data-validation-summary role="alert" tabindex="-1">
+                Please correct the highlighted fields before continuing.
             </div>
 
-            <div class="mb-5 hidden rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-sm font-medium text-error-700"
-                data-validation-summary role="alert" tabindex="-1"></div>
+            <x-application-wizard-step title="Personal Information" :index="0">
+                <div class="application-form-panel">
+                    <div class="row">
+                        <div class="col-md-12 col-lg-12">
+                            <div class="pro-form-img profile-upload-preview">
+                                <div class="profile-pic">
 
-            <section data-wizard-step
-                class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h2>
-                <div class="mt-6 -mx-2.5 flex flex-wrap gap-y-5">
-                    <div class="w-full px-2.5">
-                        <label for="profile_image" class="{{ $label }}">Profile photo @if (blank($user->profile_image_path))
-                                <span class="text-error-600">*</span>
-                            @endif
-                        </label>
-                        <div class="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
-                            <div class="relative h-24 w-24 shrink-0" data-profile-preview-frame>
-                                <img id="profile-image-preview" src="{{ $user->profileImageUrl() }}"
-                                    data-default-src="{{ $user->profileImageUrl() }}" alt="Profile photo preview"
-                                    class="h-24 w-24 rounded-full border-2 border-gray-200 bg-gray-50 object-cover shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                <span
-                                    class="absolute -right-1 bottom-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand-500 text-xs font-bold text-white shadow-sm dark:border-gray-900"
-                                    aria-hidden="true">+</span>
+                                    <img id="profile-image-preview" class="rounded-circle"
+                                        src="{{ $user->profileImageUrl() }}" alt="Profile image" width="100"
+                                        height="100" style="object-fit: cover;">
+                                </div>
+
+                                <div class="upload-files">
+                                    <label class="file-upload image-upbtn">
+                                        <i class="feather-upload me-2"></i>Upload Photo
+                                        <input id="profile-image-input" type="file" name="profile_image"
+                                            class="form-control @error('profile_image') is-invalid @enderror"
+                                            accept="{{ $profileImageAccept }}" @required(blank($user->profile_image_path))
+                                            data-file-input data-file-kind="profile-image"
+                                            data-max-kb="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_KB }}"
+                                            data-allowed-types='@json(StoreApplicationFormRequest::PROFILE_IMAGE_TYPES)'
+                                            data-min-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_WIDTH }}"
+                                            data-min-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_HEIGHT }}"
+                                            data-max-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_WIDTH }}"
+                                            data-max-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_HEIGHT }}"
+                                            aria-describedby="profile-image-help profile-image-feedback">
+                                    </label>
+                                    <span id="profile-image-help">
+                                        JPG, PNG, or WebP. Max {{ $profileImageMaxMb }}MB. Dimensions
+                                        {{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_WIDTH }}x{{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_HEIGHT }}
+                                        to
+                                        {{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_WIDTH }}x{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_HEIGHT }}
+                                        pixels.
+                                    </span>
+                                    <div id="profile-image-preview-status" class="profile-preview-status" aria-live="polite">
+                                        Choose a photo to preview it before submission.
+                                    </div>
+                                    <div id="profile-image-feedback"
+                                        class="validation-feedback @error('profile_image') is-visible @enderror"
+                                        data-validation-message aria-live="polite">
+                                        @error('profile_image')
+                                            {{ $message }}
+                                        @enderror
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex-1">
-                                <input id="profile_image" type="file" name="profile_image"
-                                    class="{{ $file }} @error('profile_image') border-error-500 @enderror"
-                                    accept="{{ $profileImageAccept }}" @required(blank($user->profile_image_path)) data-file-input
-                                    data-file-kind="profile-image"
-                                    data-max-kb="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_KB }}"
-                                    data-allowed-types='@json(StoreApplicationFormRequest::PROFILE_IMAGE_TYPES)'
-                                    data-min-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_WIDTH }}"
-                                    data-min-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_HEIGHT }}"
-                                    data-max-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_WIDTH }}"
-                                    data-max-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_HEIGHT }}"
-                                    aria-describedby="profile-image-help profile-image-preview-status profile-image-feedback">
-                                <p id="profile-image-help" class="mt-1 text-xs text-gray-500">JPG, PNG, or WebP. Max
-                                    {{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_KB / 1024 }}MB.</p>
-                                <p id="profile-image-preview-status" class="mt-1 text-xs text-gray-500"
-                                    data-profile-preview-status aria-live="polite">
-                                    Choose a photo to preview it before submission.</p>
-                                <p id="profile-image-feedback"
-                                    class="{{ $error }} @error('profile_image') block @enderror"
-                                    data-validation-message>
-                                    @error('profile_image')
-                                        {{ $message }}
-                                    @enderror
-                                </p>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name"
+                                class="form-control @error('first_name') is-invalid @enderror"
+                                value="{{ old('first_name', $user->first_name) }}" minlength="2" maxlength="100"
+                                autocomplete="given-name" required>
+                            @error('first_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Middle Name</label>
+                            <input type="text" name="middle_name"
+                                class="form-control @error('middle_name') is-invalid @enderror"
+                                value="{{ old('middle_name') }}" maxlength="100" autocomplete="additional-name">
+                            @error('middle_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name"
+                                class="form-control @error('last_name') is-invalid @enderror"
+                                value="{{ old('last_name', $user->last_name) }}" minlength="2" maxlength="100"
+                                autocomplete="family-name" required>
+                            @error('last_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" name="phone"
+                                class="form-control @error('phone') is-invalid @enderror"
+                                value="{{ old('phone', $user->phone) }}" autocomplete="tel"
+                                pattern="\+?[0-9\s().-]{7,20}" maxlength="20" required>
+                            @error('phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email"
+                                class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email', $user->email) }}" autocomplete="email" maxlength="255" required>
+                            @error('email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nationality</label>
+                            <input type="text" name="nationality"
+                                class="form-control @error('nationality') is-invalid @enderror"
+                                value="{{ old('nationality', $user->nationality ?? 'Nigeria') }}" maxlength="100"
+                                autocomplete="country-name" required>
+                            @error('nationality')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" name="date_of_birth"
+                                class="form-control @error('date_of_birth') is-invalid @enderror"
+                                value="{{ old('date_of_birth', $user->date_of_birth?->format('Y-m-d')) }}"
+                                min="1900-01-01" max="{{ now()->subDay()->toDateString() }}" required>
+                            @error('date_of_birth')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" class="form-control @error('gender') is-invalid @enderror" required>
+                                <option value="">Select gender</option>
+                                @foreach (['male' => 'Male', 'female' => 'Female', 'other' => 'Other'] as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('gender') === $value)>
+                                        {{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('gender')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Marital Status</label>
+                            <select name="marital_status"
+                                class="form-control @error('marital_status') is-invalid @enderror" required>
+                                <option value="">Select status</option>
+                                @foreach (['single' => 'Single', 'married' => 'Married', 'Other' => 'Other'] as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('marital_status') === $value)>
+                                        {{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('marital_status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Zipcode</label>
+                            <input type="text" name="zipcode"
+                                class="form-control @error('zipcode') is-invalid @enderror"
+                                value="{{ old('zipcode', $user->zipcode) }}" minlength="3" maxlength="20"
+                                pattern="[A-Za-z0-9\s-]{3,20}" autocomplete="postal-code" required>
+                            @error('zipcode')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">State of Origin</label>
+                            <select name="state_of_origin"
+                                class="form-control @error('state_of_origin') is-invalid @enderror" required
+                                data-state-of-origin>
+                                <option value="">Select state</option>
+                                @foreach ($states as $state)
+                                    <option value="{{ $state->name }}"
+                                        data-lga-url="{{ route('locations.states.local-government-areas', $state) }}"
+                                        @selected($selectedState === $state->name)>
+                                        {{ $state->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('state_of_origin')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Local Government Area</label>
+                            <select name="local_government_area"
+                                class="form-control @error('local_government_area') is-invalid @enderror" required
+                                data-local-government-area data-selected-lga="{{ $selectedLga }}">
+                                <option value="">Select LGA</option>
+                                @if ($selectedLga)
+                                    <option value="{{ $selectedLga }}" selected>{{ $selectedLga }}</option>
+                                @endif
+                            </select>
+                            @error('local_government_area')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Address</label>
+                            <input type="text" name="address"
+                                class="form-control @error('address') is-invalid @enderror"
+                                value="{{ old('address', $user->address) }}" minlength="5" maxlength="255"
+                                autocomplete="street-address" required>
+                            @error('address')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wizard-actions">
+                    <span></span>
+                    <button type="button" class="btn btn-primary" data-wizard-next>
+                        Next
+                        <i data-feather="arrow-right"></i>
+                    </button>
+                </div>
+            </x-application-wizard-step>
+
+            <x-application-wizard-step title="Identification" :index="1">
+                <div class="application-form-panel">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIN Number</label>
+                            <input type="text" name="nin_number"
+                                class="form-control @error('nin_number') is-invalid @enderror"
+                                value="{{ old('nin_number') }}" inputmode="numeric" pattern="[0-9]{11}"
+                                minlength="11" maxlength="11" required>
+                            @error('nin_number')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIN Document</label>
+                            <input type="file" name="nin_document"
+                                class="form-control @error('nin_document') is-invalid @enderror"
+                                accept="{{ $documentAccept }}" required data-file-input data-file-kind="document"
+                                data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}"
+                                data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)'
+                                aria-describedby="nin-document-help nin-document-feedback">
+                            <div id="nin-document-help" class="form-text">
+                                PDF, JPG, or PNG. Max {{ $documentMaxMb }}MB.
+                            </div>
+                            <div id="nin-document-feedback"
+                                class="validation-feedback @error('nin_document') is-visible @enderror"
+                                data-validation-message aria-live="polite">
+                                @error('nin_document')
+                                    {{ $message }}
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">BVN Number</label>
+                            <input type="text" name="bvn_number"
+                                class="form-control @error('bvn_number') is-invalid @enderror"
+                                value="{{ old('bvn_number') }}" inputmode="numeric" pattern="[0-9]{11}"
+                                minlength="11" maxlength="11" required>
+                            @error('bvn_number')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">BVN Document</label>
+                            <input type="file" name="bvn_document"
+                                class="form-control @error('bvn_document') is-invalid @enderror"
+                                accept="{{ $documentAccept }}" required data-file-input data-file-kind="document"
+                                data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}"
+                                data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)'
+                                aria-describedby="bvn-document-help bvn-document-feedback">
+                            <div id="bvn-document-help" class="form-text">
+                                PDF, JPG, or PNG. Max {{ $documentMaxMb }}MB.
+                            </div>
+                            <div id="bvn-document-feedback"
+                                class="validation-feedback @error('bvn_document') is-visible @enderror"
+                                data-validation-message aria-live="polite">
+                                @error('bvn_document')
+                                    {{ $message }}
+                                @enderror
                             </div>
                         </div>
                     </div>
-                    <div class="w-full px-2.5 xl:w-1/2">
-                        <label for="first_name" class="{{ $label }}">First name <span
-                                class="text-error-600">*</span></label>
-                        <input id="first_name" type="text" name="first_name"
-                            value="{{ old('first_name', $user->first_name) }}"
-                            class="{{ $input }} @error('first_name') border-error-500 @enderror"
-                            autocomplete="given-name" minlength="2" maxlength="100" required>
-                        <p class="{{ $error }} @error('first_name') block @enderror" data-validation-message>
-                            @error('first_name')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2">
-                        <label for="middle_name" class="{{ $label }}">Middle name <span
-                                class="text-gray-400">(optional)</span></label>
-                        <input id="middle_name" type="text" name="middle_name" value="{{ old('middle_name') }}"
-                            class="{{ $input }} @error('middle_name') border-error-500 @enderror"
-                            autocomplete="additional-name" maxlength="100">
-                        <p class="{{ $error }} @error('middle_name') block @enderror" data-validation-message>
-                            @error('middle_name')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2">
-                        <label for="last_name" class="{{ $label }}">Last name <span
-                                class="text-error-600">*</span></label>
-                        <input id="last_name" type="text" name="last_name"
-                            value="{{ old('last_name', $user->last_name) }}"
-                            class="{{ $input }} @error('last_name') border-error-500 @enderror"
-                            autocomplete="family-name" minlength="2" maxlength="100" required>
-                        <p class="{{ $error }} @error('last_name') block @enderror" data-validation-message>
-                            @error('last_name')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2">
-                        <label for="email" class="{{ $label }}">Email address <span
-                                class="text-error-600">*</span></label>
-                        <input id="email" type="email" name="email"
-                            value="{{ old('email', $user->email) }}"
-                            class="{{ $input }} @error('email') border-error-500 @enderror"
-                            autocomplete="email" maxlength="255" required>
-                        <p class="{{ $error }} @error('email') block @enderror" data-validation-message>
-                            @error('email')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2">
-                        <label for="phone" class="{{ $label }}">Phone number <span
-                                class="text-error-600">*</span></label>
-                        <input id="phone" type="tel" name="phone"
-                            value="{{ old('phone', $user->phone) }}"
-                            class="{{ $input }} @error('phone') border-error-500 @enderror"
-                            autocomplete="tel" pattern="\+?[0-9 .()-]{7,20}" maxlength="20" required>
-                        <p class="{{ $error }} @error('phone') block @enderror" data-validation-message>
-                            @error('phone')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="date_of_birth" class="{{ $label }}">Date
-                            of birth <span class="text-error-600">*</span></label><input id="date_of_birth"
-                            type="date" name="date_of_birth"
-                            value="{{ old('date_of_birth', $user->date_of_birth?->format('Y-m-d')) }}"
-                            class="{{ $input }} @error('date_of_birth') border-error-500 @enderror"
-                            min="1900-01-01" max="{{ now()->subDay()->toDateString() }}" required>
-                        <p class="{{ $error }} @error('date_of_birth') block @enderror"
-                            data-validation-message>
-                            @error('date_of_birth')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="gender" class="{{ $label }}">Gender
-                            <span class="text-error-600">*</span></label><select id="gender" name="gender"
-                            class="{{ $input }} @error('gender') border-error-500 @enderror" required>
-                            <option value="">Select gender</option>
-                            @foreach (['male' => 'Male', 'female' => 'Female', 'other' => 'Other'] as $value => $text)
-                                <option value="{{ $value }}" @selected(old('gender') === $value)>{{ $text }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="{{ $error }} @error('gender') block @enderror" data-validation-message>
-                            @error('gender')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="marital_status"
-                            class="{{ $label }}">Marital status <span
-                                class="text-error-600">*</span></label><select id="marital_status"
-                            name="marital_status"
-                            class="{{ $input }} @error('marital_status') border-error-500 @enderror" required>
-                            <option value="">Select status</option>
-                            @foreach (['single' => 'Single', 'married' => 'Married', 'Other' => 'Other'] as $value => $text)
-                                <option value="{{ $value }}" @selected(old('marital_status') === $value)>{{ $text }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="{{ $error }} @error('marital_status') block @enderror"
-                            data-validation-message>
-                            @error('marital_status')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
                 </div>
-            </section>
 
-            <section data-wizard-step
-                class="hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Location Information</h2>
-                <div class="mt-6 -mx-2.5 flex flex-wrap gap-y-5">
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="nationality"
-                            class="{{ $label }}">Nationality <span
-                                class="text-error-600">*</span></label><input id="nationality" type="text"
-                            name="nationality" value="{{ old('nationality', $user->nationality ?? 'Nigeria') }}"
-                            class="{{ $input }} @error('nationality') border-error-500 @enderror"
-                            maxlength="100" autocomplete="country-name" required>
-                        <p class="{{ $error }} @error('nationality') block @enderror" data-validation-message>
-                            @error('nationality')
-                                {{ $message }}
-                            @enderror
-                        </p>
+                <div class="wizard-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-wizard-previous>
+                        <i data-feather="arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-primary" data-wizard-next>
+                        Next
+                        <i data-feather="arrow-right"></i>
+                    </button>
+                </div>
+            </x-application-wizard-step>
+
+            <x-application-wizard-step title="Educational Qualification" :index="2">
+                <div class="application-form-panel">
+                    <div id="education-documents" data-education-documents>
+                        @foreach ($educationRows as $index => $row)
+                            <div class="qualification-document" data-education-document>
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                    <h6 class="mb-0" data-document-title>Qualification Document {{ $index + 1 }}
+                                    </h6>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        data-remove-document>
+                                        <i data-feather="x"></i>
+                                        Remove
+                                    </button>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"
+                                            for="education-document-type-{{ $index }}">Document Type</label>
+                                        <select id="education-document-type-{{ $index }}"
+                                            name="education_documents[{{ $index }}][type]"
+                                            class="form-control @error('education_documents.' . $index . '.type') is-invalid @enderror"
+                                            required data-document-type>
+                                            <option value="">Select document type</option>
+                                            @foreach ($educationDocumentTypes as $value => $label)
+                                                <option value="{{ $value }}" @selected(($row['type'] ?? '') === $value)>
+                                                    {{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('education_documents.' . $index . '.type')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"
+                                            for="education-document-file-{{ $index }}">Upload Document</label>
+                                        <input id="education-document-file-{{ $index }}" type="file"
+                                            name="education_documents[{{ $index }}][file]"
+                                            class="form-control @error('education_documents.' . $index . '.file') is-invalid @enderror"
+                                            accept="{{ $documentAccept }}" required data-document-file data-file-input
+                                            data-file-kind="document"
+                                            data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}"
+                                            data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)'
+                                            aria-describedby="education-document-file-help-{{ $index }} education-document-file-feedback-{{ $index }}">
+                                        <div id="education-document-file-help-{{ $index }}" class="form-text"
+                                            data-document-file-help>
+                                            PDF, JPG, or PNG. Max {{ $documentMaxMb }}MB.
+                                        </div>
+                                        <div id="education-document-file-feedback-{{ $index }}"
+                                            class="validation-feedback @error('education_documents.' . $index . '.file') is-visible @enderror"
+                                            data-validation-message aria-live="polite">
+                                            @error('education_documents.' . $index . '.file')
+                                                {{ $message }}
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="state_of_origin"
-                            class="{{ $label }}">State of origin <span
-                                class="text-error-600">*</span></label><select id="state_of_origin"
-                            name="state_of_origin"
-                            class="{{ $input }} @error('state_of_origin') border-error-500 @enderror" required
-                            data-state-of-origin>
-                            <option value="">Select state</option>
-                            @foreach ($states as $state)
-                                <option value="{{ $state->name }}"
-                                    data-lga-url="{{ route('locations.states.local-government-areas', $state) }}"
-                                    @selected($selectedState === $state->name)>{{ $state->name }}</option>
+
+                    @error('education_documents')
+                        <div class="text-danger mb-3">{{ $message }}</div>
+                    @enderror
+
+                    <button type="button" class="btn btn-outline-primary" data-add-document>
+                        <i data-feather="plus"></i>
+                        Add another document
+                    </button>
+                </div>
+
+                <div class="wizard-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-wizard-previous>
+                        <i data-feather="arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-primary" data-wizard-next>
+                        Next
+                        <i data-feather="arrow-right"></i>
+                    </button>
+                </div>
+            </x-application-wizard-step>
+
+            <x-application-wizard-step title="Application Summary" :index="3">
+                <div class="application-form-panel">
+                    <dl class="application-summary-list">
+                        <div>
+                            <dt>Job</dt>
+                            <dd>{{ $job->title }}</dd>
+                        </div>
+                        <div>
+                            <dt>Company</dt>
+                            <dd>{{ $job->company }}</dd>
+                        </div>
+                        <div>
+                            <dt>Deadline</dt>
+                            <dd>{{ $job->due_date->format('M d, Y') }}</dd>
+                        </div>
+                        <div>
+                            <dt>Applicant</dt>
+                            <dd data-summary-full-name>
+                                {{ trim(old('first_name', $user->first_name) . ' ' . old('last_name', $user->last_name)) ?: 'Not provided' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Contact</dt>
+                            <dd data-summary-contact>{{ old('phone', $user->phone) ?: 'Not provided' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Origin</dt>
+                            <dd data-summary-origin>
+                                {{ collect([$selectedLga, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Qualification Documents</dt>
+                            <dd data-summary-documents>{{ $educationRows->count() }}</dd>
+                        </div>
+                        <div>
+                            <dt>Nationality</dt>
+                            <dd data-summary-nationality>
+                                {{ old('nationality', $user->nationality ?? 'Nigeria') ?: 'Not provided' }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="wizard-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-wizard-previous>
+                        <i data-feather="arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="send"></i>
+                        Submit Application
+                    </button>
+                </div>
+            </x-application-wizard-step>
+        </form>
+
+        <template id="education-document-template">
+            <div class="qualification-document" data-education-document>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h6 class="mb-0" data-document-title></h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-remove-document>
+                        <i data-feather="x"></i>
+                        Remove
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" data-document-type-label>Document Type</label>
+                        <select class="form-control" required data-document-type>
+                            <option value="">Select document type</option>
+                            @foreach ($educationDocumentTypes as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
-                        <p class="{{ $error }} @error('state_of_origin') block @enderror"
-                            data-validation-message>
-                            @error('state_of_origin')
-                                {{ $message }}
-                            @enderror
-                        </p>
                     </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="local_government_area"
-                            class="{{ $label }}">Local government area <span
-                                class="text-error-600">*</span></label><select id="local_government_area"
-                            name="local_government_area"
-                            class="{{ $input }} @error('local_government_area') border-error-500 @enderror"
-                            required data-local-government-area data-selected-lga="{{ $selectedLga }}">
-                            <option value="">Select LGA</option>
-                            @if ($selectedLga)
-                                <option value="{{ $selectedLga }}" selected>{{ $selectedLga }}</option>
-                            @endif
-                        </select>
-                        <p class="{{ $error }} @error('local_government_area') block @enderror"
-                            data-validation-message>
-                            @error('local_government_area')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="address" class="{{ $label }}">Address
-                            <span class="text-error-600">*</span></label><input id="address" type="text"
-                            name="address" value="{{ old('address', $user->address) }}"
-                            class="{{ $input }} @error('address') border-error-500 @enderror" minlength="5"
-                            maxlength="255" autocomplete="street-address" required>
-                        <p class="{{ $error }} @error('address') block @enderror" data-validation-message>
-                            @error('address')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="zipcode" class="{{ $label }}">Zipcode
-                            <span class="text-error-600">*</span></label><input id="zipcode" type="text"
-                            name="zipcode" value="{{ old('zipcode') }}"
-                            class="{{ $input }} @error('zipcode') border-error-500 @enderror" minlength="3"
-                            maxlength="20" autocomplete="postal-code" required>
-                        <p class="{{ $error }} @error('zipcode') block @enderror" data-validation-message>
-                            @error('zipcode')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section data-wizard-step
-                class="hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Means of Identification</h2>
-                <p class="mt-1 text-sm text-gray-500">Accepted files: PDF, JPG, JPEG, or PNG. Max
-                    {{ $documentMaxMb }}MB each.</p>
-                <div class="mt-6 -mx-2.5 flex flex-wrap gap-y-5">
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="nin_number" class="{{ $label }}">NIN
-                            number <span class="text-error-600">*</span></label><input id="nin_number" type="text" placeholder="NIN "
-                            name="nin_number" value="{{ old('nin_number') }}"
-                            class="{{ $input }} @error('nin_number') border-error-500 @enderror"
-                            inputmode="numeric" pattern="[0-9]{11}" minlength="11" maxlength="11" required>
-                        <p class="{{ $error }} @error('nin_number') block @enderror" data-validation-message>
-                            @error('nin_number')
-                                {{ $message }}
-                            @enderror
-                        </p>
-                    </div>
-                    <div class="w-full px-2.5 xl:w-1/2"><label for="nin_document" class="{{ $label }}">NIN
-                            document <span class="text-error-600">*</span></label>
-                           
-
-                            <input type="file" id="nin_document" name="nin_document" @error('nin_document') border-error-500 @enderror class="focus:border-ring-brand-300 shadow-theme-xs focus:file:ring-brand-300 h-11 w-full overflow-hidden rounded-lg border border-gray-300 bg-transparent text-sm text-gray-500 transition-colors file:mr-5 file:border-collapse file:cursor-pointer file:rounded-l-lg file:border-0 file:border-r file:border-solid file:border-gray-200 file:bg-gray-50 file:py-3 file:pr-3 file:pl-3.5 file:text-sm file:text-gray-700 placeholder:text-gray-400 hover:file:bg-gray-100 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:text-white/90 dark:file:border-gray-800 dark:file:bg-white/[0.03] dark:file:text-gray-400 dark:placeholder:text-gray-400"  accept="{{ $documentAccept }}" required data-file-input
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" data-document-file-label>Upload Document</label>
+                        <input type="file" class="form-control" accept="{{ $documentAccept }}" required
+                            data-document-file data-file-input data-file-kind="document"
                             data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}"
                             data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)'>
-                        <p class="{{ $error }} @error('nin_document') block @enderror"
-                            data-validation-message>
-                            @error('nin_document')
-                                {{ $message }}
-                            @enderror
-                        </p>
+                        <div class="form-text" data-document-file-help>PDF, JPG, or PNG. Max {{ $documentMaxMb }}MB.</div>
+                        <div class="validation-feedback" data-validation-message aria-live="polite"></div>
                     </div>
                 </div>
-                <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-white">Education documents</h3>
-                        <p class="mt-1 text-sm text-gray-500">Upload at least one and no more than ten qualification
-                            documents.</p>
-                    </div><button type="button"
-                        class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                        data-add-document>Add another document</button>
-                </div>
-                @error('education_documents')
-                    <p class="mt-3 text-xs font-medium text-error-600">{{ $message }}</p>
-                @enderror
-                <div class="mt-4 space-y-4" data-education-documents>
-                    @foreach ($educationRows as $index => $document)
-                        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800"
-                            data-education-document>
-                            <div class="mb-4 flex items-center justify-between gap-3">
-                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white" data-document-title>
-                                    Qualification Document {{ $index + 1 }}</h4><button type="button"
-                                    class="rounded-lg px-3 py-1.5 text-sm font-medium text-error-600 hover:bg-error-50"
-                                    data-remove-document
-                                    @if ($educationRows->count() === 1) hidden @endif>Remove</button>
-                            </div>
-                            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                <div><label for="education-document-type-{{ $index }}"
-                                        class="{{ $label }}" data-document-type-label>Document type <span
-                                            class="text-error-600">*</span></label><select
-                                        id="education-document-type-{{ $index }}"
-                                        name="education_documents[{{ $index }}][type]"
-                                        class="{{ $input }} @error("education_documents.$index.type") border-error-500 @enderror"
-                                        required data-document-type>
-                                        <option value="">Select type</option>
-                                        @foreach ($educationDocumentTypes as $value => $text)
-                                            <option value="{{ $value }}" @selected(data_get($document, 'type') === $value)>
-                                                {{ $text }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p class="{{ $error }} @error("education_documents.$index.type") block @enderror"
-                                        data-validation-message>
-                                        @error("education_documents.$index.type")
-                                            {{ $message }}
-                                        @enderror
-                                    </p>
-                                </div>
-                                <div class="xl:col-span-2" data-field><label for="education-document-file-{{ $index }}"
-                                        class="{{ $label }}" data-document-file-label>Document file <span
-                                            class="text-error-600">*</span></label>
-                                    <div class="mt-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center transition hover:border-brand-500 hover:bg-brand-50/40 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-brand-500/5"
-                                        data-document-dropzone role="button" tabindex="0"
-                                        aria-label="Choose an education document file">
-                                        <input id="education-document-file-{{ $index }}" type="file"
-                                            name="education_documents[{{ $index }}][file]" class="sr-only"
-                                            accept="{{ $documentAccept }}" required data-file-input data-document-file
-                                            data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}"
-                                            data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)'>
-                                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                            <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 .7.3l4 4a1 1 0 1 1-1.4 1.4L13 6.4V16a1 1 0 1 1-2 0V6.4L8.7 8.7a1 1 0 0 1-1.4-1.4l4-4A1 1 0 0 1 12 3Zm-7 13a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2a1 1 0 1 1 2 0v2a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-2a1 1 0 0 1 1-1Z" /></svg>
-                                        </div>
-                                        <p class="mt-3 text-sm font-semibold text-gray-800 dark:text-white">Drop a document here</p>
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">PDF, JPG, JPEG, or PNG up to {{ $documentMaxMb }}MB</p>
-                                        <span class="mt-3 inline-block text-sm font-medium text-brand-600 underline dark:text-brand-400">Browse files</span>
-                                        <p class="mt-3 hidden truncate text-xs font-medium text-success-700 dark:text-success-400" data-document-file-name></p>
-                                    </div>
-                                    <p class="{{ $error }} @error("education_documents.$index.file") block @enderror"
-                                        data-validation-message>
-                                        @error("education_documents.$index.file")
-                                            {{ $message }}
-                                        @enderror
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-
-            <section data-wizard-step
-                class="hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Application Summary</h2>
-                <dl class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-lg bg-gray-50 p-4">
-                        <dt class="text-xs font-medium uppercase text-gray-500">Applicant</dt>
-                        <dd class="mt-1 text-sm font-semibold text-gray-900" data-summary-full-name>Not provided</dd>
-                    </div>
-                    <div class="rounded-lg bg-gray-50 p-4">
-                        <dt class="text-xs font-medium uppercase text-gray-500">Contact</dt>
-                        <dd class="mt-1 text-sm font-semibold text-gray-900" data-summary-contact>Not provided</dd>
-                    </div>
-                    <div class="rounded-lg bg-gray-50 p-4">
-                        <dt class="text-xs font-medium uppercase text-gray-500">Origin</dt>
-                        <dd class="mt-1 text-sm font-semibold text-gray-900" data-summary-origin>Not provided</dd>
-                    </div>
-                    <div class="rounded-lg bg-gray-50 p-4">
-                        <dt class="text-xs font-medium uppercase text-gray-500">Education documents</dt>
-                        <dd class="mt-1 text-sm font-semibold text-gray-900"><span data-summary-documents>0</span>
-                            selected</dd>
-                    </div>
-                </dl>
-            </section>
-
-            <div
-                class="mt-6 flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                <button type="button"
-                    class="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 px-5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                    data-wizard-previous>Previous</button>
-                <div class="flex flex-col gap-3 sm:flex-row"><button type="button"
-                        class="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600"
-                        data-wizard-next>Next</button><button type="submit"
-                        class="hidden h-11 items-center justify-center rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-70"
-                        data-wizard-submit><span>Submit Application</span><span
-                            class="ml-2 hidden h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-                            data-submit-spinner aria-hidden="true"></span></button></div>
             </div>
-        </form>
+        </template>
     </div>
-    <template id="education-document-template">
-        <div class="rounded-lg border border-gray-200 p-4" data-education-document>
-            <div class="mb-4 flex items-center justify-between gap-3">
-                <h4 class="text-sm font-semibold text-gray-900" data-document-title>Qualification Document</h4><button
-                    type="button" class="rounded-lg px-3 py-1.5 text-sm font-medium text-error-600 hover:bg-error-50"
-                    data-remove-document>Remove</button>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div><label class="{{ $label }}" data-document-type-label>Document type <span
-                            class="text-error-600">*</span></label><select class="{{ $input }}" required
-                        data-document-type>
-                        <option value="">Select type</option>
-                        @foreach ($educationDocumentTypes as $value => $text)
-                            <option value="{{ $value }}">{{ $text }}</option>
-                        @endforeach
-                    </select>
-                    <p class="{{ $error }}" data-validation-message></p>
-                </div>
-                <div class="xl:col-span-2" data-field><label class="{{ $label }}" data-document-file-label>Document file
-                        <span class="text-error-600">*</span></label>
-                    <div class="mt-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center transition hover:border-brand-500 hover:bg-brand-50/40 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-brand-500/5"
-                        data-document-dropzone role="button" tabindex="0" aria-label="Choose an education document file">
-                        <input type="file" class="sr-only" accept="{{ $documentAccept }}" required data-file-input
-                            data-document-file data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}"
-                            data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)'>
-                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                            <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 .7.3l4 4a1 1 0 1 1-1.4 1.4L13 6.4V16a1 1 0 1 1-2 0V6.4L8.7 8.7a1 1 0 0 1-1.4-1.4l4-4A1 1 0 0 1 12 3Zm-7 13a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2a1 1 0 1 1 2 0v2a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-2a1 1 0 0 1 1-1Z" /></svg>
-                        </div>
-                        <p class="mt-3 text-sm font-semibold text-gray-800 dark:text-white">Drop a document here</p>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">PDF, JPG, JPEG, or PNG up to {{ $documentMaxMb }}MB</p>
-                        <span class="mt-3 inline-block text-sm font-medium text-brand-600 underline dark:text-brand-400">Browse files</span>
-                        <p class="mt-3 hidden truncate text-xs font-medium text-success-700 dark:text-success-400" data-document-file-name></p>
-                    </div>
-                    <p class="{{ $error }}" data-validation-message></p>
-                </div>
-            </div>
-        </div>
-    </template>
+
     @push('scripts')
-        <script defer src="{{ asset('assets/js/application-wizard.js') }}"></script>
+        <script>
+            (function() {
+                const form = document.querySelector('[data-application-wizard]');
+
+                if (!form) {
+                    return;
+                }
+
+                const steps = Array.from(form.querySelectorAll('[data-application-wizard-step]'));
+                const progressItems = Array.from(document.querySelectorAll('[data-application-wizard-progress-item]'));
+                const validationSummary = form.querySelector('[data-validation-summary]');
+                const profileImageInput = document.getElementById('profile-image-input');
+                const profileImagePreview = document.getElementById('profile-image-preview');
+                const profilePreviewStatus = document.getElementById('profile-image-preview-status');
+                const namePattern = /^[\p{L}\s'-]+$/u;
+                const phonePattern = /^\+?[0-9\s().-]{7,20}$/;
+                const zipcodePattern = /^[A-Za-z0-9\s-]{3,20}$/;
+                let profilePreviewUrl = null;
+                let currentStep = 0;
+
+                const formatMegabytes = (kilobytes) => `${Number(kilobytes / 1024).toFixed(kilobytes % 1024 === 0 ? 0 : 1)}MB`;
+
+                const parseAllowedTypes = (field) => {
+                    try {
+                        return JSON.parse(field.dataset.allowedTypes || '[]');
+                    } catch (error) {
+                        return [];
+                    }
+                };
+
+                const extensionFor = (file) => {
+                    const parts = file.name.toLowerCase().split('.');
+
+                    return parts.length > 1 ? parts.pop() : '';
+                };
+
+                const labelFor = (field) => {
+                    if (field.id) {
+                        const explicitLabel = form.querySelector(`label[for="${CSS.escape(field.id)}"]`);
+
+                        if (explicitLabel) {
+                            return explicitLabel.textContent.trim();
+                        }
+                    }
+
+                    return field.closest('.mb-3, .upload-files')?.querySelector('label')?.textContent.trim() ||
+                        field.name.replace(/[_\[\].]/g, ' ');
+                };
+
+                const feedbackFor = (field) => {
+                    const wrapper = field.closest('.mb-3, .upload-files') || field.parentElement;
+                    let feedback = wrapper?.querySelector('[data-validation-message]');
+
+                    if (!feedback) {
+                        feedback = document.createElement('div');
+                        feedback.className = 'validation-feedback';
+                        feedback.dataset.validationMessage = '';
+                        feedback.setAttribute('aria-live', 'polite');
+                        field.insertAdjacentElement('afterend', feedback);
+                    }
+
+                    if (!feedback.id && field.id) {
+                        feedback.id = `${field.id}-feedback`;
+                    }
+
+                    if (feedback.id) {
+                        const descriptions = new Set((field.getAttribute('aria-describedby') || '').split(/\s+/)
+                            .filter(Boolean));
+                        descriptions.add(feedback.id);
+                        field.setAttribute('aria-describedby', Array.from(descriptions).join(' '));
+                    }
+
+                    return feedback;
+                };
+
+                const setFieldError = (field, message) => {
+                    const feedback = feedbackFor(field);
+
+                    field.classList.add('is-invalid');
+                    field.setAttribute('aria-invalid', 'true');
+                    feedback.textContent = message;
+                    feedback.classList.add('is-visible');
+                };
+
+                const clearFieldError = (field) => {
+                    const feedback = feedbackFor(field);
+
+                    field.classList.remove('is-invalid');
+                    field.removeAttribute('aria-invalid');
+                    feedback.textContent = '';
+                    feedback.classList.remove('is-visible');
+                };
+
+                const showValidationSummary = (message) => {
+                    if (!validationSummary) {
+                        return;
+                    }
+
+                    validationSummary.textContent = message || 'Please correct the highlighted fields before continuing.';
+                    validationSummary.classList.remove('d-none');
+                    validationSummary.focus({ preventScroll: true });
+                };
+
+                const hideValidationSummary = () => {
+                    validationSummary?.classList.add('d-none');
+                };
+
+                const loadImageDimensions = (file) => new Promise((resolve, reject) => {
+                    const objectUrl = URL.createObjectURL(file);
+                    const image = new Image();
+
+                    image.onload = () => {
+                        const dimensions = {
+                            width: image.naturalWidth,
+                            height: image.naturalHeight,
+                        };
+
+                        URL.revokeObjectURL(objectUrl);
+                        resolve(dimensions);
+                    };
+
+                    image.onerror = () => {
+                        URL.revokeObjectURL(objectUrl);
+                        reject(new Error('Unable to read image dimensions.'));
+                    };
+
+                    image.src = objectUrl;
+                });
+
+                const setProfilePreviewStatus = (message, state = '') => {
+                    if (!profilePreviewStatus) {
+                        return;
+                    }
+
+                    profilePreviewStatus.textContent = message;
+                    profilePreviewStatus.classList.toggle('is-valid', state === 'valid');
+                    profilePreviewStatus.classList.toggle('is-invalid', state === 'invalid');
+                };
+
+                const validateFileField = async (field) => {
+                    const label = labelFor(field);
+                    const file = field.files?.[0] || null;
+                    const allowedTypes = parseAllowedTypes(field);
+                    const maxKb = Number(field.dataset.maxKb || 0);
+
+                    if (!file) {
+                        if (field.required) {
+                            setFieldError(field, `${label} is required.`);
+                            return false;
+                        }
+
+                        clearFieldError(field);
+                        return true;
+                    }
+
+                    const extension = extensionFor(file);
+
+                    if (allowedTypes.length > 0 && !allowedTypes.includes(extension)) {
+                        setFieldError(field, `${label} must be a ${allowedTypes.map((type) => type.toUpperCase()).join(', ')} file.`);
+                        return false;
+                    }
+
+                    if (maxKb > 0 && file.size > maxKb * 1024) {
+                        setFieldError(field, `${label} must not be larger than ${formatMegabytes(maxKb)}.`);
+                        return false;
+                    }
+
+                    if (field.dataset.fileKind === 'profile-image') {
+                        try {
+                            const dimensions = await loadImageDimensions(file);
+                            const minWidth = Number(field.dataset.minWidth || 0);
+                            const minHeight = Number(field.dataset.minHeight || 0);
+                            const maxWidth = Number(field.dataset.maxWidth || Infinity);
+                            const maxHeight = Number(field.dataset.maxHeight || Infinity);
+
+                            if (
+                                dimensions.width < minWidth ||
+                                dimensions.height < minHeight ||
+                                dimensions.width > maxWidth ||
+                                dimensions.height > maxHeight
+                            ) {
+                                setFieldError(
+                                    field,
+                                    `${label} must be between ${minWidth}x${minHeight} and ${maxWidth}x${maxHeight} pixels.`
+                                );
+                                setProfilePreviewStatus('The selected image dimensions are not allowed.', 'invalid');
+                                return false;
+                            }
+
+                            if (profileImagePreview) {
+                                if (profilePreviewUrl) {
+                                    URL.revokeObjectURL(profilePreviewUrl);
+                                }
+
+                                profilePreviewUrl = URL.createObjectURL(file);
+                                profileImagePreview.src = profilePreviewUrl;
+                            }
+
+                            setProfilePreviewStatus(
+                                `${file.name} selected - ${dimensions.width}x${dimensions.height}px, ${(file.size / 1024 / 1024).toFixed(2)}MB.`,
+                                'valid'
+                            );
+                        } catch (error) {
+                            setFieldError(field, 'Choose a valid image that can be previewed.');
+                            setProfilePreviewStatus('The selected file could not be previewed.', 'invalid');
+                            return false;
+                        }
+                    }
+
+                    clearFieldError(field);
+                    return true;
+                };
+
+                const validateStandardField = (field) => {
+                    const label = labelFor(field);
+                    const value = field.value.trim();
+
+                    if (field.required && value === '') {
+                        setFieldError(field, `${label} is required.`);
+                        return false;
+                    }
+
+                    if (value === '') {
+                        clearFieldError(field);
+                        return true;
+                    }
+
+                    if (field.name === 'first_name' || field.name === 'middle_name' || field.name === 'last_name' || field.name === 'nationality') {
+                        if (!namePattern.test(value)) {
+                            setFieldError(field, `${label} may only contain letters, spaces, hyphens, and apostrophes.`);
+                            return false;
+                        }
+                    }
+
+                    if (field.name === 'phone' && !phonePattern.test(value)) {
+                        setFieldError(field, 'Enter a valid phone number using 7 to 20 digits, with an optional leading plus sign.');
+                        return false;
+                    }
+
+                    if (field.name === 'zipcode' && !zipcodePattern.test(value)) {
+                        setFieldError(field, 'The zipcode may only contain letters, numbers, spaces, and hyphens.');
+                        return false;
+                    }
+
+                    if (!field.checkValidity()) {
+                        setFieldError(field, field.validationMessage || `${label} is invalid.`);
+                        return false;
+                    }
+
+                    clearFieldError(field);
+                    return true;
+                };
+
+                const validateField = async (field) => {
+                    if (field.disabled) {
+                        return true;
+                    }
+
+                    return field.type === 'file' ? validateFileField(field) : validateStandardField(field);
+                };
+
+                const validateFields = async (fields) => {
+                    let firstInvalidField = null;
+
+                    for (const field of fields) {
+                        const isValid = await validateField(field);
+
+                        if (!isValid && !firstInvalidField) {
+                            firstInvalidField = field;
+                        }
+                    }
+
+                    if (firstInvalidField) {
+                        firstInvalidField.focus({ preventScroll: false });
+                        return false;
+                    }
+
+                    hideValidationSummary();
+                    return true;
+                };
+
+                const showStep = (index) => {
+                    currentStep = Math.max(0, Math.min(index, steps.length - 1));
+
+                    steps.forEach((step, stepIndex) => {
+                        step.hidden = stepIndex !== currentStep;
+                    });
+
+                    progressItems.forEach((item, itemIndex) => {
+                        item.classList.toggle('is-active', itemIndex === currentStep);
+                        item.classList.toggle('is-complete', itemIndex < currentStep);
+                    });
+                };
+
+                const validateCurrentStep = async () => {
+                    const fields = Array.from(steps[currentStep].querySelectorAll('input, select, textarea'));
+                    const isValid = await validateFields(fields);
+
+                    if (!isValid) {
+                        showValidationSummary('Please correct the highlighted fields in this step before continuing.');
+                    }
+
+                    return isValid;
+                };
+
+                const stateSelect = form.querySelector('[data-state-of-origin]');
+                const lgaSelect = form.querySelector('[data-local-government-area]');
+
+                const resetLgaOptions = (placeholder = 'Select LGA') => {
+                    if (!lgaSelect) {
+                        return;
+                    }
+
+                    lgaSelect.innerHTML = '';
+                    lgaSelect.append(new Option(placeholder, ''));
+                };
+
+                const populateLgas = async (selectedLga = '') => {
+                    if (!stateSelect || !lgaSelect) {
+                        return;
+                    }
+
+                    const selectedOption = stateSelect.selectedOptions[0];
+                    const lgaUrl = selectedOption?.dataset.lgaUrl || '';
+
+                    resetLgaOptions(lgaUrl ? 'Loading LGAs...' : 'Select state first');
+                    lgaSelect.disabled = true;
+
+                    if (!lgaUrl) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(lgaUrl, {
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Unable to load LGAs.');
+                        }
+
+                        const payload = await response.json();
+                        const localGovernmentAreas = Array.isArray(payload.data) ? payload.data : [];
+
+                        resetLgaOptions(localGovernmentAreas.length > 0 ? 'Select LGA' : 'No LGAs available');
+
+                        localGovernmentAreas.forEach((lga) => {
+                            const option = new Option(lga.name, lga.name, false, lga.name === selectedLga);
+                            option.dataset.lgaId = lga.id;
+                            option.dataset.lgaSlug = lga.slug;
+                            lgaSelect.append(option);
+                        });
+
+                        lgaSelect.disabled = localGovernmentAreas.length === 0;
+                    } catch (error) {
+                        resetLgaOptions('Unable to load LGAs');
+                        lgaSelect.disabled = true;
+                        console.error(error);
+                    } finally {
+                        updateSummary();
+                    }
+                };
+
+                if (stateSelect && lgaSelect) {
+                    populateLgas(lgaSelect.dataset.selectedLga || lgaSelect.value || '');
+
+                    stateSelect.addEventListener('change', () => {
+                        lgaSelect.dataset.selectedLga = '';
+                        populateLgas();
+                        updateSummary();
+                    });
+
+                    lgaSelect.addEventListener('change', updateSummary);
+                }
+
+                const documentsContainer = form.querySelector('[data-education-documents]');
+                const addDocumentButton = form.querySelector('[data-add-document]');
+                const documentTemplate = document.getElementById('education-document-template');
+
+                const refreshDocumentRows = () => {
+                    if (!documentsContainer) {
+                        return;
+                    }
+
+                    const rows = Array.from(documentsContainer.querySelectorAll('[data-education-document]'));
+
+                    rows.forEach((row, index) => {
+                        const number = index + 1;
+                        const type = row.querySelector('[data-document-type]');
+                        const file = row.querySelector('[data-document-file]');
+                        const typeLabel = row.querySelector('[data-document-type-label]');
+                        const fileLabel = row.querySelector('[data-document-file-label]');
+                        const fileHelp = row.querySelector('[data-document-file-help]');
+                        const fileFeedback = row.querySelector('[data-validation-message]');
+                        const removeButton = row.querySelector('[data-remove-document]');
+                        const title = row.querySelector('[data-document-title]');
+
+                        if (title) {
+                            title.textContent = `Qualification Document ${number}`;
+                        }
+
+                        if (type) {
+                            type.name = `education_documents[${index}][type]`;
+                            type.id = `education-document-type-${index}`;
+                        }
+
+                        if (file) {
+                            file.name = `education_documents[${index}][file]`;
+                            file.id = `education-document-file-${index}`;
+                        }
+
+                        if (typeLabel) {
+                            typeLabel.setAttribute('for', `education-document-type-${index}`);
+                        }
+
+                        if (fileLabel) {
+                            fileLabel.setAttribute('for', `education-document-file-${index}`);
+                        }
+
+                        if (fileHelp) {
+                            fileHelp.id = `education-document-file-help-${index}`;
+                        }
+
+                        if (fileFeedback) {
+                            fileFeedback.id = `education-document-file-feedback-${index}`;
+                        }
+
+                        if (file && fileHelp && fileFeedback) {
+                            file.setAttribute('aria-describedby', `${fileHelp.id} ${fileFeedback.id}`);
+                        }
+
+                        if (removeButton) {
+                            removeButton.hidden = rows.length === 1;
+                        }
+                    });
+
+                    updateSummary();
+
+                    if (typeof feather !== 'undefined') {
+                        feather.replace();
+                    }
+                };
+
+                addDocumentButton?.addEventListener('click', () => {
+                    if (!documentTemplate || !documentsContainer) {
+                        return;
+                    }
+
+                    const currentRows = documentsContainer.querySelectorAll('[data-education-document]').length;
+
+                    if (currentRows >= 10) {
+                        return;
+                    }
+
+                    documentsContainer.append(documentTemplate.content.firstElementChild.cloneNode(true));
+                    refreshDocumentRows();
+                    documentsContainer.lastElementChild?.querySelector('select')?.focus();
+                });
+
+                documentsContainer?.addEventListener('click', (event) => {
+                    const removeButton = event.target.closest('[data-remove-document]');
+
+                    if (!removeButton) {
+                        return;
+                    }
+
+                    const rows = documentsContainer.querySelectorAll('[data-education-document]');
+
+                    if (rows.length <= 1) {
+                        return;
+                    }
+
+                    removeButton.closest('[data-education-document]')?.remove();
+                    refreshDocumentRows();
+                });
+
+                function fieldValue(name) {
+                    return form.elements[name]?.value?.trim() || '';
+                }
+
+                function updateSummary() {
+                    const fullName = [fieldValue('first_name'), fieldValue('last_name')].filter(Boolean).join(' ');
+                    const origin = [fieldValue('local_government_area'), fieldValue('state_of_origin')].filter(Boolean)
+                        .join(', ');
+                    const documentCount = documentsContainer?.querySelectorAll('[data-education-document]').length || 0;
+
+                    const summary = {
+                        '[data-summary-full-name]': fullName,
+                        '[data-summary-contact]': fieldValue('phone'),
+                        '[data-summary-origin]': origin,
+                        '[data-summary-nationality]': fieldValue('nationality'),
+                        '[data-summary-documents]': String(documentCount),
+                    };
+
+                    Object.entries(summary).forEach(([selector, value]) => {
+                        const target = document.querySelector(selector);
+
+                        if (target) {
+                            target.textContent = value || 'Not provided';
+                        }
+                    });
+                }
+
+                form.addEventListener('click', async (event) => {
+                    if (event.target.closest('[data-wizard-next]')) {
+                        if (await validateCurrentStep()) {
+                            showStep(currentStep + 1);
+                            updateSummary();
+                        }
+                    }
+
+                    if (event.target.closest('[data-wizard-previous]')) {
+                        showStep(currentStep - 1);
+                        updateSummary();
+                    }
+                });
+
+                form.addEventListener('input', (event) => {
+                    delete form.dataset.validationPassed;
+                    updateSummary();
+
+                    if (event.target.matches('input:not([type="file"]), select, textarea')) {
+                        validateField(event.target);
+                    }
+                });
+
+                form.addEventListener('change', async (event) => {
+                    delete form.dataset.validationPassed;
+                    updateSummary();
+
+                    if (event.target.matches('input, select, textarea')) {
+                        await validateField(event.target);
+                    }
+                });
+
+                profileImageInput?.addEventListener('change', async () => {
+                    if (!profileImageInput.files?.length) {
+                        setProfilePreviewStatus('Choose a photo to preview it before submission.');
+                        return;
+                    }
+
+                    await validateFileField(profileImageInput);
+                });
+
+                form.addEventListener('submit', async (event) => {
+                    if (form.dataset.confirmed === 'true' || form.dataset.validationPassed === 'true') {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+
+                    const allFields = steps.flatMap((step) => Array.from(step.querySelectorAll('input, select, textarea')));
+                    const isValid = await validateFields(allFields);
+
+                    if (!isValid) {
+                        const invalidStepIndex = steps.findIndex((step) => step.querySelector('.is-invalid'));
+
+                        if (invalidStepIndex >= 0) {
+                            showStep(invalidStepIndex);
+                        }
+
+                        showValidationSummary('Please correct the highlighted fields before submitting your application.');
+                        return;
+                    }
+
+                    form.dataset.validationPassed = 'true';
+                    form.requestSubmit();
+                });
+
+                refreshDocumentRows();
+                updateSummary();
+                showStep(0);
+            })();
+        </script>
     @endpush
 </x-layout>

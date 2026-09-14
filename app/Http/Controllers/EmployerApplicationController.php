@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatus;
-use App\Http\Requests\ReviewApplicationDocumentsRequest;
 use App\Http\Requests\ReviewApplicationFormRequest;
 use App\Models\ApplicationForm;
 use App\Models\Job;
@@ -57,23 +56,6 @@ class EmployerApplicationController extends Controller
         );
 
         return back()->with('success', 'Application status updated.');
-    }
-
-    public function reviewDocuments(
-        ReviewApplicationDocumentsRequest $request,
-        ApplicationForm $applicationForm,
-        ApplicationFormService $service
-    ): RedirectResponse {
-        $data = $request->validated();
-
-        $reviewedCount = $service->reviewDocuments(
-            $applicationForm,
-            $request->user(),
-            ApplicationStatus::from($data['status']),
-            $data['remarks'] ?? null
-        );
-
-        return back()->with('success', "Document status updated for {$reviewedCount} submitted document(s).");
     }
 
     private function candidateTable(Request $request, ?ApplicationStatus $status, string $title, string $routeName, string $viewName): View

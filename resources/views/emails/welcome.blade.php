@@ -1,6 +1,6 @@
 <x-mail::message>
 
-# Welcome to MartHire
+# Welcome to NextHire
 
 Hello {{ trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: $user->username }},
 
@@ -10,7 +10,7 @@ Your account has been successfully created.
 Login
 </x-mail::button>
 
-Thank you for choosing MartHire.
+Thank you for choosing NextHire.
 
 Thanks,<br>
 {{ config('app.name') }}
