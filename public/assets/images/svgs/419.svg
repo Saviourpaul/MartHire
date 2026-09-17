@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 150" width="450" height="150">
+  <g fill="#4d5bf9">
+    <!-- Digit 4 (Left) -->
+    <path d="M 15 0 H 33 V 24 H 15 Z" />
+    <path d="M 0 48 H 15 V 72 H 0 Z" />
+    <path d="M 15 72 H 33 V 87 H 15 Z" />
+    <path d="M 33 60 H 75 V 87 H 33 Z" />
+    <path d="M 72 0 H 105 V 150 C 105 150 105 150 88.5 150 C 72 150 72 150 72 150 Z" />
+    <rect x="72" y="0" width="33" height="150" rx="16.5" />
+
+    <!-- Digit 1 (Center) -->
+    <!-- Top-left serifs/beak -->
+    <rect x="155" y="24" width="25" height="25" />
+    <rect x="180" y="0" width="25" height="25" />
+    <!-- Main Vertical Bar -->
+    <rect x="205" y="0" width="35" height="150" rx="17.5" />
+    <!-- Base Plate -->
+    <rect x="165" y="125" width="115" height="25" rx="12.5" />
+
+    <!-- Digit 9 (Right) -->
+    <!-- Main outer rounded container -->
+    <rect x="300" y="0" width="135" height="150" rx="40" />
+    <!-- Inner cutout (Top counter) -->
+    <rect x="330" y="25" width="75" height="40" rx="12" fill="#ffffff" />
+    <!-- Bottom left cutout to form the tail -->
+    <path d="M 300 85 H 390 V 150 H 300 Z" fill="#ffffff" />
+    <!-- Bottom bar connecting the tail -->
+    <rect x="330" y="125" width="75" height="25" rx="12.5" fill="#4d5bf9" />
+  </g>
+</svg>
