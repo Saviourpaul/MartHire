@@ -11,6 +11,7 @@
     </title>
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link href="{{ asset('assets/css/mains.css') }}" rel="stylesheet">
+    
      @vite(['resources/css/app.css', 'resources/js/app.js'])
 
 
@@ -558,15 +559,15 @@ $currentUser = auth()->user();
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="{{ route('employer.Approved-Candidates') }}"
+                                                <a href="{{ route('employer.Applied-Candidates', ['stage' => 'selected']) }}"
                                                     class="menu-dropdown-item group"
                                                     :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
                                                         'menu-dropdown-item-inactive'">
-                                                    Approved Candidates
+                                                    Selected Candidates
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="{{ route('employer.Rejected-Candidate') }}"
+                                                <a href="{{ route('employer.Applied-Candidates', ['stage' => 'rejected']) }}"
                                                     class="menu-dropdown-item group"
                                                     :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
                                                         'menu-dropdown-item-inactive'">
@@ -1124,9 +1125,8 @@ $currentUser = auth()->user();
     <script src="{{ asset('assets/js/sweetalert.js') }}"></script>
     <script src="{{ asset('assets/js/app-alerts.js') }}"></script>
     <script src="{{ asset('assets/js/table-refresh.js') }}"></script>
+    
 </body>
 
 </html>
-
-
 

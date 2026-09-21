@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
+use App\Enums\DashboardPeriod;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
@@ -95,9 +96,9 @@ class EmployerDashboardService
             'total_jobs' => Job::query()->where('employer_id', $employer->id)->count(),
             'total_applicants' => ApplicationForm::query()->forEmployer($employer)->distinct('user_id')->count('user_id'),
             'total_applications' => (int) $applicationCounts->sum(),
-            'approved_candidates' => (int) ($applicationCounts[ApplicationStatus::Approved->value] ?? 0),
-            'rejected_candidates' => (int) ($applicationCounts[ApplicationStatus::Rejected->value] ?? 0),
-            'pending_applications' => (int) ($applicationCounts[ApplicationStatus::Pending->value] ?? 0),
+            'selected_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Selected->value] ?? 0),
+            'rejected_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Rejected->value] ?? 0),
+            'submitted_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Submitted->value] ?? 0),
         ];
     }
 
@@ -151,13 +152,15 @@ class EmployerDashboardService
         $series = [];
         $colors = [];
 
-        foreach ([ApplicationStatus::Approved, ApplicationStatus::Pending, ApplicationStatus::Rejected] as $status) {
+        foreach (CandidatePipelineStage::cases() as $status) {
             $labels[] = $status->label();
             $series[] = (int) ($counts[$status->value] ?? 0);
             $colors[] = match ($status) {
-                ApplicationStatus::Approved => '#3641f5',
-                ApplicationStatus::Pending => '#7592ff',
-                ApplicationStatus::Rejected => '#dde9ff',
+                CandidatePipelineStage::Submitted => '#64748b',
+                CandidatePipelineStage::Shortlisted => '#3641f5',
+                CandidatePipelineStage::Interview => '#f59e0b',
+                CandidatePipelineStage::Selected => '#22c55e',
+                CandidatePipelineStage::Rejected => '#ef4444',
             };
         }
 
@@ -209,17 +212,17 @@ class EmployerDashboardService
 
         return match ($period) {
             '30_days' => new AdminDashboardDateRange(
-                period: \App\Enums\DashboardPeriod::Custom,
+                period: DashboardPeriod::Custom,
                 start: $now->copy()->subDays(29)->startOfDay(),
                 end: $now->copy()->endOfDay(),
             ),
             '7_days' => new AdminDashboardDateRange(
-                period: \App\Enums\DashboardPeriod::Custom,
+                period: DashboardPeriod::Custom,
                 start: $now->copy()->subDays(6)->startOfDay(),
                 end: $now->copy()->endOfDay(),
             ),
             default => new AdminDashboardDateRange(
-                period: \App\Enums\DashboardPeriod::Custom,
+                period: DashboardPeriod::Custom,
                 start: $now->copy()->subMonths(11)->startOfMonth(),
                 end: $now->copy()->endOfDay(),
             ),

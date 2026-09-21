@@ -5,7 +5,7 @@
         </div>
         <div class="container">
             <div class="row justify-center text-center">
-                <div class="lg:col-8 xl:col-6 mb-[72px]">
+                <div class="lg:col-8 xl:col-6 mb-[72px] ">
                     <h1 class="h1-lg highlighted">The Future of Work - <br>
                         and <span>Extended</span> Workforce Planning - is Here</h1>
                     <p class="mt-8">The choice of font and font size with which Lorem ipsum is reproduced answers to

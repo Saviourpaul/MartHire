@@ -2,11 +2,13 @@
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureUserHasRole;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,14 +23,27 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
-            $referer = $request->headers->get('referer');
-            $previousUrl = $referer && parse_url($referer, PHP_URL_HOST) === $request->getHost()
-                ? $referer
-                : route('home');
+        $exceptions->render(function (TokenMismatchException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
 
-            return response()->view('404', [
-                'previousUrl' => $previousUrl,
-            ], 404);
+            return response()->view('errors.419', [], 419);
+        });
+
+        $exceptions->render(function (AuthorizationException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            return response()->view('errors.403', ['exception' => $exception], 403);
+        });
+
+        $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
+            if ($exception->getStatusCode() !== 403 || $request->expectsJson()) {
+                return null;
+            }
+
+            return response()->view('errors.403', ['exception' => $exception], 403);
         });
     })->create();

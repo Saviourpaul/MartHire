@@ -36,7 +36,7 @@
                                             <a href="{{ route('client.applications.show', $document->applicationForm) }}">{{ $document->applicationForm->reference }}</a>
                                             <div class="text-muted small">{{ $document->applicationForm->job->title }}</div>
                                         </td>
-                                        <td><span class="badge {{ $document->status->badgeClass() }}">{{ $document->status->label() }}</span></td>
+                                        <td>Submitted</td>
                                         <td>{{ $document->employer_remarks ?: 'No remarks' }}</td>
                                         <td>{{ $document->created_at->format('M d, Y') }}</td>
                                     </tr>

@@ -145,6 +145,7 @@
 
 <!-- latest jobs -->
 <section class="section-bordered">
+    
     <div class="container">
         <div class="row mx-0 border border-border rounded-2xl justify-center">
             <div class="lg:col-11 xl:col-10">
@@ -154,7 +155,7 @@
                     </h2>
                     <p>Job Recommendations for You</p>
                 </div>
-                <div class="swiper jobs-carousel pr-[1px]">
+                <marquee class="swiper jobs-carousel pr-[1px]">
                     <div class="swiper-wrapper">
                         <div class="swiper-slide h-auto relative">
                             <div class="px-8 py-10 hover:bg-white rounded-xl border border-border h-full hover:shadow transition-all duration-300">
@@ -220,8 +221,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="swiper-bullets jobs-carousel-pagination text-center"></div>
-                </div>
+                    <!--div class="swiper-bullets jobs-carousel-pagination text-center"></div-->
+                </marquee>
             </div>
         </div>
     </div>
