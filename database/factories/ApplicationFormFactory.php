@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
@@ -27,7 +27,7 @@ class ApplicationFormFactory extends Factory
             'job_id' => Job::factory(),
             'user_id' => User::factory()->applicant(),
             'reference' => 'APP-'.now()->format('Ymd').'-'.Str::upper(fake()->unique()->bothify('??####')),
-            'status' => ApplicationStatus::Pending,
+            'status' => CandidatePipelineStage::Submitted,
             'submitted_at' => fake()->dateTimeBetween('-30 days', 'now'),
             'first_name' => fake()->firstName(),
             'middle_name' => fake()->optional()->firstName(),
@@ -49,17 +49,17 @@ class ApplicationFormFactory extends Factory
         ];
     }
 
-    public function approved(?User $reviewer = null): static
+    public function selected(?User $reviewer = null): static
     {
-        return $this->reviewed(ApplicationStatus::Approved, $reviewer, 'Application approved.');
+        return $this->moved(CandidatePipelineStage::Selected, $reviewer, 'Candidate selected.');
     }
 
     public function rejected(?User $reviewer = null): static
     {
-        return $this->reviewed(ApplicationStatus::Rejected, $reviewer, 'Application rejected.');
+        return $this->moved(CandidatePipelineStage::Rejected, $reviewer, 'Candidate rejected.');
     }
 
-    public function reviewed(ApplicationStatus $status, ?User $reviewer = null, ?string $remarks = null): static
+    public function moved(CandidatePipelineStage $status, ?User $reviewer = null, ?string $remarks = null): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => $status,

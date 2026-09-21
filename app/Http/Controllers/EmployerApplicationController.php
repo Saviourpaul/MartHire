@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ApplicationStatus;
-use App\Http\Requests\ReviewApplicationFormRequest;
+use App\Enums\CandidatePipelineStage;
+use App\Http\Requests\MoveCandidatePipelineRequest;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Services\ApplicationFormService;
@@ -15,17 +15,11 @@ class EmployerApplicationController extends Controller
 {
     public function applied(Request $request): View
     {
-        return $this->candidateTable($request, null, 'Applied Candidates', 'employer.Applied-Candidates', 'employer.Applied-candidates');
-    }
+        $stage = $request->filled('stage') ? CandidatePipelineStage::tryFrom($request->string('stage')->toString()) : null;
 
-    public function approved(Request $request): View
-    {
-        return $this->candidateTable($request, ApplicationStatus::Approved, 'Approved Candidates', 'employer.Approved-Candidates', 'employer.Approved-candidates');
-    }
+        abort_if($request->filled('stage') && ! $stage, 404);
 
-    public function rejected(Request $request): View
-    {
-        return $this->candidateTable($request, ApplicationStatus::Rejected, 'Rejected Candidates', 'employer.Rejected-Candidate', 'employer.Rejected-Candidate');
+        return $this->candidateTable($request, $stage, 'Candidate Pipeline', 'employer.Applied-Candidates', 'employer.Applied-candidates');
     }
 
     public function show(Request $request, ApplicationForm $applicationForm): View
@@ -36,36 +30,31 @@ class EmployerApplicationController extends Controller
             'application' => $applicationForm->load([
                 'applicant',
                 'job',
-                'documents.reviewer',
-                'documents.statusHistories.changedBy',
                 'statusHistories.changedBy',
                 'reviewer',
             ]),
         ]);
     }
 
-    public function review(ReviewApplicationFormRequest $request, ApplicationForm $applicationForm, ApplicationFormService $service): RedirectResponse
+    public function movePipeline(MoveCandidatePipelineRequest $request, ApplicationForm $applicationForm, ApplicationFormService $service): RedirectResponse
     {
         $data = $request->validated();
 
-        $service->reviewApplication(
+        $application = $service->moveCandidate(
             $applicationForm,
             $request->user(),
-            ApplicationStatus::from($data['status']),
+            CandidatePipelineStage::from($data['stage']),
             $data['remarks'] ?? null
         );
 
-        return back()->with('success', 'Application status updated.');
+        return back()->with('success', "Candidate moved to {$application->status->label()}.");
     }
 
-    private function candidateTable(Request $request, ?ApplicationStatus $status, string $title, string $routeName, string $viewName): View
+    private function candidateTable(Request $request, ?CandidatePipelineStage $status, string $title, string $routeName, string $viewName): View
     {
         $applications = ApplicationForm::query()
             ->with(['job:id,title,company', 'applicant:id,first_name,last_name,email'])
-            ->withCount([
-                'documents',
-                'documents as approved_documents_count' => fn ($query) => $query->where('status', ApplicationStatus::Approved),
-            ])
+            ->withCount('documents')
             ->forEmployer($request->user())
             ->when($status, fn ($query) => $query->status($status))
             ->when($request->filled('job_id'), fn ($query) => $query->where('job_id', $request->integer('job_id')))

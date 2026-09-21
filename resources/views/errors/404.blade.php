@@ -32,19 +32,19 @@
             <h1 class="text-title-md xl:text-title-2xl mb-8 font-bold text-gray-800 dark:text-white/90">
                 ERROR
             </h1>
-            <img src="{{ asset('assets/images/svgs/404.svg') }}" alt="404" class="dark:hidden">
-            <img src="{{ asset('assets/images/svgs/404-dark.svg') }}" alt="404" class="hidden dark:block">
+            <img src="{{ asset('assets/images/svgs/419.svg') }}" alt="419" class="dark:hidden">
+            <img src="{{ asset('assets/images/svgs/419-dark.svg') }}" alt="419" class="hidden dark:block">
             <p class="mt-10 mb-6 text-base text-gray-700 sm:text-lg dark:text-gray-400">
-                We can’t seem to find the page you are looking for!
+                Your Session Has Expired Please Login again!
             </p>
 
             <a href="{{ route('home') }}"
                 class="shadow-theme-xs inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200" style="margin-bottom: 20px">
                 Go to Home Page
             </a>
-			<a href="javascript:history.back()"
+			<a href="{{route('login')}}"
                 class="shadow-theme-xs inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
-                Back to previous page
+                Login 
             </a>
         </div>
         <!-- Footer -->

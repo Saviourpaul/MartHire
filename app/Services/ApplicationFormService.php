@@ -3,13 +3,11 @@
 namespace App\Services;
 
 use App\Enums\ApplicationDocumentType;
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
-use App\Notifications\ApplicationDocumentStatusChanged;
-use App\Notifications\ApplicationStatusChanged;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +64,7 @@ class ApplicationFormService
                     'job_id' => $job->id,
                     'user_id' => $applicant->id,
                     'reference' => $this->generateReference(),
-                    'status' => ApplicationStatus::Pending,
+                    'status' => CandidatePipelineStage::Submitted,
                     'submitted_at' => now(),
                     'profile_image_path' => $profileImagePath,
                 ]);
@@ -102,7 +100,7 @@ class ApplicationFormService
 
                 $application->statusHistories()->create([
                     'from_status' => null,
-                    'to_status' => ApplicationStatus::Pending,
+                    'to_status' => CandidatePipelineStage::Submitted,
                     'changed_by' => $applicant->id,
                     'remarks' => 'Application submitted.',
                     'created_at' => now(),
@@ -125,61 +123,23 @@ class ApplicationFormService
         return $application;
     }
 
-    public function reviewApplication(ApplicationForm $application, User $reviewer, ApplicationStatus $status, ?string $remarks = null): ApplicationForm
+    public function moveCandidate(ApplicationForm $application, User $employer, CandidatePipelineStage $stage, ?string $remarks = null): ApplicationForm
     {
-        return DB::transaction(function () use ($application, $reviewer, $status, $remarks): ApplicationForm {
-            $application->loadMissing(['applicant', 'job']);
-            $previousStatus = $application->status;
+        return DB::transaction(function () use ($application, $employer, $stage, $remarks): ApplicationForm {
+            $application = ApplicationForm::query()->lockForUpdate()->findOrFail($application->id);
+            $currentStage = $application->status;
 
-            $application->update([
-                'status' => $status,
-                'reviewed_by' => $reviewer->id,
-                'reviewed_at' => now(),
-                'employer_remarks' => $remarks,
-            ]);
-
-            $application->statusHistories()->create([
-                'from_status' => $previousStatus,
-                'to_status' => $status,
-                'changed_by' => $reviewer->id,
-                'remarks' => $remarks,
-                'created_at' => now(),
-            ]);
-
-            if ($previousStatus !== $status) {
-                $application->applicant->notify(new ApplicationStatusChanged($application->fresh(['job']), $remarks));
+            if (! $currentStage->canTransitionTo($stage)) {
+                throw ValidationException::withMessages([
+                    'stage' => "A candidate cannot move from {$currentStage->label()} to {$stage->label()}.",
+                ]);
             }
 
-            return $application->fresh(['job', 'applicant', 'documents']);
-        });
-    }
+            $movedAt = now();
+            $application->update(['status' => $stage, 'reviewed_by' => $employer->id, 'reviewed_at' => $movedAt, 'employer_remarks' => $remarks]);
+            $application->statusHistories()->create(['from_status' => $currentStage, 'to_status' => $stage, 'changed_by' => $employer->id, 'remarks' => $remarks, 'created_at' => $movedAt]);
 
-    public function reviewDocument(ApplicationDocument $document, User $reviewer, ApplicationStatus $status, ?string $remarks = null): ApplicationDocument
-    {
-        return DB::transaction(function () use ($document, $reviewer, $status, $remarks): ApplicationDocument {
-            $document->loadMissing(['applicationForm.applicant', 'applicationForm.job']);
-            $previousStatus = $document->status;
-
-            $document->update([
-                'status' => $status,
-                'reviewed_by' => $reviewer->id,
-                'reviewed_at' => now(),
-                'employer_remarks' => $remarks,
-            ]);
-
-            $document->statusHistories()->create([
-                'from_status' => $previousStatus,
-                'to_status' => $status,
-                'changed_by' => $reviewer->id,
-                'remarks' => $remarks,
-                'created_at' => now(),
-            ]);
-
-            if ($previousStatus !== $status) {
-                $document->applicationForm->applicant->notify(new ApplicationDocumentStatusChanged($document->fresh(['applicationForm.job']), $remarks));
-            }
-
-            return $document->fresh(['applicationForm.job', 'reviewer']);
+            return $application->fresh(['job', 'applicant', 'documents', 'statusHistories.changedBy']);
         });
     }
 
@@ -229,7 +189,6 @@ class ApplicationFormService
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getClientMimeType(),
             'size' => $file->getSize(),
-            'status' => ApplicationStatus::Pending,
         ]);
     }
 

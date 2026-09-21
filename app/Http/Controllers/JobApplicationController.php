@@ -10,11 +10,14 @@ use App\Models\NigeriaState;
 use App\Services\ApplicationFormService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\View\View;
 use Throwable;
 
 class JobApplicationController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request): View
     {
         $applications = $request->user()
@@ -79,10 +82,10 @@ class JobApplicationController extends Controller
 
     public function show(Request $request, ApplicationForm $applicationForm): View
     {
-        abort_unless($applicationForm->user_id === $request->user()->id, 403);
+        $this->authorize('view', $applicationForm);
 
         return view('client.application-show', [
-            'application' => $applicationForm->load(['job', 'documents.statusHistories.changedBy', 'statusHistories.changedBy']),
+            'application' => $applicationForm->load(['job', 'applicant', 'documents', 'statusHistories.changedBy']),
         ]);
     }
 

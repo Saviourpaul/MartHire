@@ -7,7 +7,6 @@ use App\Http\Controllers\ApplicationDocumentDownloadController;
 use App\Http\Controllers\ApplicationDocumentPreviewController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployerApplicationController;
-use App\Http\Controllers\EmployerApplicationDocumentController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\LocationController;
@@ -73,7 +72,6 @@ Route::middleware(['auth', 'active.account'])->group(function () {
         Route::post('jobs', [JobController::class, 'store'])
             ->middleware('throttle:uploads')
             ->name('jobs.store');
-        Route::get('client.applications.show')->name('client.applications.show');
         Route::get('jobs/{job}', [JobController::class, 'employerShow'])->name('jobs.show');
         Route::put('jobs/{job}', [JobController::class, 'update'])
             ->middleware('throttle:uploads')
@@ -81,11 +79,8 @@ Route::middleware(['auth', 'active.account'])->group(function () {
         Route::delete('jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy');
         Route::get('profile', fn () => view('employer.profile'))->name('employer.profile');
         Route::get('Applied-Candidates', [EmployerApplicationController::class, 'applied'])->name('employer.Applied-Candidates');
-        Route::get('Approved-Candidates', [EmployerApplicationController::class, 'approved'])->name('employer.Approved-Candidates');
-        Route::get('Rejected-Candidate', [EmployerApplicationController::class, 'rejected'])->name('employer.Rejected-Candidate');
-        Route::get('applications/{applicationForm}', [EmployerApplicationController::class, 'show'])->name('employer.applications.show');
-        Route::patch('applications/{applicationForm}/status', [EmployerApplicationController::class, 'review'])->name('employer.applications.review');
-        Route::patch('application-documents/{applicationDocument}/status', [EmployerApplicationDocumentController::class, 'update'])->name('employer.application-documents.review');
+        Route::get('employer/applications/{applicationForm}', [EmployerApplicationController::class, 'show'])->name('employer.applications.show');
+        Route::patch('employer/applications/{applicationForm}/pipeline', [EmployerApplicationController::class, 'movePipeline'])->name('employer.applications.pipeline.move');
         Route::get('dashboard/analytics', [DashboardController::class, 'employerAnalytics'])
             ->middleware('throttle:60,1')
             ->name('employer.dashboard.analytics');

@@ -3,14 +3,12 @@
 namespace App\Models;
 
 use App\Enums\ApplicationDocumentType;
-use App\Enums\ApplicationStatus;
 use Database\Factories\ApplicationDocumentFactory;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 
 class ApplicationDocument extends Model
@@ -33,18 +31,12 @@ class ApplicationDocument extends Model
         'original_name',
         'mime_type',
         'size',
-        'status',
-        'reviewed_by',
-        'reviewed_at',
-        'employer_remarks',
     ];
 
     protected function casts(): array
     {
         return [
             'document_type' => ApplicationDocumentType::class,
-            'status' => ApplicationStatus::class,
-            'reviewed_at' => 'datetime',
         ];
     }
 
@@ -62,16 +54,6 @@ class ApplicationDocument extends Model
     public function applicationForm(): BelongsTo
     {
         return $this->belongsTo(ApplicationForm::class);
-    }
-
-    public function reviewer(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'reviewed_by');
-    }
-
-    public function statusHistories(): HasMany
-    {
-        return $this->hasMany(ApplicationDocumentStatusHistory::class);
     }
 
     public function downloadUrl(): string

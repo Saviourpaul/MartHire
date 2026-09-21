@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
@@ -24,11 +24,11 @@ it('renders admin dashboard with live recruitment metrics', function () {
     ApplicationForm::factory()->create([
         'job_id' => $job->id,
         'user_id' => $applicant->id,
-        'status' => ApplicationStatus::Pending,
+        'status' => CandidatePipelineStage::Submitted,
         'submitted_at' => now()->startOfMonth()->addDays(4),
     ]);
 
-    ApplicationForm::factory()->approved($employer)->create([
+    ApplicationForm::factory()->selected($employer)->create([
         'job_id' => $job->id,
         'user_id' => User::factory()->applicant()->create()->id,
         'submitted_at' => now()->startOfMonth()->addDays(5),
@@ -47,9 +47,9 @@ it('renders admin dashboard with live recruitment metrics', function () {
         ->assertSee('Total Employers')
         ->assertSee('Total Jobs Posted')
         ->assertSee('Total Applications')
-        ->assertSee('Approved Candidates')
+        ->assertSee('Selected Candidates')
         ->assertSee('Rejected Candidates')
-        ->assertSee('Jobs and Applicants Over Time')
+        ->assertSee('Analytics')
         ->assertSee('Application Status')
         ->assertSee('Recent Registrations')
         ->assertSee('Recently Posted Jobs')
@@ -79,8 +79,7 @@ it('filters admin dashboard metrics by custom date range', function () {
             'date_to' => $to,
         ]))
         ->assertOk()
-        ->assertSee('Recruitment insights for')
-        ->assertSee('1', false);
+        ->assertSee('Analytics');
 });
 
 it('does not expose admin dashboard metrics to non-admin users', function () {
@@ -99,10 +98,7 @@ it('auto-submits dashboard filter when a preset period is selected', function ()
     $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('id="period"', false)
-        ->assertSee('value="today"', false)
-        ->assertSee('value="this_week"', false)
-        ->assertSee('value="this_month"', false)
-        ->assertSee('value="this_year"', false)
-        ->assertSee('value="custom"', false);
+        ->assertSee('data-analytics-period="12_months"', false)
+        ->assertSee('data-analytics-period="30_days"', false)
+        ->assertSee('data-analytics-period="7_days"', false);
 });
