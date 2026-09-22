@@ -88,12 +88,30 @@ class ApplicationForm extends Seeder
                 ]);
             }
 
-            foreach (ApplicationDocumentType::cases() as $type) {
-                ApplicationDocument::factory()
-                    ->for($application, 'applicationForm')
-                    ->type($type)
-                    ->create();
-            }
+            $identificationType = fake()->randomElement(ApplicationDocumentType::identityTypes());
+            $identification = $applicant->identificationDocument()->create([
+                'document_type' => $identificationType,
+                'file_path' => "user-identification-documents/{$applicant->id}/seeded-identity.pdf",
+                'original_name' => 'seeded-identity.pdf',
+                'mime_type' => 'application/pdf',
+                'size' => 102400,
+            ]);
+
+            ApplicationDocument::factory()
+                ->for($application, 'applicationForm')
+                ->type($identificationType)
+                ->create([
+                    'user_identification_document_id' => $identification->id,
+                    'file_path' => $identification->file_path,
+                    'original_name' => $identification->original_name,
+                    'mime_type' => $identification->mime_type,
+                    'size' => $identification->size,
+                ]);
+
+            ApplicationDocument::factory()
+                ->for($application, 'applicationForm')
+                ->type(ApplicationDocumentType::Education)
+                ->create();
         }
     }
 }
