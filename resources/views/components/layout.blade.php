@@ -20,7 +20,7 @@
 
 <body
     @php
-$currentUser = auth()->user();
+ $currentUser = auth()->user();
 		$searchRoute = match(true) {
 			request()->routeIs('dashboard') => route('dashboard'),
 			default => route('dashboard'),
@@ -66,9 +66,6 @@ $currentUser = auth()->user();
                     <!-- Menu Group -->
                     <div>
                         <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
-                            
-
-
                             <svg :class="sidebarToggle ? 'xl:block hidden' : 'hidden'"
                                 class="menu-group-icon mx-auto fill-current" width="24" height="24"
                                 viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -452,8 +449,7 @@ $currentUser = auth()->user();
                                     <!-- Dropdown Menu End -->
                                 </li>
                             @endif
-
-                            @if ($currentUser?->isEmployer())
+                           @if ($currentUser?->isEmployer())
                                 <li>
                                     <a href="{{ route('dashboard') }}" class="menu-item group">
 
@@ -754,8 +750,6 @@ $currentUser = auth()->user();
                                 </li>
                                
                             @endif
-
-
                         </ul>
                          <!-- Promo Box -->
                             <div class="pb-20" :class="sidebarToggle ? 'xl:hidden' : ''">
@@ -774,9 +768,7 @@ $currentUser = auth()->user();
                             </div>
                         <!-- Promo Box -->
                     </div>
-
                     <!-- Support Group -->
-
                 </nav>
                 <!-- Sidebar Menu -->
 
@@ -1125,8 +1117,8 @@ $currentUser = auth()->user();
     <script src="{{ asset('assets/js/sweetalert.js') }}"></script>
     <script src="{{ asset('assets/js/app-alerts.js') }}"></script>
     <script src="{{ asset('assets/js/table-refresh.js') }}"></script>
+    @stack('page-scripts')
     
 </body>
 
 </html>
-
