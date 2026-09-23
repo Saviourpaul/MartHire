@@ -8,6 +8,7 @@ use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
+use App\Models\UserIdentificationDocument;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -69,22 +70,16 @@ class ApplicationFormService
                     'profile_image_path' => $profileImagePath,
                 ]);
 
-                $this->createDocument(
-                    $application,
-                    $data['nin_document'],
-                    ApplicationDocumentType::Nin,
-                    ApplicationDocumentType::Nin->label(),
-                    $data['nin_number'],
+                $identification = $this->storeIdentificationDocument(
+                    $applicant,
+                    ApplicationDocumentType::from($data['identification_type']),
+                    $data['identification_document'],
                     $storedFiles
                 );
 
-                $this->createDocument(
+                $this->createIdentityDocument(
                     $application,
-                    $data['bvn_document'],
-                    ApplicationDocumentType::Bvn,
-                    ApplicationDocumentType::Bvn->label(),
-                    $data['bvn_number'],
-                    $storedFiles
+                    $identification
                 );
 
                 foreach ($data['education_documents'] as $document) {
@@ -93,7 +88,6 @@ class ApplicationFormService
                         $document['file'],
                         ApplicationDocumentType::Education,
                         Str::headline($document['type']),
-                        null,
                         $storedFiles
                     );
                 }
@@ -170,12 +164,54 @@ class ApplicationFormService
     /**
      * @param  array<int, array{disk: string, path: string}>  $storedFiles
      */
+    private function storeIdentificationDocument(
+        User $applicant,
+        ApplicationDocumentType $type,
+        UploadedFile $file,
+        array &$storedFiles
+    ): UserIdentificationDocument {
+        if (! $type->isIdentityType()) {
+            throw ValidationException::withMessages([
+                'identification_type' => 'Select a supported identification method.',
+            ]);
+        }
+
+        $path = $file->store('user-identification-documents/'.$applicant->id, 'local');
+        $storedFiles[] = ['disk' => 'local', 'path' => $path];
+
+        // Application snapshots may still reference a previously selected profile document.
+        return $applicant->identificationDocument()->updateOrCreate([], [
+            'document_type' => $type,
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType() ?: null,
+            'size' => $file->getSize(),
+        ]);
+    }
+
+    private function createIdentityDocument(
+        ApplicationForm $application,
+        UserIdentificationDocument $identification
+    ): ApplicationDocument {
+        return $application->documents()->create([
+            'user_identification_document_id' => $identification->id,
+            'document_type' => $identification->document_type,
+            'document_name' => $identification->document_type->label(),
+            'file_path' => $identification->file_path,
+            'original_name' => $identification->original_name,
+            'mime_type' => $identification->mime_type,
+            'size' => $identification->size,
+        ]);
+    }
+
+    /**
+     * @param  array<int, array{disk: string, path: string}>  $storedFiles
+     */
     private function createDocument(
         ApplicationForm $application,
         UploadedFile $file,
         ApplicationDocumentType $type,
         string $name,
-        ?string $number,
         array &$storedFiles
     ): ApplicationDocument {
         $path = $file->store('application-documents/'.$application->id, 'local');
@@ -184,10 +220,9 @@ class ApplicationFormService
         return $application->documents()->create([
             'document_type' => $type,
             'document_name' => $name,
-            'document_number' => $number,
             'file_path' => $path,
             'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
+            'mime_type' => $file->getMimeType() ?: null,
             'size' => $file->getSize(),
         ]);
     }

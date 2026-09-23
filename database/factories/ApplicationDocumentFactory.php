@@ -19,13 +19,15 @@ class ApplicationDocumentFactory extends Factory
      */
     public function definition(): array
     {
-        $type = fake()->randomElement(ApplicationDocumentType::cases());
+        $type = fake()->randomElement([
+            ...ApplicationDocumentType::identityTypes(),
+            ApplicationDocumentType::Education,
+        ]);
 
         return [
             'application_form_id' => ApplicationForm::factory(),
             'document_type' => $type,
             'document_name' => $type->label(),
-            'document_number' => fake()->numerify('###########'),
             'file_path' => 'application-documents/sample.pdf',
             'original_name' => fake()->word().'.pdf',
             'mime_type' => 'application/pdf',
