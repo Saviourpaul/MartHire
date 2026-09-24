@@ -6,13 +6,13 @@
     <div class="container">
         <div class="row justify-center mx-0">
             <div class="lg:col-6 text-center mb-14">
-                <h1 class="h1-lg mb-6 highlighted">Choose Your Simple
-                    <span>Pricing</span> Plan</h1>
-                <p class="mb-14">Lorem ipsum dolor sit amet . The graphic and typographic operators <br>
-                    know this well, in reality all the professions</p>
+                <h1 class="h1-lg mb-6 highlighted">Recruitment Management
+                    <span>Built to Scale</span></h1>
+                <p class="mb-14">Marthire is preparing tailored ATS access for African government institutions and private organizations. <br>
+                    Join the waitlist to hear when plans become available.</p>
                 <ul class="inline-flex items-center justify-center bg-white rounded-[40px] px-1.5 py-1.5">
-                    <li class="px-[30px] py-[11px] rounded-[40px] cursor-pointer text-dark price-tab-btn active" data-type="monthly">Billed Monthly</li>
-                    <li class="px-[30px] py-[11px] rounded-[40px] cursor-pointer text-dark price-tab-btn" data-type="yearly">Billed Yearly</li>
+                    <li class="px-[30px] py-[11px] rounded-[40px] cursor-pointer text-dark price-tab-btn active" data-type="monthly">Monthly Access</li>
+                    <li class="px-[30px] py-[11px] rounded-[40px] cursor-pointer text-dark price-tab-btn" data-type="yearly">Annual Access</li>
                 </ul>
             </div>
         </div>
@@ -20,38 +20,38 @@
             <div class="md:col-6 lg:col-4">
                 <div class="price-card">
                     <div class="price-card-head">
-                        <span class="btn btn-sm bg-secondary rounded-[40px] h-8 px-4 py-[5px] text-sm">Free</span>
+                        <span class="btn btn-sm bg-secondary rounded-[40px] h-8 px-4 py-[5px] text-sm">Waitlist</span>
                         <div class="monthly-price">
                             <h2 class="mb-2.5 mt-6">Free</span></h2>
                         </div>
                         <div class="yearly-price">
                             <h2 class="mb-2.5 mt-6">Free</h2>
                         </div>
-                        <span>Perfect Plan For Starter</span>
+                        <span>For organizations preparing to modernize recruitment.</span>
                     </div>
                     <div class="max-w-[250px] mx-auto">
                         <ul class="mb-10 checklist-circle">
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Web & Mobile Optimized</li>
+                                Join the Marthire waitlist</li>
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Lifetime Free Usage</li>
+                                Recruitment readiness updates</li>
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Software Update Timely</li>
+                                Early-access consideration</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                3 Month Support</li>
+                                Configurable hiring workflows</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                No Installation Charges</li>
+                                Collaborative candidate reviews</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                Inbuilt Malware Scanner</li>
+                                Institutional onboarding support</li>
                         </ul>
                         <div class="text-center">
-                            <a class="btn btn-primary btn-sm" href="#">Get Started Now <i class="fa fa-chevron-right"></i></a>
+                            <a class="btn btn-primary btn-sm" href="#">Join the waitlist <i class="fa fa-chevron-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -65,38 +65,38 @@
                         <span class="text-white relative rotate-45 text-lg inline-block pt-6 pl-3.5">Popular</span>
                     </div>
                     <div class="price-card-head">
-                        <span class="btn btn-sm bg-[#D5EBFF] rounded-[40px] text-dark h-8 px-4 py-[5px] text-sm">pro</span>
+                        <span class="btn btn-sm bg-[#D5EBFF] rounded-[40px] text-dark h-8 px-4 py-[5px] text-sm">Team</span>
                         <div class="monthly-price">
-                            <h2 class="mb-2.5 mt-6 text-white">$49 <span class="text-lg">/ Month</span></h2>
+                            <h2 class="mb-2.5 mt-6 text-white">Coming soon <span class="text-lg">at launch</span></h2>
                         </div>
                         <div class="yearly-price">
-                            <h2 class="mb-2.5 mt-6 text-white">$59 <span class="text-lg">/ Yearly</span></h2>
+                            <h2 class="mb-2.5 mt-6 text-white">Tailored <span class="text-lg">annual access</span></h2>
                         </div>
-                        <span>Get 7 Days Free Trial</span>
+                        <span>For private organizations and growing recruitment teams.</span>
                     </div>
                     <div class="max-w-[250px] mx-auto">
                         <ul class="mb-10 checklist-circle">
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Web & Mobile Optimized</li>
+                                Centralized applicant records</li>
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Lifetime Free Usage</li>
+                                Screening and shortlisting workflows</li>
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Software Update Timely</li>
+                                Shared candidate pipeline visibility</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                3 Month Support</li>
+                                Institution-wide approval workflows</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                No Installation Charges</li>
+                                Custom implementation support</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                Inbuilt Malware Scanner</li>
+                                Dedicated account support</li>
                         </ul>
                         <div class="text-center">
-                            <a class="btn btn-primary btn-sm" href="#">Get Started Now <i class="fa fa-chevron-right"></i></a>
+                            <a class="btn btn-primary btn-sm" href="#">Join the waitlist <i class="fa fa-chevron-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -104,38 +104,38 @@
             <div class="md:col-6 lg:col-4">
                 <div class="price-card">
                     <div class="price-card-head">
-                        <span class="btn btn-sm bg-secondary rounded-[40px] h-8 px-4 py-[5px] text-sm">Enterprise</span>
+                        <span class="btn btn-sm bg-secondary rounded-[40px] h-8 px-4 py-[5px] text-sm">Institution</span>
                         <div class="monthly-price">
-                            <h2 class="mb-2.5 mt-6">$79 <span class="text-lg">/ Month</span></h2>
+                            <h2 class="mb-2.5 mt-6">Tailored <span class="text-lg">deployment</span></h2>
                         </div>
                         <div class="yearly-price">
-                            <h2 class="mb-2.5 mt-6">$99 <span class="text-lg">/ Yearly</span></h2>
+                            <h2 class="mb-2.5 mt-6">Tailored <span class="text-lg">annual access</span></h2>
                         </div>
-                        <span>Get 7 Days Free Trial</span>
+                        <span>For government institutions and complex hiring operations.</span>
                     </div>
                     <div class="max-w-[250px] mx-auto">
                         <ul class="mb-10 checklist-circle">
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Web & Mobile Optimized</li>
+                                Multi-stage recruitment workflows</li>
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Lifetime Free Usage</li>
+                                Centralized candidate management</li>
                             <li>
                                 <i class="fa-solid fa-check-circle"></i>
-                                Software Update Timely</li>
+                                Collaborative shortlisting and interviews</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                3 Month Support</li>
+                                Generic, one-size-fits-all workflows</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                No Installation Charges</li>
+                                Disconnected recruitment records</li>
                             <li class="line-through">
                                 <i class="fa-solid fa-check-circle"></i>
-                                Inbuilt Malware Scanner</li>
+                                Manual spreadsheet tracking</li>
                         </ul>
                         <div class="text-center">
-                            <a class="btn btn-primary btn-sm" href="#">Get Started Now <i class="fa fa-chevron-right"></i></a>
+                            <a class="btn btn-primary btn-sm" href="#">Join the waitlist <i class="fa fa-chevron-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -149,57 +149,57 @@
     <div class="container">
         <div class="row justify-center">
             <div class="lg:col-11 xl:col-10">
-                <h2 class="mb-14 text-center highlighted">Choose Your <span>Best Price</span> <br>
-                    Plan For You</h2>
+                <h2 class="mb-14 text-center highlighted">Prepare Your <span>Recruitment Workflow</span> <br>
+                    for Launch</h2>
                 <div class="md:border-border md:rounded-2xl md:border overflow-x-auto">
                     <table class="w-full price-table">
                         <thead class="shadow-sm">
                             <tr>
-                                <th class="min-w-[250px] text-start pl-2 xl:pl-8 py-5 font-secondary font-normal text-lg lg:text-2xl text-black w-[45%] xl:w-[50%]">Features</th>
-                                <th class="px-2 py-5 font-secondary font-normal text-lg xl:text-2xl text-black">free</th>
-                                <th class="px-2 py-5 font-secondary font-normal text-lg xl:text-2xl text-black">pro</th>
-                                <th class="px-2 py-5 font-secondary font-normal text-lg xl:text-2xl text-black pr-8">Enterprise</th>
+                                <th class="min-w-[250px] text-start pl-2 xl:pl-8 py-5 font-secondary font-normal text-lg lg:text-2xl text-black w-[45%] xl:w-[50%]">Recruitment Capability</th>
+                                <th class="px-2 py-5 font-secondary font-normal text-lg xl:text-2xl text-black">Waitlist</th>
+                                <th class="px-2 py-5 font-secondary font-normal text-lg xl:text-2xl text-black">Team</th>
+                                <th class="px-2 py-5 font-secondary font-normal text-lg xl:text-2xl text-black pr-8">Institution</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="">
-                                <td class="md:pl-2 xl:pl-8">Unlimited E-Mail Notifications</td>
+                                <td class="md:pl-2 xl:pl-8">Waitlist registration</td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="business"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="Enterprise"><i class="fa fa-check text-primary"></i></td>
                             </tr>
                             <tr class=" bg-[#F2F9FF] shadow-sm">
-                                <td class="pl-2 xl:pl-8">Display Personalized Messege</td>
+                                <td class="pl-2 xl:pl-8">Configurable vacancy and application forms</td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-times text-[#D62221]"></i></td>
                                 <td class="text-center" data-label="business"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="Enterprise"><i class="fa fa-check text-primary"></i></td>
                             </tr>
                             <tr class="">
-                                <td class="pl-2 xl:pl-8">Send Text Messeges Instant</td>
+                                <td class="pl-2 xl:pl-8">Product and launch updates</td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="business"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-check text-primary"></i></td>
                             </tr>
                             <tr class=" bg-[#F2F9FF] shadow-sm">
-                                <td class="pl-2 xl:pl-8">Send Live Messege Notifications</td>
+                                <td class="pl-2 xl:pl-8">Institutional approvals and multi-stage workflows</td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-times text-[#D62221]"></i></td>
                                 <td class="text-center" data-label="business"><i class="fa fa-times text-[#D62221]"></i></td>
                                 <td class="text-center" data-label="Enterprise"><i class="fa fa-check text-primary"></i></td>
                             </tr>
                             <tr class="">
-                                <td class="pl-2 xl:pl-8">Organize Contacts Into Showing In System</td>
+                                <td class="pl-2 xl:pl-8">Recruitment readiness resources</td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="business"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="Enterprise"><i class="fa fa-check text-primary"></i></td>
                             </tr>
                             <tr class=" bg-[#F2F9FF] shadow-sm">
-                                <td class="pl-2 xl:pl-8">Create Smart Segment Using Field Policy</td>
+                                <td class="pl-2 xl:pl-8">Recruitment workflow design guidance</td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="business"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="Enterprise"><i class="fa fa-check text-primary"></i></td>
                             </tr>
                             <tr class="">
-                                <td class="pl-2 xl:pl-8">24×7 Online Outstanding Support</td>
+                                <td class="pl-2 xl:pl-8">Priority onboarding and implementation support</td>
                                 <td class="text-center" data-label="pro"><i class="fa fa-times text-[#D62221]"></i></td>
                                 <td class="text-center" data-label="business"><i class="fa fa-check text-primary"></i></td>
                                 <td class="text-center" data-label="Enterprise"><i class="fa fa-check text-primary"></i></td>
@@ -219,7 +219,7 @@
     <div class="container">
         <div class="row justify-center">
             <div class="col-12 lg:col-6 text-center">
-                <h2 class="section-title">Popular questions <br>
+                <h2 class="section-title">Recruitment questions <br>
                     <span>answered</span>
                 </h2>
             </div>
@@ -228,65 +228,58 @@
                     <div class="faqs-col">
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                Hyper-personalize, engage, and convert candidates
+                                What does Marthire manage?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    Marthire helps organizations manage applications, candidate records,
+                                    screening, shortlisting, interviews, decisions, and recruitment administration
+                                    from one centralized workspace.
                                 </p>
                             </div>
                         </div>
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                Develop and retain your employees with intelligence
+                                How does Marthire reduce manual recruitment work?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    It replaces scattered spreadsheets, email threads, and disconnected files with
+                                    a structured workflow that keeps recruitment activity and candidate progress organized.
                                 </p>
                             </div>
                         </div>
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                Improve recruiter productivity through automation
+                                Can hiring teams work together in Marthire?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    Recruitment teams and hiring panels can work from a shared view of each vacancy
+                                    and candidate pipeline, making reviews, feedback, and decisions easier to coordinate.
                                 </p>
                             </div>
                         </div>
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                Hire more talent, faster with Al
+                                Does Marthire support multiple vacancies?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    Yes. Organizations can organize separate recruitment campaigns and track each
+                                    candidate pipeline through the stages that fit the role and hiring process.
                                 </p>
                             </div>
                         </div>
@@ -294,81 +287,71 @@
                     <div class="faqs-col">
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                How Can I Manage Transactions?
+                                Who is Marthire built for?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    Marthire is designed for African government institutions, public agencies, private
+                                    organizations, and recruitment teams that need more structure and visibility in hiring.
                                 </p>
                             </div>
                         </div>
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                How Many Should I Pay?
+                                Is Marthire a job board?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    No. Posting a vacancy can be part of the process, but Marthire is primarily a
+                                    recruitment management platform for tracking and progressing candidates through hiring.
                                 </p>
                             </div>
                         </div>
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                How does app work?
+                                How will pricing work?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    Marthire is pre-launch, and pricing is being prepared around the needs of different
+                                    organizations. Join the waitlist to receive launch and access updates.
                                 </p>
                             </div>
                         </div>
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                How can I manage income?
+                                Can our workflow be configured?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    Marthire is being built to support structured recruitment stages that reflect how
+                                    institutions and organizations manage applications, approvals, and hiring decisions.
                                 </p>
                             </div>
                         </div>
                         <div class="accordion">
                             <div class="accordion-header" data-accordion>
-                                How to invest using this app?
+                                How can my organization get early access?
                                 <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512" xmlspace="preserve">
                                     <path fill="currentColor" d="M505.755,123.592c-8.341-8.341-21.824-8.341-30.165,0L256.005,343.176L36.421,123.592c-8.341-8.341-21.824-8.341-30.165,0 s-8.341,21.824,0,30.165l234.667,234.667c4.16,4.16,9.621,6.251,15.083,6.251c5.462,0,10.923-2.091,15.083-6.251l234.667-234.667 C514.096,145.416,514.096,131.933,505.755,123.592z"></path>
                                 </svg>
                             </div>
                             <div class="accordion-content">
                                 <p>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi
-                                    quaerat veritatis necessitatibus nemo ullam dolores aut veniam
-                                    officiis asperiores, unde quo magni repudiandae impedit iusto
-                                    voluptatum eos, aliquam, consectetur aliquid.
+                                    Join the Marthire waitlist. We will share updates as the platform prepares for launch
+                                    and early access for organizations.
                                 </p>
                             </div>
                         </div>

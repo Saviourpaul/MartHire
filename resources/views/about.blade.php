@@ -6,10 +6,10 @@
         <div class="container">
             <div class="row justify-center">
                 <div class="lg:col-7 text-center mb-24">
-                    <h1 class="h1-lg mb-8 highlighted">Helping a <span>billion</span> people find the right job</h1>
-                    <p>The choice of font and font size with which Lorem ipsum is reproduced answers to specific needs
-                        that go beyond the simple and simple filling of spaces dedicated to accepting real texts and
-                        allowing to have hands an advertising/publishing product.</p>
+                    <h1 class="h1-lg mb-8 highlighted">Recruitment management <span>built for Africa</span></h1>
+                    <p>Government institutions and private organizations use Marthire to bring every recruitment
+                        activity into a clear, centralized workflow from vacancy setup and applications to screening,
+                        interviews, and hiring decisions.</p>
                 </div>
                 <div class="lg:col-10 -mb-12 px-10 lg:px-0">
                     <div class="video-wrapper">
@@ -34,8 +34,8 @@
                     <img src="{{ asset('assets/images/common-bg.png') }}" alt="">
                 </div>
                 <div class="lg:col-6 mb-14 text-center">
-                    <h2 class="section-title mb-0">The power of talent <br>
-                        <span>experience</span>
+                    <h2 class="section-title mb-0">The power of a <br>
+                        <span>connected recruitment process</span>
                     </h2>
                 </div>
                 <div class="lg:col-11 xl:col-10">
@@ -45,10 +45,9 @@
                                 <span class="inline-block mb-6">
                                     <img src="{{ asset('assets/images/svgs/gear.svg') }}" alt="">
                                 </span>
-                                <h5 class="mb-6 capitalize">MSPs</h5>
-                                <p class="text-lg">Lorem ipsum dolor sit amet, consectetur
-                                    adipisci elit, sed eiusmod tempor
-                                    incidunt ut labore et dolore magna aliqua.</p>
+                                <h5 class="mb-6 capitalize">Government Institutions</h5>
+                                <p class="text-lg">Give public-sector recruitment teams a structured way to manage
+                                    high-volume applications, approvals, and candidate progression.</p>
                             </div>
                         </div>
                         <div class="md:col-6 lg:col-4">
@@ -56,9 +55,9 @@
                                 <span class="inline-block mb-6">
                                     <img src="{{ asset('assets/images/svgs/supplier.svg') }}" alt="">
                                 </span>
-                                <h5 class="mb-6 capitalize">Suppliers</h5>
-                                <p class="text-lg">Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                                    accusantium doloremque laudantium, totam rem</p>
+                                <h5 class="mb-6 capitalize">Private Organizations</h5>
+                                <p class="text-lg">Replace disconnected recruitment tasks with one shared workflow
+                                    that keeps hiring teams aligned and informed.</p>
                             </div>
                         </div>
                         <div class="md:col-6 lg:col-4">
@@ -66,10 +65,9 @@
                                 <span class="inline-block mb-6">
                                     <img src="{{ asset('assets/images/svgs/people.svg') }}" alt="">
                                 </span>
-                                <h5 class="mb-6 capitalize">Workers</h5>
-                                <p class="text-lg">Lorem ipsum dolor sit amet, consectetur
-                                    adipisci elit, sed eiusmod tempor
-                                    incidunt ut labore et dolore magna aliqua.</p>
+                                <h5 class="mb-6 capitalize">Applicants</h5>
+                                <p class="text-lg">Provide applicants with a clearer process for submitting
+                                    information and following their recruitment journey.</p>
                             </div>
                         </div>
                     </div>
@@ -101,21 +99,20 @@
                         </div>
                         <div class="lg:col-5 mt-10 xl:mt-0 lg:pl-6">
                             <h2 class="section-title">
-                                Work with us to get
-                                the best <span>services</span>.
+                                Bring every <span>recruitment workflow</span>
+                                together.
                             </h2>
-                            <p class="mb-8">Lorem ipsum dolor sit amet, consectetur adipisci elit, sed eiusmod
-                                tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim
-                                veniam, quis nostrum exercitationem ullam.</p>
+                            <p class="mb-8">Marthire replaces scattered spreadsheets, inboxes, and manual follow-ups
+                                with a shared recruitment workspace for managing candidates, decisions, and progress.</p>
                             <ul class="checklist mb-10">
-                                <li class="my-1.5"><i class="fa fa-check-circle"></i> Lorem ipsum dolor sit amet,
-                                    consectetur adipisci elit</li>
-                                <li class="my-1.5"><i class="fa fa-check-circle"></i> tempor incidunt ut labore et
-                                    dolore magna aliqua.</li>
-                                <li class="my-1.5"><i class="fa fa-check-circle"></i> nisi ut aliquid ex ea commodi
-                                    consequatur.</li>
+                                <li class="my-1.5"><i class="fa fa-check-circle"></i> Centralize vacancies, applicant
+                                    records, documents, and recruitment decisions.</li>
+                                <li class="my-1.5"><i class="fa fa-check-circle"></i> Move candidates through clear,
+                                    consistent stages from application to hire.</li>
+                                <li class="my-1.5"><i class="fa fa-check-circle"></i> Give authorized teams a shared
+                                    view of recruitment progress.</li>
                             </ul>
-                            <a href="#" class="btn btn-primary">Go to our team</a>
+                            <a href="#" class="btn btn-primary">Explore the platform</a>
                         </div>
                     </div>
                 </div>
@@ -130,13 +127,12 @@
                             <img src="{{ asset('assets/images/about/about-img-4.png') }}" alt="">
                         </div>
                         <div class="lg:col-5 order-2 lg:order-1">
-                            <h2 class="section-title">Come <span>work</span> with us
+                            <h2 class="section-title">Make every hiring decision <span>easier to manage</span>
                             </h2>
-                            <p class="mb-8">Lorem ipsum dolor sit amet, consectetur adipisci elit, sed
-                                eiusmod tempor incidunt ut labore et dolore magna aliqua.
-                                Ut enim ad minim veniam, quis nostrum exercitationem
-                                ullam corporis suscipit laboriosam, nisi ut aliquid</p>
-                            <a class="btn btn-primary" href="#">learn more</a>
+                            <p class="mb-8">From initial screening to interviews, shortlisting, and final selection,
+                                Marthire helps your organization maintain a consistent process for every vacancy and a
+                                visible record of candidate progression.</p>
+                            <a class="btn btn-primary" href="#">Join the waitlist</a>
                         </div>
                     </div>
                 </div>
@@ -152,18 +148,18 @@
                 </div>
                 <div class="lg:col-6 text-center mb-14">
                     <h2 class="section-title">
-                        Our leadership <span>team</span>
+                        Built around real <span>recruitment needs</span>
                     </h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisci elit, sed eiusmod
-                        tempor incidunt ut labore et dolore magna aliqua.</p>
+                    <p>Marthire is being designed for the operational realities of government institutions and private
+                        organizations across Africa.</p>
                 </div>
-                <div class="row lg:col-11 xl:col-10 gy-4 -mt-6 team-shuffle shuffle" style="position: relative; overflow: hidden; height: 2609.1px; transition: height 250ms cubic-bezier(0.4, 0, 0.2, 1);">
+                <!--div class="row lg:col-11 xl:col-10 gy-4 -mt-6 team-shuffle shuffle" style="position: relative; overflow: hidden; height: 2609.1px; transition: height 250ms cubic-bezier(0.4, 0, 0.2, 1);">
                     <div class="md:col-6 xl:col-4 team-member shuffle-item shuffle-item--visible" style="position: absolute; top: 0px; visibility: visible; will-change: transform; left: 0px; opacity: 1; transition-duration: 250ms; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-property: transform, opacity;">
                         <div class="px-5 py-6 xl:px-10 xl:py-12 rounded-xl bg-white">
                             <div class="relative text-center pb-10 mb-8 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-4 after:h-0.5 after:bg-primary">
                                 <img class="rounded-full mx-auto mb-6" src="{{ asset('assets/images/team/member-1.png') }}" width="150" height="150" alt="">
-                                <h3 class="h4 mb-4 font-bold">Olivia Rhye</h3>
-                                <p class="text-[#505050] font-semibold text-sm">Founder &amp; CEO</p>
+                                <h3 class="h4 mb-4 font-bold">Public-sector hiring</h3>
+                                <p class="text-[#505050] font-semibold text-sm">Structured, accountable workflows for institutions and agencies</p>
                             </div>
                             <ul class="social-icons member-social-icons member-social-icons text-center">
                                 <li class="my-1.5">
@@ -193,8 +189,8 @@
                         <div class="px-5 py-6 xl:px-10 xl:py-12 rounded-xl bg-white">
                             <div class="relative text-center pb-10 mb-8 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-4 after:h-0.5 after:bg-primary">
                                 <img class="rounded-full mx-auto mb-6" src="{{ asset('assets/images/team/member-2.png') }}" width="150" height="150" alt="">
-                                <h3 class="h4 mb-4 font-bold">Phoenix Baken</h3>
-                                <p class="text-[#505050] font-semibold text-sm">Engineering Manager</p>
+                                <h3 class="h4 mb-4 font-bold">Private-sector hiring</h3>
+                                <p class="text-[#505050] font-semibold text-sm">One place for growing teams to manage recruitment</p>
                             </div>
                             <ul class="social-icons member-social-icons text-center">
                                 <li class="my-1.5">
@@ -224,8 +220,8 @@
                         <div class="px-5 py-6 xl:px-10 xl:py-12 rounded-xl bg-white">
                             <div class="relative text-center pb-10 mb-8 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-4 after:h-0.5 after:bg-primary">
                                 <img class="rounded-full mx-auto mb-6" src="{{ asset('assets/images/team/member-3.png') }}" width="150" height="150" alt="">
-                                <h3 class="h4 mb-4 font-bold">Lana Steiner</h3>
-                                <p class="text-[#505050] font-semibold text-sm">Product Manager</p>
+                                <h3 class="h4 mb-4 font-bold">Candidate experience</h3>
+                                <p class="text-[#505050] font-semibold text-sm">A clearer process for every applicant</p>
                             </div>
                             <ul class="social-icons member-social-icons text-center">
                                 <li class="my-1.5">
@@ -255,8 +251,8 @@
                         <div class="px-5 py-6 xl:px-10 xl:py-12 rounded-xl bg-white">
                             <div class="relative text-center pb-10 mb-8 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-4 after:h-0.5 after:bg-primary">
                                 <img class="rounded-full mx-auto mb-6" src="{{ asset('assets/images/team/member-4.png') }}" width="150" height="150" alt="">
-                                <h3 class="h4 mb-4 font-bold">Drew Cano</h3>
-                                <p class="text-[#505050] font-semibold text-sm">UX Researcher</p>
+                                <h3 class="h4 mb-4 font-bold">Workflow consistency</h3>
+                                <p class="text-[#505050] font-semibold text-sm">Repeatable stages for screening, interviews, and approvals</p>
                             </div>
                             <ul class="social-icons member-social-icons text-center">
                                 <li class="my-1.5">
@@ -286,8 +282,8 @@
                         <div class="px-5 py-6 xl:px-10 xl:py-12 rounded-xl bg-white">
                             <div class="relative text-center pb-10 mb-8 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-4 after:h-0.5 after:bg-primary">
                                 <img class="rounded-full mx-auto mb-6" src="{{ asset('assets/images/team/member-4.png') }}" width="150" height="150" alt="">
-                                <h3 class="h4 mb-4 font-bold">Candice Wu</h3>
-                                <p class="text-[#505050] font-semibold text-sm">Backend Developer</p>
+                                <h3 class="h4 mb-4 font-bold">Team collaboration</h3>
+                                <p class="text-[#505050] font-semibold text-sm">A shared view for authorized recruitment stakeholders</p>
                             </div>
                             <ul class="social-icons member-social-icons text-center">
                                 <li class="my-1.5">
@@ -317,8 +313,8 @@
                         <div class="px-5 py-6 xl:px-10 xl:py-12 rounded-xl bg-white">
                             <div class="relative text-center pb-10 mb-8 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-4 after:h-0.5 after:bg-primary">
                                 <img class="rounded-full mx-auto mb-6" src="{{ asset('assets/images/team/member-6.png') }}" width="150" height="150" alt="">
-                                <h3 class="h4 mb-4 font-bold">Lori Bryson</h3>
-                                <p class="text-[#505050] font-semibold text-sm">Product Manager</p>
+                                <h3 class="h4 mb-4 font-bold">African-market focus</h3>
+                                <p class="text-[#505050] font-semibold text-sm">Recruitment management shaped around local organizational context</p>
                             </div>
                             <ul class="social-icons member-social-icons text-center">
                                 <li class="my-1.5">
@@ -344,7 +340,7 @@
                             </ul>
                         </div>
                     </div>
-                </div>
+                </div-->
             </div>
         </div>
     </section>
@@ -358,11 +354,11 @@
                 <div class="lg:col-10 text-center">
                     <div class="shadow rounded-xl bg-white/40 py-20 border border-border">
                         <div class="md:max-w-[588px] mx-auto">
-                            <h2 class="mb-6 highlighted">Do you want to be a part <br>
-                                of our <span>team</span>?</h2>
-                            <p class="mb-6">All our premium themes are designed elegantly with blazing speed
-                                themes even score above% in Google page speed.</p>
-                            <a href="#" class="btn btn-primary">Start journey</a>
+                            <h2 class="mb-6 highlighted">Ready to improve <br>
+                                your <span>recruitment process</span>?</h2>
+                            <p class="mb-6">Marthire is preparing to help organizations across Africa run recruitment
+                                with more clarity, consistency, and control. Join the waitlist for launch updates.</p>
+                            <a href="#" class="btn btn-primary">Join the waitlist</a>
                         </div>
                     </div>
                 </div>

@@ -152,9 +152,7 @@
                         <a href="{{ route('home') }}" class="mb-4 inline-block">
                             <img src="{{ asset('assets/images/logo2.png') }}" alt="">
                         </a>
-                        <p class="mb-10">Lorem ipsum dolor sit sed dmi amet
-                            consectetur adipiscing. Cdo tellus
-                            sed condimentum volutpat. </p>
+                        <p class="mb-10">One platform to manage recruitment across Africa. </p>
                         <span class="inline-block font-semibold text-lg font-primary mb-2">Follow us</span>
                         <ul class="social-icons footer-social-icons">
                             <li>
