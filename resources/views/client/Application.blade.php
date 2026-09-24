@@ -1,8 +1,10 @@
+@use('App\Enums\ApplicationDocumentType')
 @use('App\Http\Requests\StoreApplicationFormRequest')
 
 <x-layout title="Job Application">
     @php
-        $wizardSteps = ['Personal details', 'Identity documents', 'Education', 'Review'];
+        $wizardSteps = ['Personal details', 'Identification', 'Education', 'Review'];
+        $identificationTypes = ApplicationDocumentType::identityTypes();
         $educationDocumentTypes = [
             'ssce' => 'SSCE',
             'ond' => 'OND',
@@ -27,7 +29,7 @@
         foreach ($errorKeys as $errorKey) {
             $step = match (true) {
                 str_starts_with($errorKey, 'education_documents') => 2,
-                in_array($errorKey, ['nin_number', 'nin_document', 'bvn_number', 'bvn_document'], true) => 1,
+                in_array($errorKey, ['identification_type', 'identification_document'], true) => 1,
                 $errorKey === 'job' => 3,
                 default => 0,
             };
@@ -65,12 +67,17 @@
             </dl>
         </div>
 
-        <x-application-wizard-progress :steps="$wizardSteps" />
+        <div data-application-wizard-container>
+            <x-application-wizard-progress :steps="$wizardSteps" />
 
-        <form class="mt-6 space-y-6" action="{{ route('applications.store', $job) }}" method="POST" enctype="multipart/form-data"
-            data-application-wizard data-initial-step="{{ $initialStep }}" data-completed-steps="{{ $initialStep }}"
-            data-confirm-title="Submit application?" data-confirm-text="Please confirm your information and uploaded documents are correct."
-            data-confirm-button="Submit application" novalidate>
+            <noscript>
+                <style>[data-application-wizard] [data-wizard-step][hidden] { display: block !important; }</style>
+            </noscript>
+
+            <form class="mt-6 space-y-6" action="{{ route('applications.store', $job) }}" method="POST" enctype="multipart/form-data"
+                data-application-wizard data-initial-step="{{ $initialStep }}"
+                data-confirm-title="Submit application?" data-confirm-text="Please confirm your information and uploaded documents are correct."
+                data-confirm-button="Submit application" novalidate>
             @csrf
 
             <div class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-theme-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
@@ -83,7 +90,7 @@
                 </div>
             @endif
 
-            <x-application-wizard-step :title="$wizardSteps[0]" :index="0" description="Confirm your contact information and add a profile photo.">
+            <x-application-wizard-step :title="$wizardSteps[0]" :index="0" :initially-hidden="$initialStep !== 0" description="Confirm your contact information and add a profile photo.">
                 <div class="space-y-6">
                     <div class="flex flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.02] sm:flex-row sm:items-center">
                         <div class="size-20 shrink-0 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800" data-profile-preview-frame>
@@ -93,10 +100,11 @@
                         <div class="min-w-0 flex-1" data-field>
                             <label for="profile-image-input" class="{{ $labelClass }}">Profile photo @if (blank($user->profile_image_path))<span class="text-red-600 dark:text-red-400">*</span>@endif</label>
                             <div class="mt-2 flex flex-wrap items-center gap-3">
-                                <label for="profile-image-input" class="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]">
+                                <label for="profile-image-input" class="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]" data-profile-image-trigger>
                                     Choose photo
                                 </label>
-                                <span class="text-theme-xs text-gray-500 dark:text-gray-400" data-profile-preview-status>Choose a photo to preview it before submission.</span>
+                                <button type="button" hidden data-remove-profile-image class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]">Remove</button>
+                                <span class="text-theme-xs text-gray-500 dark:text-gray-400" data-profile-preview-status aria-live="polite">Choose a photo to preview it before submission.</span>
                             </div>
                             <input id="profile-image-input" type="file" name="profile_image" class="sr-only" accept="{{ $profileImageAccept }}"
                                 @required(blank($user->profile_image_path)) data-file-kind="profile-image"
@@ -178,7 +186,7 @@
                             <select id="state-of-origin" name="state_of_origin" class="{{ $inputClass }} @error('state_of_origin') border-red-500 @enderror" required data-state-of-origin aria-describedby="state-of-origin-error">
                                 <option value="">Select state</option>
                                 @foreach ($states as $state)
-                                    <option value="{{ $state->name }}" data-lga-url="{{ route('locations.states.local-government-areas', $state) }}" @selected($selectedState === $state->name)>{{ $state->name }}</option>
+                                    <option value="{{ $state->name }}" data-lga-url="{{ route('locations.states.local-government-areas', $state, false) }}" @selected($selectedState === $state->name)>{{ $state->name }}</option>
                                 @endforeach
                             </select>
                             <p id="state-of-origin-error" class="{{ $errorClass }} {{ $errors->has('state_of_origin') ? 'block' : 'hidden' }}" data-validation-message aria-live="polite">@error('state_of_origin'){{ $message }}@enderror</p>
@@ -200,54 +208,38 @@
                 </div>
 
                 <div class="mt-8 flex justify-end border-t border-gray-100 pt-5 dark:border-gray-800">
-                    <button type="button" data-wizard-next class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-white transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30">Next</button>
+                    <button type="button" data-wizard-next class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-black transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30">Next</button>
                 </div>
             </x-application-wizard-step>
 
-            <x-application-wizard-step :title="$wizardSteps[1]" :index="1" description="Provide the identity details required for this application.">
-                <div class="grid gap-6 lg:grid-cols-2">
-                    <div class="space-y-5 rounded-lg border border-gray-200 p-4 dark:border-gray-800 sm:p-5">
-                        <div>
-                            <h3 class="text-theme-sm font-semibold text-gray-900 dark:text-white/90">National Identity Number</h3>
-                            <p class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">Enter your 11-digit NIN and upload the supporting document.</p>
-                        </div>
-                        <div data-field>
-                            <label for="nin-number" class="{{ $labelClass }}">NIN number <span class="text-red-600 dark:text-red-400">*</span></label>
-                            <input id="nin-number" type="text" name="nin_number" class="{{ $inputClass }} @error('nin_number') border-red-500 @enderror" value="{{ old('nin_number') }}" inputmode="numeric" pattern="[0-9]{11}" minlength="11" maxlength="11" required aria-describedby="nin-number-error">
-                            <p id="nin-number-error" class="{{ $errorClass }} {{ $errors->has('nin_number') ? 'block' : 'hidden' }}" data-validation-message aria-live="polite">@error('nin_number'){{ $message }}@enderror</p>
-                        </div>
-                        <div data-field>
-                            <label for="nin-document" class="{{ $labelClass }}">NIN document <span class="text-red-600 dark:text-red-400">*</span></label>
-                            <div class="mt-1.5 rounded-lg border border-dashed border-gray-300 p-4 text-center transition hover:border-brand-400 hover:bg-brand-50/40 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:hover:bg-brand-500/5" data-document-dropzone tabindex="0" role="button" aria-label="Choose NIN document">
-                                <input id="nin-document" type="file" name="nin_document" class="sr-only" accept="{{ $documentAccept }}" required data-document-file data-file-kind="document" data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}" data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)' aria-describedby="nin-document-help nin-document-error">
-                                <p class="text-theme-sm font-medium text-gray-700 dark:text-gray-300">Choose or drop a document</p>
-                                <p id="nin-document-help" class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">PDF, JPG, or PNG. Up to {{ $documentMaxMb }}MB.</p>
-                                <p class="mt-2 hidden text-theme-xs font-medium text-brand-600 dark:text-brand-400" data-document-file-name></p>
-                            </div>
-                            <p id="nin-document-error" class="{{ $errorClass }} {{ $errors->has('nin_document') ? 'block' : 'hidden' }}" data-validation-message aria-live="polite">@error('nin_document'){{ $message }}@enderror</p>
-                        </div>
-                    </div>
+            <x-application-wizard-step :title="$wizardSteps[1]" :index="1" :initially-hidden="$initialStep !== 1" description="Choose one accepted identification method and upload its document.">
+                <div class="space-y-6">
+                    <fieldset class="rounded-lg border border-gray-200 p-4 dark:border-gray-800 sm:p-5" data-field>
+                        <legend class="text-theme-sm font-semibold text-gray-900 dark:text-white/90">Identification method <span class="text-red-600 dark:text-red-400">*</span></legend>
+                        <p id="identification-type-help" class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">Select the document you will use to verify your identity.</p>
 
-                    <div class="space-y-5 rounded-lg border border-gray-200 p-4 dark:border-gray-800 sm:p-5">
-                        <div>
-                            <h3 class="text-theme-sm font-semibold text-gray-900 dark:text-white/90">Bank Verification Number</h3>
-                            <p class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">Enter your 11-digit BVN and upload the supporting document.</p>
+                        <div class="mt-5 grid gap-3 sm:grid-cols-2" aria-describedby="identification-type-help identification-type-error">
+                            @foreach ($identificationTypes as $identificationType)
+                                @php($isSelected = old('identification_type') === $identificationType->value)
+                                <label class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition focus-within:ring-2 focus-within:ring-brand-500/20 {{ $isSelected ? 'border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/10' : 'border-gray-200 bg-white hover:border-brand-300 dark:border-gray-800 dark:bg-white/[0.02] dark:hover:border-brand-500/50' }}" data-identification-option>
+                                    <input id="identification-type-{{ $identificationType->value }}" type="radio" name="identification_type" value="{{ $identificationType->value }}" class="mt-0.5 size-4 shrink-0 accent-brand-500" required @checked($isSelected) data-identification-type data-identification-label="{{ $identificationType->label() }}">
+                                    <span class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $identificationType->label() }}</span>
+                                </label>
+                            @endforeach
                         </div>
-                        <div data-field>
-                            <label for="bvn-number" class="{{ $labelClass }}">BVN number <span class="text-red-600 dark:text-red-400">*</span></label>
-                            <input id="bvn-number" type="text" name="bvn_number" class="{{ $inputClass }} @error('bvn_number') border-red-500 @enderror" value="{{ old('bvn_number') }}" inputmode="numeric" pattern="[0-9]{11}" minlength="11" maxlength="11" required aria-describedby="bvn-number-error">
-                            <p id="bvn-number-error" class="{{ $errorClass }} {{ $errors->has('bvn_number') ? 'block' : 'hidden' }}" data-validation-message aria-live="polite">@error('bvn_number'){{ $message }}@enderror</p>
+
+                        <p id="identification-type-error" class="{{ $errorClass }} {{ $errors->has('identification_type') ? 'block' : 'hidden' }}" data-validation-message aria-live="polite">@error('identification_type'){{ $message }}@enderror</p>
+                    </fieldset>
+
+                    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800 sm:p-5" data-field>
+                        <label for="identification-document" class="{{ $labelClass }}"><span data-identification-document-label>Identification document</span> <span class="text-red-600 dark:text-red-400">*</span></label>
+                        <p id="identification-document-help" class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400" data-identification-document-help>Select an identification method before choosing its document. PDF, JPG, or PNG; up to {{ $documentMaxMb }}MB.</p>
+                        <div class="mt-4 rounded-lg border border-dashed border-gray-300 p-5 text-center transition hover:border-brand-400 hover:bg-brand-50/40 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:hover:bg-brand-500/5" data-document-dropzone data-identification-document-dropzone tabindex="0" role="button" aria-label="Choose identification document">
+                            <input id="identification-document" type="file" name="identification_document" class="sr-only" accept="{{ $documentAccept }}" required data-document-file data-identification-document data-file-kind="document" data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}" data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)' aria-describedby="identification-document-help identification-document-error">
+                            <p class="text-theme-sm font-medium text-gray-700 dark:text-gray-300" data-identification-document-prompt>Choose or drop a document</p>
+                            <p class="mt-2 hidden text-theme-xs font-medium text-brand-600 dark:text-brand-400" data-document-file-name></p>
                         </div>
-                        <div data-field>
-                            <label for="bvn-document" class="{{ $labelClass }}">BVN document <span class="text-red-600 dark:text-red-400">*</span></label>
-                            <div class="mt-1.5 rounded-lg border border-dashed border-gray-300 p-4 text-center transition hover:border-brand-400 hover:bg-brand-50/40 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:hover:bg-brand-500/5" data-document-dropzone tabindex="0" role="button" aria-label="Choose BVN document">
-                                <input id="bvn-document" type="file" name="bvn_document" class="sr-only" accept="{{ $documentAccept }}" required data-document-file data-file-kind="document" data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}" data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)' aria-describedby="bvn-document-help bvn-document-error">
-                                <p class="text-theme-sm font-medium text-gray-700 dark:text-gray-300">Choose or drop a document</p>
-                                <p id="bvn-document-help" class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">PDF, JPG, or PNG. Up to {{ $documentMaxMb }}MB.</p>
-                                <p class="mt-2 hidden text-theme-xs font-medium text-brand-600 dark:text-brand-400" data-document-file-name></p>
-                            </div>
-                            <p id="bvn-document-error" class="{{ $errorClass }} {{ $errors->has('bvn_document') ? 'block' : 'hidden' }}" data-validation-message aria-live="polite">@error('bvn_document'){{ $message }}@enderror</p>
-                        </div>
+                        <p id="identification-document-error" class="{{ $errorClass }} {{ $errors->has('identification_document') ? 'block' : 'hidden' }}" data-validation-message aria-live="polite">@error('identification_document'){{ $message }}@enderror</p>
                     </div>
                 </div>
 
@@ -257,7 +249,7 @@
                 </div>
             </x-application-wizard-step>
 
-            <x-application-wizard-step :title="$wizardSteps[2]" :index="2" description="Add at least one educational qualification document.">
+            <x-application-wizard-step :title="$wizardSteps[2]" :index="2" :initially-hidden="$initialStep !== 2" description="Add at least one educational qualification document.">
                 <div id="education-documents" class="space-y-4" data-education-documents>
                     @foreach ($educationRows as $index => $row)
                         <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-800 sm:p-5" data-education-document>
@@ -306,7 +298,7 @@
                 </div>
             </x-application-wizard-step>
 
-            <x-application-wizard-step :title="$wizardSteps[3]" :index="3" description="Review the application before sending it to {{ $job->company }}.">
+            <x-application-wizard-step :title="$wizardSteps[3]" :index="3" :initially-hidden="$initialStep !== 3" description="Review the application before sending it to {{ $job->company }}.">
                 <dl class="grid divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 text-theme-sm dark:divide-gray-800 dark:border-gray-800 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
                     <div class="p-4"><dt class="text-theme-xs text-gray-500 dark:text-gray-400">Job</dt><dd class="mt-1 font-medium text-gray-800 dark:text-white/90">{{ $job->title }}</dd></div>
                     <div class="p-4"><dt class="text-theme-xs text-gray-500 dark:text-gray-400">Company</dt><dd class="mt-1 font-medium text-gray-800 dark:text-white/90">{{ $job->company }}</dd></div>
@@ -363,7 +355,8 @@
                     </div>
                 </article>
             </template>
-        </form>
+            </form>
+        </div>
     </main>
 
     @push('page-scripts')
