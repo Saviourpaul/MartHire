@@ -233,8 +233,8 @@
 
                     <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800 sm:p-5" data-field>
                         <label for="identification-document" class="{{ $labelClass }}"><span data-identification-document-label>Identification document</span> <span class="text-red-600 dark:text-red-400">*</span></label>
-                        <p id="identification-document-help" class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400" data-identification-document-help>Select an identification method before choosing its document. PDF, JPG, or PNG; up to {{ $documentMaxMb }}MB.</p>
-                        <div class="mt-4 rounded-lg border border-dashed border-gray-300 p-5 text-center transition hover:border-brand-400 hover:bg-brand-50/40 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:hover:bg-brand-500/5" data-document-dropzone data-identification-document-dropzone tabindex="0" role="button" aria-label="Choose identification document">
+                        <p id="identification-document-help" class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400" data-identification-document-help aria-live="polite">Select an identification method before choosing its document. PDF, JPG, or PNG; up to {{ $documentMaxMb }}MB.</p>
+                        <div class="mt-4 rounded-lg border border-dashed border-gray-300 p-5 text-center transition hover:border-brand-400 hover:bg-brand-50/40 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:hover:bg-brand-500/5" data-document-dropzone data-identification-document-dropzone tabindex="0" role="button" aria-label="Select an identification method first" aria-disabled="true">
                             <input id="identification-document" type="file" name="identification_document" class="sr-only" accept="{{ $documentAccept }}" required data-document-file data-identification-document data-file-kind="document" data-max-kb="{{ StoreApplicationFormRequest::DOCUMENT_MAX_KB }}" data-allowed-types='@json(StoreApplicationFormRequest::DOCUMENT_TYPES)' aria-describedby="identification-document-help identification-document-error">
                             <p class="text-theme-sm font-medium text-gray-700 dark:text-gray-300" data-identification-document-prompt>Choose or drop a document</p>
                             <p class="mt-2 hidden text-theme-xs font-medium text-brand-600 dark:text-brand-400" data-document-file-name></p>
@@ -245,7 +245,7 @@
 
                 <div class="mt-8 flex items-center justify-between border-t border-gray-100 pt-5 dark:border-gray-800">
                     <button type="button" data-wizard-previous class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]">Previous</button>
-                    <button type="button" data-wizard-next class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-white transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30">Next</button>
+                    <button type="button" data-wizard-next class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-black transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30">Next</button>
                 </div>
             </x-application-wizard-step>
 
@@ -294,7 +294,7 @@
 
                 <div class="mt-8 flex items-center justify-between border-t border-gray-100 pt-5 dark:border-gray-800">
                     <button type="button" data-wizard-previous class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]">Previous</button>
-                    <button type="button" data-wizard-next class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-white transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30">Next</button>
+                    <button type="button" data-wizard-next class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-theme-sm font-medium text-black transition hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30">Next</button>
                 </div>
             </x-application-wizard-step>
 
