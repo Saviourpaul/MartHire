@@ -12,8 +12,8 @@
                 <div class="lg:col-5 lg:order-1">
                     <h1 class="h2 mb-4 highlighted">Run recruitment with
                         <span>clarity</span> and control</h1>
-                    <p class="mb-10">Marthire is a centralized Applicant Tracking System (ATS) and recruitment management platform for government institutions and private organizations across Africa. Organize applications, screen candidates, coordinate hiring teams, and move every candidate through a structured, transparent workflow.</p>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Join the waitlist</a>
+                    <p class="mb-10">MartHire is a recruitment management platform for organizations that need to keep vacancies, applications, applicant records, and candidate progression organized in one place.</p>
+                    <a href="{{ route('how-it-works') }}" class="btn btn-outline-primary btn-sm">See how it works</a>
                 </div>
             </div>
         </div>
@@ -28,8 +28,8 @@
                 <div class="lg:col-10 xl:col-8 mb-14 text-center">
                     <h2 class="section-title">Bring every hiring workflow <br>
                         into <span>one place</span></h2>
-                    <p class="mb-12">Marthire brings requisitions, applications, screening records, interview feedback, and hiring decisions into one organized workspace. Replace spreadsheet-heavy processes, fragmented emails, and disconnected tools with a clear, accountable recruitment workflow.</p>
-                    <a href="#" class="btn btn-primary">Join the waitlist</a>
+                    <p class="mb-12">MartHire connects published vacancies, submitted applications, supporting documents, and pipeline decisions in one organized workspace.</p>
+                    <a href="{{ route('client.jobs-listings') }}" class="btn btn-primary">Browse jobs</a>
                 </div>
                 <div class="lg:col-11 xl:col-10">
                     <img class="mx-auto max-w-[946px] w-full rounded-xl" src="{{ asset('assets/images/service-img-2.png') }}" alt="">
@@ -133,7 +133,7 @@
                     <h2 class="section-title mb-5">
                         <span>A recruitment process your team can follow</span>
                     </h2>
-                    <p>From approved vacancy to final decision, Marthire keeps every stage organized.</p>
+                    <p>From approved vacancy to final decision, MartHire keeps every stage organized.</p>
                 </div>
                 <marquee class="swiper jobs-carousel pr-[1px]">
                     <div class="swiper-wrapper">
@@ -217,7 +217,7 @@
     <div class="container">
         <div class="row justify-center">
             <div class="lg:col-6 text-center mb-14">
-                <h2 class="section-title">Marthire <span>Benefits</span></h2>
+                <h2 class="section-title">MartHire <span>Benefits</span></h2>
                 <p>Make recruitment easier to manage, easier to audit, and easier for every stakeholder to follow.</p>
             </div>
             <div class="lg:col-11 xl:col-10">
@@ -262,8 +262,8 @@
                     <div class="md:max-w-[588px] mx-auto">
                         <h2 class="mb-6 highlighted">Prepare for a more <span>organized</span> <br>
                             recruitment process</h2>
-                        <p class="mb-6">Marthire is being built for organizations ready to manage applicants, collaborate on hiring decisions, and deliver a more consistent experience for every candidate.</p>
-                        <a href="#" class="btn btn-primary">Join the waitlist</a>
+                        <p class="mb-6">MartHire helps organizations manage applicants and move candidates through a visible, consistent recruitment pipeline.</p>
+                        <a href="{{ route('contact') }}" class="btn btn-primary">Contact us</a>
                     </div>
                 </div>
             </div>
