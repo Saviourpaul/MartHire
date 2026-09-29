@@ -8,16 +8,11 @@
                 <div class="lg:col-8 xl:col-6 mb-[72px] ">
                     <h1 class="h1-lg highlighted">One platform to <br>
                         manage <span>recruitment</span> across Africa</h1>
-                    <p class="mt-8">Marthire helps government institutions and private organizations centralize
-                        recruitment—from vacancy setup and applications to screening, shortlisting, interviews, and
-                        hiring decisions.</p>
+                    <p class="mt-8">MartHire helps organizations keep job vacancies, applications, applicant records,
+                        and candidate progression in one structured recruitment workspace.</p>
                     <div class="mt-14">
-                        <a class="block sm:inline-block btn btn-primary sm:mx-2 mb-2 sm:mb-0 w-full sm:w-auto"
-                            href="#">Join the waitlist</a>
-                        <button id="modal-open-button"
-                            class="block sm:inline-block btn btn-outline-dark sm:mx-2 w-full sm:w-auto">
-                            See how it works
-                        </button>
+                        <a href="{{ route('Browse-jobs') }}" class="block sm:inline-block btn btn-primary sm:mx-2 mb-2 sm:mb-0 w-full sm:w-auto">Browse jobs</a>
+                        <a href="{{ route('how-it-works') }}" class="block sm:inline-block btn btn-outline-dark sm:mx-2 w-full sm:w-auto">See how it works</a>
                     </div>
                 </div>
                 <div class="col-12">
@@ -83,7 +78,7 @@
                 <div class="lg:col-12 text-center max-w-[1072px] px-8">
                     <div class="mb-20">
                         <h2 class="section-title">Recruitment without the <span>manual chase</span></h2>
-                        <p>Marthire brings candidates, recruitment stages, and hiring activity into one organized
+                        <p>MartHire brings candidates, recruitment stages, and hiring activity into one organized
                             workflow—so your team can spend less time chasing updates across spreadsheets and emails.</p>
                     </div>
                     <div class="video-wrapper">
@@ -179,7 +174,7 @@
                     </div>
                 </div>
                 <div class="lg:col-10 text-center relative z-10">
-                    <a class="btn btn-primary" href="#">Join the waitlist</a>
+                    <a href="{{ route('services') }}" class="btn btn-primary">Explore the platform</a>
                 </div>
             </div>
         </div>
@@ -206,7 +201,7 @@
                             <p class="mb-8">Bring vacancies, applications, documents, and recruitment decisions into
                                 one organized workspace instead of relying on fragmented spreadsheets, email threads,
                                 and manual follow-ups.</p>
-                            <a class="btn btn-primary" href="#">Explore the platform</a>
+                            <a class="btn btn-primary" href="{{ route('services') }}">Explore the platform</a>
                         </div>
                     </div>
                 </div>
@@ -225,10 +220,9 @@
                                 Keep candidate progression <span>clear</span>
                                 and consistent
                             </h2>
-                            <p class="mb-8">Move applicants through screening, shortlisting, interviews, and final
-                                decisions with structured stages that help every authorized stakeholder understand what
-                                happens next.</p>
-                            <a class="btn btn-primary" href="#">Join the waitlist</a>
+                            <p class="mb-8">Move applicants through Submitted, Shortlisted, Interview, Selected, and
+                                Rejected stages with a recorded history of each progression decision.</p>
+                            <a href="{{ route('how-it-works') }}" class="btn btn-primary">See the workflow</a>
                         </div>
                     </div>
                 </div>
@@ -239,8 +233,8 @@
                 </div>
                 <div class="lg:col-6 mx-auto text-center">
                     <h2 class="section-title">Recruitment management <span>made for Africa</span></h2>
-                    <p>Marthire is being built for the realities of government and private-sector recruitment across
-                        African markets—where clarity, consistency, and accountable administration matter.</p>
+                    <p>MartHire supports structured recruitment for organizations that need clear applicant records,
+                        consistent candidate progression, and accountable administration.</p>
                 </div>
             </div>
         </div>
@@ -432,7 +426,7 @@
                         <div class="faqs-col">
                             <div class="accordion">
                                 <div class="accordion-header" data-accordion>
-                                    What does Marthire help organizations manage?
+                                    What does MartHire help organizations manage?
                                     <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
                                         xmlspace="preserve">
                                         <path fill="currentColor"
@@ -442,14 +436,14 @@
                                 </div>
                                 <div class="accordion-content">
                                     <p>
-                                        Marthire centralizes vacancies, applications, candidate records, screening,
+                                        MartHire centralizes vacancies, applications, candidate records, screening,
                                         shortlisting, interviews, and hiring administration in one workflow.
                                     </p>
                                 </div>
                             </div>
                             <div class="accordion">
                                 <div class="accordion-header" data-accordion>
-                                    Who is Marthire built for?
+                                    Who is MartHire built for?
                                     <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
                                         xmlspace="preserve">
                                         <path fill="currentColor"
@@ -466,7 +460,7 @@
                             </div>
                             <div class="accordion">
                                 <div class="accordion-header" data-accordion>
-                                    How does Marthire reduce manual recruitment work?
+                                    How does MartHire reduce manual recruitment work?
                                     <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
                                         xmlspace="preserve">
                                         <path fill="currentColor"
@@ -502,7 +496,7 @@
                         <div class="faqs-col">
                             <div class="accordion">
                                 <div class="accordion-header" data-accordion>
-                                    Can we use Marthire for government recruitment?
+                                    Can we use MartHire for government recruitment?
                                     <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
                                         xmlspace="preserve">
                                         <path fill="currentColor"
@@ -512,8 +506,8 @@
                                 </div>
                                 <div class="accordion-content">
                                     <p>
-                                        Yes. Marthire is being designed to support structured, accountable recruitment
-                                        processes for public institutions and agencies.
+                                        Yes. MartHire supports structured recruitment processes for public institutions,
+                                        agencies, and private organizations.
                                     </p>
                                 </div>
                             </div>
@@ -553,7 +547,7 @@
                             </div>
                             <div class="accordion">
                                 <div class="accordion-header" data-accordion>
-                                    Is job posting Marthire's main purpose?
+                                    Is job posting MartHire's main purpose?
                                     <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
                                         xmlspace="preserve">
                                         <path fill="currentColor"
@@ -570,7 +564,7 @@
                             </div>
                             <div class="accordion">
                                 <div class="accordion-header" data-accordion>
-                                    How can our organization join the waitlist?
+                                    How can our organization access MartHire?
                                     <svg class="accordion-icon" x="0px" y="0px" viewBox="0 0 512 512"
                                         xmlspace="preserve">
                                         <path fill="currentColor"
@@ -580,8 +574,8 @@
                                 </div>
                                 <div class="accordion-content">
                                     <p>
-                                        Marthire is pre-launch. Join the waitlist to receive updates and learn when the
-                                        platform becomes available for your organization.
+                                        Contact MartHire to discuss platform access for your organization. Applicants can
+                                        create an account and browse available opportunities.
                                     </p>
                                 </div>
                             </div>
@@ -605,42 +599,10 @@
                         <div class="md:max-w-[588px] mx-auto">
                             <h2 class="mb-6 highlighted">Ready to improve your <br>
                                 <span>recruitment process</span>?</h2>
-                            <p class="mb-6">Join the Marthire waitlist to receive launch updates and prepare your
-                                organization for more organized, transparent recruitment.</p>
-                            <a href="#" class="btn btn-primary">Join the waitlist</a>
+                            <p class="mb-6">Bring vacancies, applications, applicant records, and candidate decisions
+                                into one organized recruitment workflow.</p>
+                            <a href="{{ route('contact') }}" class="btn btn-primary">Contact us</a>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Modal -->
-    <section>
-        <div class="container">
-            <div class="row mb-10">
-                <div class="col-12">
-                    <!--modal open button -->
-                    <!-- <button id="modal-open-button" class="rounded bg-primary py-2 px-4 font-bold text-white hover:bg-primary/80">
-                    Open Modal
-                </button> -->
-                    <!-- modal container -->
-                    <div id="modal-container"
-                        class="fixed inset-0 z-50 hidden h-screen w-screen bg-theme-dark bg-opacity-75"></div>
-                    <!-- modal -->
-                    <div id="modal"
-                        class="fixed top-1/2 left-1/2 z-50 hidden -translate-x-1/2 -translate-y-1/2 transform rounded p-6 shadow-lg bg-transparent w-full max-w-[650px]">
-                        <div class="rounded-xl overflow-hidden">
-                            <iframe class="w-full" width="650" height="450"
-                                src="https://www.youtube.com/embed/ResipmZmpDU" title="YouTube video player"
-                                frameborder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowfullscreen></iframe>
-                        </div>
-                        <button id="modal-close-button"
-                            class="border absolute -top-1.5 -right-1.5 text-primary w-8 h-8 rounded-full border-primary inline-flex items-center justify-center text-xl">
-                            <i class="fa fa-times"></i>
-                        </button>
                     </div>
                 </div>
             </div>
