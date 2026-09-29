@@ -93,7 +93,7 @@
                 <div class="footer-grid lg:col-10 pt-[100px] pb-16">
                     <div class="footer-col mb-10 lg:mb-0 lg:max-w-[270px]">
                         <a href="{{ route('home') }}" class="mb-4 inline-block">
-                            <img src="{{ asset('assets/images/logo2.png') }}" alt="MartHire">
+                            <img src="{{ asset('assets/images/logo2.png') }}" height="100" width="300" alt="MartHire">
                         </a>
                         <p>One platform to manage recruitment across Africa.</p>
                     </div>
