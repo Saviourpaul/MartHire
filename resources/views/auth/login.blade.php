@@ -69,6 +69,11 @@
                 {{ session('success') }}
               </div>
             @endif
+            @if (session('info'))
+              <div role="status" class="mb-5 rounded-lg border border-brand-500/30 bg-brand-50 px-4 py-3 text-sm font-medium text-brand-800 dark:bg-brand-500/10 dark:text-brand-200">
+                {{ session('info') }}
+              </div>
+            @endif
             <div>
               
               <form method="POST" action="{{ route('login') }}">

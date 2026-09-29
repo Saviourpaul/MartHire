@@ -43,7 +43,7 @@ class JobApplicationController extends Controller
 
             return redirect()
                 ->route('login')
-                ->with('info', 'Log in with an applicant account to continue your job application.');
+                ->with('info', 'Log in or Register to continue with job application.');
         }
 
         abort_unless($user->isApplicant(), 403);

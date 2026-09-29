@@ -27,6 +27,7 @@ Route::view('services', 'services')->name('services');
 Route::view('pricing', 'pricing')->name('pricing');
 Route::view('how-it-works', 'how-it-works')->name('how-it-works');
 Route::view('our-team', 'our-team')->name('our-team');
+Route::get('Browse-jobs', [JobController::class, 'browse'])->name('Browse-jobs');
 Route::view('contact', 'contact')->name('contact');
 Route::get('jobs-listings', [JobController::class, 'listings'])->name('client.jobs-listings');
 Route::get('locations/states/{nigeriaState}/local-government-areas', [LocationController::class, 'localGovernmentAreas'])

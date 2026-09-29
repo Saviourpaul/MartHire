@@ -22,13 +22,6 @@ class JobController extends Controller
     {
         $data = $this->publicListingData($request, 6);
 
-        if ($request->ajax()) {
-            return response()->json([
-                'html' => view('jobs.partials.public-listings', $data)->render(),
-                'total' => $data['jobs']->total(),
-            ]);
-        }
-
         $data['categories'] = Job::query()
             ->acceptingApplications()
             ->whereNotNull('category')
@@ -36,6 +29,13 @@ class JobController extends Controller
             ->distinct()
             ->orderBy('category')
             ->pluck('category');
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('Browse-jobs', $data)->fragment('jobs-results'),
+                'total' => $data['jobs']->total(),
+            ]);
+        }
 
         return view('Browse-jobs', $data);
     }

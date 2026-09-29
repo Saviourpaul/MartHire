@@ -7,7 +7,7 @@
             <div class="row justify-center">
                 <div class="lg:col-7 text-center mb-24">
                     <h1 class="h1-lg mb-8 highlighted">Recruitment management <span>built for Africa</span></h1>
-                    <p>Government institutions and private organizations use Marthire to bring every recruitment
+                    <p>Government institutions and private organizations use MartHire to bring every recruitment
                         activity into a clear, centralized workflow from vacancy setup and applications to screening,
                         interviews, and hiring decisions.</p>
                 </div>
@@ -102,7 +102,7 @@
                                 Bring every <span>recruitment workflow</span>
                                 together.
                             </h2>
-                            <p class="mb-8">Marthire replaces scattered spreadsheets, inboxes, and manual follow-ups
+                            <p class="mb-8">MartHire replaces scattered spreadsheets, inboxes, and manual follow-ups
                                 with a shared recruitment workspace for managing candidates, decisions, and progress.</p>
                             <ul class="checklist mb-10">
                                 <li class="my-1.5"><i class="fa fa-check-circle"></i> Centralize vacancies, applicant
@@ -130,9 +130,9 @@
                             <h2 class="section-title">Make every hiring decision <span>easier to manage</span>
                             </h2>
                             <p class="mb-8">From initial screening to interviews, shortlisting, and final selection,
-                                Marthire helps your organization maintain a consistent process for every vacancy and a
+                                MartHire helps your organization maintain a consistent process for every vacancy and a
                                 visible record of candidate progression.</p>
-                            <a class="btn btn-primary" href="#">Join the waitlist</a>
+                            <a href="{{ route('how-it-works') }}" class="btn btn-primary">See how it works</a>
                         </div>
                     </div>
                 </div>
@@ -150,8 +150,8 @@
                     <h2 class="section-title">
                         Built around real <span>recruitment needs</span>
                     </h2>
-                    <p>Marthire is being designed for the operational realities of government institutions and private
-                        organizations across Africa.</p>
+                    <p>MartHire supports the operational needs of government institutions and private organizations
+                        that require structured recruitment records and clear candidate progression.</p>
                 </div>
                 <!--div class="row lg:col-11 xl:col-10 gy-4 -mt-6 team-shuffle shuffle" style="position: relative; overflow: hidden; height: 2609.1px; transition: height 250ms cubic-bezier(0.4, 0, 0.2, 1);">
                     <div class="md:col-6 xl:col-4 team-member shuffle-item shuffle-item--visible" style="position: absolute; top: 0px; visibility: visible; will-change: transform; left: 0px; opacity: 1; transition-duration: 250ms; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-property: transform, opacity;">
@@ -160,7 +160,7 @@
                                 <img class="rounded-full mx-auto mb-6" src="{{ asset('assets/images/team/member-1.png') }}" width="150" height="150" alt="">
                                 <h3 class="h4 mb-4 font-bold">Public-sector hiring</h3>
                                 <p class="text-[#505050] font-semibold text-sm">Structured, accountable workflows for institutions and agencies</p>
-                            </div>
+                            </div>z
                             <ul class="social-icons member-social-icons member-social-icons text-center">
                                 <li class="my-1.5">
                                     <a class="text-xl" href="#">
@@ -356,9 +356,9 @@
                         <div class="md:max-w-[588px] mx-auto">
                             <h2 class="mb-6 highlighted">Ready to improve <br>
                                 your <span>recruitment process</span>?</h2>
-                            <p class="mb-6">Marthire is preparing to help organizations across Africa run recruitment
-                                with more clarity, consistency, and control. Join the waitlist for launch updates.</p>
-                            <a href="#" class="btn btn-primary">Join the waitlist</a>
+                            <p class="mb-6">Bring job vacancies, applications, applicant records, and candidate
+                                progression into a more organized recruitment process.</p>
+                            <a href="{{ route('contact') }}" class="btn btn-primary">Contact us</a>
                         </div>
                     </div>
                 </div>

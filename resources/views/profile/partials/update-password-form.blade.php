@@ -13,7 +13,7 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
         </div>
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
+        <h2 id="change-password-modal-title" class="text-xl font-semibold text-gray-800 dark:text-white/90">
             {{ __('Change Password') }}
         </h2>
         <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
@@ -116,7 +116,7 @@
         </div>
 
         <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-            <button type="button" x-on:click="isChangePasswordModal = false"
+            <button type="button" x-on:click="closeModal('isChangePasswordModal')"
                 class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]">
                 {{ __('Cancel') }}
             </button>

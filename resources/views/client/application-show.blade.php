@@ -1,7 +1,83 @@
 <x-layout>
     <div class="mx-auto max-w-(--breakpoint-2xl) space-y-6 p-4 pb-20 md:p-6 md:pb-6">
-        <header class="flex flex-col gap-4 border-b border-gray-200 pb-6 sm:flex-row sm:justify-between dark:border-gray-800"><div><p class="text-theme-xs font-medium uppercase text-gray-500">{{ $application->reference }}</p><h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white/90">{{ $application->job->title }}</h1><p class="mt-1 text-theme-sm text-gray-500">{{ $application->job->company }}</p></div><a href="{{ route('Client.Application') }}" class="text-theme-sm font-medium text-brand-500">My applications</a></header>
-        <section class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"><p class="text-theme-xs font-medium uppercase text-gray-500">Current stage</p><div class="mt-2 flex items-center justify-between gap-4"><span class="inline-flex rounded-full px-2.5 py-1 text-theme-xs font-medium {{ $application->status->badgeClass() }}">{{ $application->status->label() }}</span><span class="text-theme-sm text-gray-500">Submitted {{ $application->submitted_at->format('M d, Y') }}</span></div>@if($application->employer_remarks)<p class="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-theme-sm text-gray-600 dark:bg-white/[0.04] dark:text-gray-300">{{ $application->employer_remarks }}</p>@endif</section>
-        <div class="grid gap-6 lg:grid-cols-3"><section class="rounded-xl border border-gray-200 bg-white lg:col-span-2 dark:border-gray-800 dark:bg-white/[0.03]"><div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800"><h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Submitted documents</h2></div><div class="divide-y divide-gray-100 dark:divide-gray-800">@forelse($application->documents as $document)<div class="flex items-center justify-between gap-4 px-5 py-4"><div><p class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $document->document_name }}</p><p class="text-theme-xs text-gray-500">{{ $document->original_name }}</p></div><a href="{{ $document->canPreviewInline() ? $document->previewUrl() : $document->downloadUrl() }}" target="_blank" rel="noopener" class="text-theme-sm font-medium text-brand-500">View file</a></div>@empty<div class="px-5 py-8 text-theme-sm text-gray-500">No documents submitted.</div>@endforelse</div></section><div class="space-y-6"><section class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"><h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Applicant information</h2><dl class="mt-4 space-y-3 text-theme-sm"><div><dt class="text-gray-500">Name</dt><dd class="font-medium text-gray-800 dark:text-white/90">{{ $application->applicant->name }}</dd></div><div><dt class="text-gray-500">Email</dt><dd class="font-medium text-gray-800 dark:text-white/90">{{ $application->email }}</dd></div><div><dt class="text-gray-500">Phone</dt><dd class="font-medium text-gray-800 dark:text-white/90">{{ $application->phone }}</dd></div></dl></section><section class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"><h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Progress</h2><ol class="mt-4 space-y-4">@forelse($application->statusHistories->sortBy('created_at') as $history)<li><p class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $history->to_status->label() }}</p><p class="text-theme-xs text-gray-500">{{ $history->created_at->format('M d, Y g:i A') }}</p></li>@empty<li class="text-theme-sm text-gray-500">No progress updates yet.</li>@endforelse</ol></section></div></div>
+        <header
+            class="flex flex-col gap-4 border-b border-gray-200 pb-6 sm:flex-row sm:justify-between dark:border-gray-800">
+            <div>
+                <p class="text-theme-xs font-medium uppercase text-gray-500">{{ $application->reference }}</p>
+                <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white/90">{{ $application->job->title }}
+                </h1>
+                <p class="mt-1 text-theme-sm text-gray-500">{{ $application->job->company }}</p>
+            </div><a href="{{ route('Client.Application') }}" class="text-theme-sm font-medium text-brand-500">My
+                applications</a>
+        </header>
+        <section class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <p class="text-theme-xs font-medium uppercase text-gray-500">Current stage</p>
+            <div class="mt-2 flex items-center justify-between gap-4"><span
+                    class="inline-flex rounded-full px-2.5 py-1 text-theme-xs font-medium {{ $application->status->badgeClass() }}">{{ $application->status->label() }}</span><span
+                    class="text-theme-sm text-gray-500">Submitted
+                    {{ $application->submitted_at->format('M d, Y') }}</span></div>
+            @if ($application->employer_remarks)
+                <p
+                    class="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-theme-sm text-gray-600 dark:bg-white/[0.04] dark:text-gray-300">
+                    {{ $application->employer_remarks }}</p>
+            @endif
+        </section>
+        <div class="grid gap-6 lg:grid-cols-3">
+            <section
+                class="rounded-xl border border-gray-200 bg-white lg:col-span-2 dark:border-gray-800 dark:bg-white/[0.03]">
+                <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Submitted documents</h2>
+                </div>
+                <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                    @forelse($application->documents as $document)
+                        <div class="flex items-center justify-between gap-4 px-5 py-4">
+                            <div>
+                                <p class="text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                    {{ $document->document_name }}</p>
+                                <p class="text-theme-xs text-gray-500">{{ $document->original_name }}</p>
+                            </div><a
+                                href="{{ $document->canPreviewInline() ? $document->previewUrl() : $document->downloadUrl() }}"
+                                target="_blank" rel="noopener" class="text-theme-sm font-medium text-brand-500">View
+                                file</a>
+                    </div>@empty<div class="px-5 py-8 text-theme-sm text-gray-500">No documents submitted.</div>
+                    @endforelse
+                </div>
+            </section>
+            <div class="space-y-6">
+                <section
+                    class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Applicant information</h2>
+                    <dl class="mt-4 space-y-3 text-theme-sm">
+                        <div>
+                            <dt class="text-gray-500">Name</dt>
+                            <dd class="font-medium text-gray-800 dark:text-white/90">
+                                {{ $application->applicant->name }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">Email</dt>
+                            <dd class="font-medium text-gray-800 dark:text-white/90">{{ $application->email }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">Phone</dt>
+                            <dd class="font-medium text-gray-800 dark:text-white/90">{{ $application->phone }}</dd>
+                        </div>
+                    </dl>
+                </section>
+                <section
+                    class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Progress</h2>
+                    <ol class="mt-4 space-y-4">
+                        @forelse($application->statusHistories->sortBy('created_at') as $history)
+                            <li>
+                                <p class="text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                    {{ $history->to_status->label() }}</p>
+                                <p class="text-theme-xs text-gray-500">
+                                    {{ $history->created_at->format('M d, Y g:i A') }}</p>
+                        </li>@empty<li class="text-theme-sm text-gray-500">No progress updates yet.</li>
+                        @endforelse
+                    </ol>
+                </section>
+            </div>
+        </div>
     </div>
 </x-layout>
