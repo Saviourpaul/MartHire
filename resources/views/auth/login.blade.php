@@ -73,7 +73,7 @@
               </div>
             @endif
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-1 sm:gap-5">
-                        <button
+                        <a href=""
                             class="inline-flex items-center justify-center gap-3 rounded-lg bg-gray-100 px-7 py-3 text-sm font-normal text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -91,7 +91,9 @@
                                     fill="#EB4335" />
                             </svg>
                             Login with Google
-                        </button>
+                      
+                        </a>
+                          
 
                     </div>
                     <div class="relative py-3 sm:py-5">
