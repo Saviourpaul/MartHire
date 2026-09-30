@@ -7,7 +7,7 @@
             <div class="row justify-center text-center">
                 <div class="lg:col-8 xl:col-6 mb-[72px] ">
                     <h1 class="h1-lg highlighted">One platform to <br>
-                        manage <span>recruitment</span> across Africa</h1>
+                        manage <span>Recruitment</span> across Africa</h1>
                     <p class="mt-8">MartHire helps organizations keep job vacancies, applications, applicant records,
                         and candidate progression in one structured recruitment workspace.</p>
                     <div class="mt-14">
