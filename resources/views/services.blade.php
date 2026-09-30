@@ -249,6 +249,26 @@
     </div>
 </section>
 <!-- end benefits -->
+<section class="section-bordered relative">
+        <div class="grained-bg absolute left-0 top-0 h-full w-full opacity-[0.16]"><img src="{{ asset('assets/images/common-bg.png') }}" alt=""></div>
+        <div class="container relative">
+            <div class="row justify-center">
+                <div class="mb-14 text-center lg:col-8">
+                    <h2 class="section-title">One visible <span>candidate pipeline</span></h2>
+                    <p>Each application follows the same five stages, so employers and applicants can see its current position clearly.</p>
+                </div>
+                 <ol class="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                @foreach (['Submitted', 'Shortlisted', 'Interview', 'Selected', 'Rejected'] as $index => $stage)
+                    <li class="rounded-xl border border-border bg-white p-5 text-center shadow-sm">
+                        <span class="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">{{ $index + 1 }}</span>
+                        <h3 class="font-semibold text-black">{{ $stage }}</h3>
+                    </li>
+                @endforeach
+            </ol>
+            </div>
+           
+        </div>
+    </section>
 
 <!-- Call to Action -->
 <section class="cta section-bordered">
