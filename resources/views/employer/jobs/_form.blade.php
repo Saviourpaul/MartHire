@@ -3,7 +3,7 @@
     $labelClass = 'mb-1.5 block text-theme-xs font-medium text-gray-700 dark:text-gray-400';
 @endphp
 
-<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-5">
     <div class="sm:col-span-2">
         <label class="{{ $labelClass }}" for="{{ $prefix }}_title">Job Title</label>
         <input id="{{ $prefix }}_title" type="text" name="title" value="{{ old('title', $job?->title) }}" class="{{ $inputClass }}" required>
@@ -65,7 +65,7 @@
 
     <div class="sm:col-span-2">
         <label class="{{ $labelClass }}" for="{{ $prefix }}_description">Description</label>
-        <textarea id="{{ $prefix }}_description" name="description" rows="7" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-theme-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" required>{{ old('description', $job?->description) }}</textarea>
+        <textarea id="{{ $prefix }}_description" name="description" rows="7" class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-theme-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 h-20" required>{{ old('description', $job?->description) }}</textarea>
         <p class="mt-1 hidden text-theme-xs text-error-500" data-field-error="description"></p>
     </div>
 </div>
