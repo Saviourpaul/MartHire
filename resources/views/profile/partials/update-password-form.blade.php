@@ -112,22 +112,22 @@
         </div>
 
         <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
-            {{ __('Use a unique password with at least 8 characters. ') }}
+            {{ __('Use a strong  password with at least 8 characters. ') }}
         </div>
 
         <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
             <button type="button" x-on:click="closeModal('isChangePasswordModal')"
                 class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]">
-                {{ __('Cancel') }}
+                Cancel
             </button>
             <button type="submit"
-                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600 focus:outline-hidden focus:ring-3 focus:ring-brand-500/30 sm:w-auto">
+                class="inline-flex w-full items-center justify-center gap-2 rounded-lg btn btn-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600 focus:outline-hidden focus:ring-3 focus:ring-brand-500/30 sm:w-auto">
                 <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     aria-hidden="true">
                     <path d="M20 6 9 17l-5-5" />
                 </svg>
-                {{ __('Update Password') }}
+                Update Password
             </button>
         </div>
     </form>

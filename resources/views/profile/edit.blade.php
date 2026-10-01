@@ -512,7 +512,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                        class="bg-brand-500 hover:bg-brand-600 flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">
+                        class="btn btn-primary  justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">
                         Save Changes
                     </button>
                 </div>
