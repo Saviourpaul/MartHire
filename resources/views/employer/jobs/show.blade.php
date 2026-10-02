@@ -18,7 +18,7 @@
                 </div>
                 <div class="flex gap-3">
                     <button type="button" @click="isEditJobModal = true" class="h-11 rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Edit</button>
-                    <button type="button" @click="isDeleteJobModal = true" class="h-11 rounded-lg bg-error-500 px-4 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-error-600">Delete</button>
+                    <button type="button" @click="isDeleteJobModal = true" class="h-11 rounded-lg bg-error-500 px-4 text-theme-sm font-medium text-white shadow-theme-xs " style="background-color: rgb(240, 68, 56)">Delete</button>
                 </div>
             </div>
 
@@ -85,7 +85,6 @@
 
                     <div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                         <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Review Status</h3>
-                        <p class="mt-2 text-theme-sm text-gray-500 dark:text-gray-400">Edits move this job back to pending review.</p>
                     </div>
                 </aside>
             </div>
@@ -104,13 +103,12 @@
             <input type="hidden" name="redirect_to" value="{{ route('jobs.show', $job) }}">
             <div class="mb-5 pr-12">
                 <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Edit Job</h2>
-                <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">Changes are resubmitted for admin review.</p>
             </div>
             <div class="mb-4 hidden rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-theme-sm text-error-700" data-form-error></div>
             @include('employer.jobs._form', ['job' => $job, 'prefix' => 'show_edit_job_'.$job->id])
             <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
                 <button type="button" @click="isEditJobModal = false" class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">Cancel</button>
-                <button type="submit" class="bg-brand-500 hover:bg-brand-600 flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">Save Changes</button>
+                <button type="submit" class="btn-primary flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">Save Changes</button>
             </div>
         </form>
         </div>
@@ -130,7 +128,7 @@
             <div class="mt-4 hidden rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-theme-sm text-error-700" data-form-error></div>
             <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
                 <button type="button" @click="isDeleteJobModal = false" class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">Cancel</button>
-                <button type="submit" class="flex w-full justify-center rounded-lg bg-error-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-error-600 sm:w-auto">Delete</button>
+                <button type="submit" class="flex w-full justify-center rounded-lg  px-4 py-2.5 text-sm font-medium text-white  sm:w-auto" style="background-color: rgb(240, 68, 56)">Delete</button>
             </div>
         </form>
         </div>

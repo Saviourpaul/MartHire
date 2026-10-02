@@ -68,17 +68,14 @@
                 <li class="nav-item"><a href="{{ route('how-it-works') }}" class="nav-link">How it works</a></li>
                 <li class="nav-item"><a href="{{ route('our-team') }}" class="nav-link">Our team</a></li>
                 <li class="nav-item"><a href="{{ route('contact') }}" class="nav-link">Contact us</a></li>
+                
                 <li class="nav-item mt-3.5 lg:hidden">
-                    <a class="btn btn-primary btn-sm" href="{{ route('Browse-jobs') }}">Browse jobs <i class="fa fa-chevron-right" aria-hidden="true"></i></a>
-                </li>
-                <li class="nav-item mt-3.5 lg:hidden">
-                    <a class="btn btn-outline-dark btn-sm" href="{{ route('login') }}">Sign in <i class="fa fa-chevron-right" aria-hidden="true"></i></a>
+                    <a class="btn btn-primary btn-sm" href="{{ route('login') }}">Get started <i class="fa fa-chevron-right" aria-hidden="true"></i></a>
                 </li>
             </ul>
 
             <div class="order-1 ml-auto hidden items-center lg:order-2 lg:ml-0 lg:flex">
-                <a class="btn btn-outline-dark btn-sm mr-2" href="{{ route('login') }}">Sign in</a>
-                <a class="btn btn-primary btn-sm" href="{{ route('Browse-jobs') }}">Browse jobs <i class="fa fa-chevron-right" aria-hidden="true"></i></a>
+                <a class="btn btn-primary btn-sm" href="{{ route('login') }}">Get started</a>
             </div>
         </nav>
     </header>

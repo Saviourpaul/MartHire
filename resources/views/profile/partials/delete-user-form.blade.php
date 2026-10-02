@@ -66,7 +66,7 @@
                 {{ __('Cancel') }}
             </button>
             <button type="submit"
-                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-error-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-error-600 focus:outline-hidden focus:ring-3 focus:ring-error-500/30 sm:w-auto">
+                class="inline-flex w-full items-center justify-center gap-2 rounded-lg  px-4 py-2.5 text-sm font-medium text-white transition hover:bg-error-600 focus:outline-hidden focus:ring-3 focus:ring-error-500/30 sm:w-auto" style="background-color: rgb(240, 68, 56)">
                 <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     aria-hidden="true">

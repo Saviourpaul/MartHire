@@ -611,6 +611,22 @@
                                                 </a>
                                             </li>
                                             <li>
+                                                <a href="{{ route('employer.Applied-Candidates', ['stage' => 'shortlisted']) }}"
+                                                    class="menu-dropdown-item group"
+                                                    :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
+                                                        'menu-dropdown-item-inactive'">
+                                                    shortlisted Candidates
+                                                </a>
+                                            </li>
+                                             <li>
+                                                <a href="{{ route('employer.Applied-Candidates', ['stage' => 'interview']) }}"
+                                                    class="menu-dropdown-item group"
+                                                    :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
+                                                        'menu-dropdown-item-inactive'">
+                                                    Interviewed Candidates
+                                                </a>
+                                            </li>
+                                            <li>
                                                 <a href="{{ route('employer.Applied-Candidates', ['stage' => 'selected']) }}"
                                                     class="menu-dropdown-item group"
                                                     :class="page === 'Manage Applicants' ? 'menu-dropdown-item-active' :
@@ -618,6 +634,7 @@
                                                     Selected Candidates
                                                 </a>
                                             </li>
+
                                             <li>
                                                 <a href="{{ route('employer.Applied-Candidates', ['stage' => 'rejected']) }}"
                                                     class="menu-dropdown-item group"
