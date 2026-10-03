@@ -12,6 +12,7 @@ use App\Http\Controllers\JobController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GoogleAuthController;
 
 Route::get('/', function () {
 
@@ -53,6 +54,12 @@ Route::middleware(['auth', 'active.account', 'role:applicant'])->group(function 
     Route::get('jobs', [JobApplicationController::class, 'index'])->name('client.jobs');
     Route::get('notifications', [JobApplicationController::class, 'notifications'])->name('client.notifications');
     Route::get('settings', fn () => view('client.settings'))->name('client.settings');
+});
+/**Google Login */
+Route::controller(GoogleAuthController::class)->group(function(){
+    Route::get('auth/google', [GoogleAuthController::class, 'googleLogin'])->name('auth.google');
+    Route::get('auth/google-callback', 'googleAuthentication')->name('auth.google-callback');
+
 });
 
 Route::middleware(['auth', 'active.account'])->group(function () {
