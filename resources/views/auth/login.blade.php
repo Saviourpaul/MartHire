@@ -73,7 +73,7 @@
               </div>
             @endif
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-1 sm:gap-5">
-                        <a href=""
+                        <a href="{{route('auth.google') }}"
                             class="inline-flex items-center justify-center gap-3 rounded-lg bg-gray-100 px-7 py-3 text-sm font-normal text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -197,7 +197,7 @@
       <div class="bg-brand-950 relative hidden h-full w-full items-center lg:grid lg:w-1/2 dark:bg-white/5">
         <div class="z-1 flex items-center justify-center">
           <div class="flex max-w-xs flex-col items-center">
-            <a href="Home" class="mb-4 block">
+            <a href="{{ route('home') }}" class="mb-4 block">
               <img src="{{ asset('assets/images/logo2.png') }}" alt="Logo" />
             </a>
             
@@ -210,10 +210,6 @@
   </div>
   <!-- ===== Page Wrapper End ===== -->
   <script defer src="{{ asset('assets/js/bundle.js') }}"></script>
-  <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447"
-    integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ=="
-    data-cf-beacon='{"version":"2024.11.0","token":"67f7a278e3374824ae6dd92295d38f77","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}'
-    crossorigin="anonymous"></script>
 </body>
 
 </html>

@@ -59,7 +59,7 @@ $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(valu
                 <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
                     <div class="mb-5 sm:mb-8">
                         <h1 class="text-title-sm sm:text-title-md mb-2 font-semibold text-gray-800 dark:text-white/90">
-                            Registration
+                            Get started
                         </h1>
 
                     </div>
@@ -100,9 +100,7 @@ $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(valu
                             Enter your email and password to Register!
                         </p>
                     </div>
-                    <div>
-
-
+                    <div class="">
                         <form method="POST" action="{{ route('register') }}">
                             @csrf
                             <div class="space-y-5">
@@ -257,7 +255,7 @@ $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(valu
                 <div class="z-1 flex items-center justify-center">
                     <!-- ===== Common Grid Shape Start ===== -->
                     <div class="flex max-w-xs flex-col items-center">
-                        <a href="Home" class="mb-4 block">
+                        <a href="{{ route('home') }}" class="mb-4 block">
                             <img src="{{ asset('assets/images/logo2.png') }}" alt="Logo" />
                         </a>
 
