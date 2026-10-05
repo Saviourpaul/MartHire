@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Illuminate\Validation\Rules\Password;
-use App\Mail\WelcomeEmail;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Auth\Events\Registered;
 
 class RegisteredUserController extends Controller
 {
@@ -46,19 +45,13 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => UserRole::Applicant,
-            'status' => UserStatus::Active,
-            'approved_at' => now(),
+            'status' => UserStatus::pending,
         ]);
 
-        Mail::to($user->email)
-            ->queue(new WelcomeEmail($user));
+       Auth::login($user);
+       event(new Registered($user));
 
-        Auth::login($user);
-
-        return redirect()
-            ->intended(route('dashboard', absolute: false))
-            ->with('success', 'Registration completed successfully.');
-    }
+       return redirect()->route('verification.notice');}
 }
-
+    
 
