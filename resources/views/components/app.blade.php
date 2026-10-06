@@ -93,7 +93,31 @@
                             <img src="{{ asset('assets/images/logo2.png') }}" height="100" width="300" alt="MartHire">
                         </a>
                         <p>One platform to manage recruitment across Africa.</p>
+                        <span class="inline-block font-semibold text-lg font-primary mt-2 mb-2">Follow us</span>
+                    <ul class="social-icons footer-social-icons">
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-facebook-f"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-twitter"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-instagram"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="fa-brands fa-linkedin-in"></i>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
+                    
 
                     <div class="footer-col mb-10 lg:mb-0">
                         <h5>Platform</h5>
