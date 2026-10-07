@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Http\Request;
+use App\Enums\UserStatus;
 use App\Models\User;
-use Illuminate\Support\Str;
-use Throwable;
+use App\Services\EmailVerificationService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class GoogleAuthController extends Controller
 {
@@ -22,8 +24,8 @@ class GoogleAuthController extends Controller
         ->with(['prompt' => 'select_account'])
         ->redirect();
 }
- public function googleAuthentication(Request $request)
-{
+    public function googleAuthentication(Request $request, EmailVerificationService $emailVerification)
+    {
     try {
         $googleUser = Socialite::driver('google')->user();
 
@@ -51,11 +53,11 @@ class GoogleAuthController extends Controller
 
                 $update = ['google_id' => $googleId];
 
-                // Local email was never verified: someone may have pre-registered it.
-                // Google just proved ownership, so kill any password set before now.
+                // Local email was never verified: Google has now proved ownership.
+                // Preserve the existing account-linking policy of rotating a
+                // pre-registration password before activating the account.
                 if (! $user->email_verified_at) {
                     $update['password'] = Hash::make(Str::random(40));
-                    $update['email_verified_at'] = now();
                 }
 
                 $user->update($update);
@@ -65,19 +67,29 @@ class GoogleAuthController extends Controller
                     'last_name'         => $googleUser->user['family_name'] ?? '',
                     'email'             => $email,
                     'google_id'         => $googleId,
-                    'email_verified_at' => now(),
                     'password'          => Hash::make(Str::random(40)),
-                    
+                    'status'            => UserStatus::Pending,
                 ]);
             }
+        }
+
+        // Google supplied an email_verified=true claim. Use the same atomic
+        // transition as an email-link verification so activation and the
+        // one-time delayed welcome mail remain consistent across providers.
+        $user = $emailVerification->verify($user);
+
+        if (! $user) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account has been suspended. Please contact support.',
+            ]);
         }
 
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('Dashboard', absolute: false));
-    } catch (Throwable $e) {
-        report($e);
+        return redirect()->intended(route('dashboard', absolute: false));
+    } catch (Throwable $exception) {
+        report($exception);
 
         return redirect()->route('login')->withErrors([
             'email' => 'Google sign-in could not be completed. Please try again.',
