@@ -2,11 +2,11 @@
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureUserHasRole;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\TokenMismatchException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -31,16 +31,36 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->view('errors.419', [], 419);
         });
 
-        $exceptions->render(function (AuthorizationException $exception, Request $request) {
+        $exceptions->render(function (InvalidSignatureException $exception, Request $request) {
             if ($request->expectsJson()) {
                 return null;
             }
 
-            return response()->view('errors.403', ['exception' => $exception], 403);
+            if ($request->user()) {
+                return redirect()
+                    ->route('verification.notice')
+                    ->withErrors(['verification' => 'This verification link is invalid or has expired. Request a new link.']);
+            }
+
+            return redirect()
+                ->route('login')
+                ->with('status', 'verification-link-invalid');
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
-            if ($exception->getStatusCode() !== 403 || $request->expectsJson()) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            if ($exception->getStatusCode() === 403
+                && $request->route()?->getName() === 'verification.verify'
+                && $request->user()) {
+                return redirect()
+                    ->route('verification.notice')
+                    ->withErrors(['verification' => 'This verification link is invalid or belongs to a different account. Request a new link.']);
+            }
+
+            if ($exception->getStatusCode() !== 403) {
                 return null;
             }
 
