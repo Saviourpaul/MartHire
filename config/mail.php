@@ -136,4 +136,9 @@ return [
         'unsubscribe_url' => env('MAIL_FOOTER_UNSUBSCRIBE_URL'),
     ],
 
+    'markdown' => [
+        'theme' => 'martHire',
+        'paths' => [resource_path('views/vendor/mail')],
+    ],
+
 ];
