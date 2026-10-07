@@ -33,6 +33,12 @@ class AuthenticatedSessionController extends Controller
             'last_login_at' => now(),
         ])->save();
 
+        if (! $request->user()->hasVerifiedEmail()) {
+            return redirect()
+                ->route('verification.notice')
+                ->with('status', 'verification-required');
+        }
+
         return redirect()
             ->intended(route('dashboard', absolute: false))
             ->with('success', 'Logged in successfully.');
