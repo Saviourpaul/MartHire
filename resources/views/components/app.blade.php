@@ -92,7 +92,7 @@
                         <a href="{{ route('home') }}" class="mb-4 inline-block">
                             <img src="{{ asset('assets/images/logo2.png') }}" height="100" width="300" alt="MartHire">
                         </a>
-                        <p>One platform to manage recruitment across Africa.</p>
+                        <p>One platform to manage recruitment across  African businesses, and international organisations</p>
                         <span class="inline-block font-semibold text-lg font-primary mt-2 mb-2">Follow us</span>
                     <ul class="social-icons footer-social-icons">
                             <li>
