@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
-class SendWelcomeEmail implements ShouldBeEncrypted, ShouldBeUnique, ShouldQueue
+class SendWelcomeEmail implements ShouldQueue, ShouldBeEncrypted, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
@@ -26,7 +26,9 @@ class SendWelcomeEmail implements ShouldBeEncrypted, ShouldBeUnique, ShouldQueue
 
     public int $uniqueFor = 3600;
 
-    public function __construct(public int $userId) {}
+    public function __construct(public int $userId)
+    {
+    }
 
     public function uniqueId(): string
     {

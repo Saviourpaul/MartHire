@@ -14,14 +14,15 @@ class VerifyEmailController extends Controller
     public function __invoke(
         EmailVerificationRequest $request,
         EmailVerificationService $emailVerification,
-    ): RedirectResponse {
+    ): RedirectResponse
+    {
         if (! $emailVerification->verify($request->user())) {
             return $this->logoutSuspendedUser($request);
         }
 
         return redirect()
             ->intended(route('dashboard', absolute: false))
-            ->with('success', 'Your email has been verified. Welcome to MartHire.');
+            ->with('success', 'Your email has been verified. Welcome to Marthire.');
     }
 
     private function logoutSuspendedUser(Request $request): RedirectResponse

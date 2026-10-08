@@ -51,10 +51,10 @@ class AuthenticatedSessionController extends Controller
     {
         $user = $request->user();
 
-        if ($user) {
+        if($user){
             $globalLogout->revoke($user);
         }
-
+        
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

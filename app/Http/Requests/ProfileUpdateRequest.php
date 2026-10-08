@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\ValidatesLocationSelection;
+use App\Models\NigeriaState;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -11,8 +11,6 @@ use Illuminate\Validation\Validator;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    use ValidatesLocationSelection;
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -38,9 +36,12 @@ class ProfileUpdateRequest extends FormRequest
             'date_of_birth' => $dateOfBirthRule,
             'phone' => $profileFieldRule,
             'address' => $profileFieldRule,
-            'country_code' => [$this->user()->isApplicant() ? 'required' : 'nullable', 'string', 'regex:/^[A-Z]{2}$/D'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
+            'nationality' => $profileFieldRule,
+            'state_of_origin' => [
+                ...$profileFieldRule,
+                Rule::exists('nigeria_states', 'name'),
+            ],
+            'local_government_area' => $profileFieldRule,
         ];
     }
 
@@ -54,7 +55,25 @@ class ProfileUpdateRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            $this->validateLocation($validator, $this->user()->isApplicant());
+            if (! $this->filled('state_of_origin') || ! $this->filled('local_government_area')) {
+                return;
+            }
+
+            $state = NigeriaState::query()
+                ->where('name', (string) $this->input('state_of_origin'))
+                ->first();
+
+            if (! $state) {
+                return;
+            }
+
+            $hasLga = $state->localGovernmentAreas()
+                ->where('name', (string) $this->input('local_government_area'))
+                ->exists();
+
+            if (! $hasLga) {
+                $validator->errors()->add('local_government_area', 'Select a local government area in the selected state.');
+            }
         });
     }
 }

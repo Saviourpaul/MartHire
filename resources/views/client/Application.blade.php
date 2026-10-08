@@ -608,22 +608,18 @@
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-contact>
                                 {{ old('phone', $user->phone) ?: 'Not provided' }}</dd>
                         </div>
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
+
                         <div>
                             <dt>Origin</dt>
                             <dd data-summary-origin>
                                 {{ collect([$selectedLga, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
                             </dd>
                         </div>
-<<<<<<< HEAD
+
                         <div>
                             <dt>Qualification Documents</dt>
                             <dd data-summary-documents>{{ $educationRows->count() }}</dd>
-=======
+
                         <div class="border-t border-gray-100 p-4 dark:border-gray-800">
                             <dt class="text-theme-xs text-gray-500 dark:text-gray-400">State and city</dt>
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-origin>
@@ -634,16 +630,15 @@
                             <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Country</dt>
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-country>
                                 {{ $user->country ?: 'Not provided' }}</dd>
->>>>>>> Stashed changes
+
                         </div>
                         <div>
                             <dt>Nationality</dt>
                             <dd data-summary-nationality>
-=======
+
                         <div class="border-t border-gray-100 p-4 dark:border-gray-800">
                             <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Nationality</dt>
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-nationality>
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
                                 {{ old('nationality', $user->nationality ?? 'Nigeria') ?: 'Not provided' }}</dd>
 
                         <div class="border-t border-gray-100 p-4 dark:border-gray-800">

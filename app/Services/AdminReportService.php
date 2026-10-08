@@ -351,22 +351,21 @@ class AdminReportService
      */
     private function usersByState(UserRole $role): array
     {
-        $stateExpression = "COALESCE(NULLIF(state, ''), NULLIF(state_of_origin, ''), 'Not Provided')";
-        $countryExpression = "COALESCE(NULLIF(country, ''), NULLIF(nationality, ''), 'Not Provided')";
+        $stateExpression = "COALESCE(NULLIF(state_of_origin, ''), 'Not Provided')";
         $normalizedUsers = User::query()
             ->role($role)
-            ->selectRaw("{$stateExpression} as state, {$countryExpression} as country");
+            ->selectRaw("{$stateExpression} as state");
 
         return DB::query()
             ->fromSub($normalizedUsers, 'normalized_users')
-            ->select('state', 'country')
+            ->select('state')
             ->selectRaw('COUNT(*) as total')
-            ->groupBy('state', 'country')
+            ->groupBy('state')
             ->orderByDesc('total')
             ->limit(10)
             ->get()
             ->map(fn ($row): array => [
-                'state' => $row->country === 'Not Provided' ? $row->state : $row->state.', '.$row->country,
+                'state' => $row->state,
                 'total' => (int) $row->total,
             ])
             ->all();

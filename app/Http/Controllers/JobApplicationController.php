@@ -6,10 +6,11 @@ use App\Http\Requests\StoreApplicationFormRequest;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\Job;
+use App\Models\NigeriaState;
 use App\Services\ApplicationFormService;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\View\View;
 use Throwable;
 
@@ -61,6 +62,9 @@ class JobApplicationController extends Controller
         return view('client.Application', [
             'job' => $job,
             'user' => $user,
+            'states' => NigeriaState::query()
+                ->ordered()
+                ->get(),
         ]);
     }
 
@@ -69,7 +73,7 @@ class JobApplicationController extends Controller
      */
     public function store(StoreApplicationFormRequest $request, Job $job, ApplicationFormService $service): RedirectResponse
     {
-        $application = $service->submit($job, $request->user(), [...$request->validated(), ...$request->locationSelection()]);
+        $application = $service->submit($job, $request->user(), $request->validated());
 
         return redirect()
             ->route('client.applications.show', $application)
