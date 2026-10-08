@@ -31,10 +31,8 @@ function validApplicationPayload(array $overrides = []): array
         'local_government_area' => 'Ikeja',
         'address' => '12 Market Road',
         'zipcode' => '100001',
-        'nin_number' => '12345678901',
-        'nin_document' => UploadedFile::fake()->create('nin.pdf', 100, 'application/pdf'),
-        'bvn_number' => '22345678901',
-        'bvn_document' => UploadedFile::fake()->create('bvn.pdf', 100, 'application/pdf'),
+        'identification_type' => ApplicationDocumentType::NationalIdentityCard->value,
+        'identification_document' => UploadedFile::fake()->create('national-identity-card.pdf', 100, 'application/pdf'),
         'education_documents' => [
             [
                 'type' => 'bsc',
@@ -65,16 +63,43 @@ it('renders the application wizard with dependent location and document controls
     $this->actingAs($applicant)
         ->get(route('applications.create', $job))
         ->assertOk()
-        ->assertSee('Personal Information')
+        ->assertSee('Personal details')
         ->assertSee('Identification')
-        ->assertSee('Educational Qualification')
-        ->assertSee('Application Summary')
+        ->assertSee('Education')
+        ->assertSee('Review')
+        ->assertSee('data-wizard-step="0"', false)
+        ->assertSee('data-wizard-step="1"', false)
+        ->assertSee('data-wizard-step="2"', false)
+        ->assertSee('data-wizard-step="3"', false)
+        ->assertSeeInOrder([
+            'data-wizard-step="1"',
+            'hidden',
+            'data-wizard-step="2"',
+            'hidden',
+            'data-wizard-step="3"',
+            'hidden',
+        ], false)
+        ->assertSee('data-overall-progress', false)
+        ->assertSee('application-wizard', false)
         ->assertSee('data-state-of-origin', false)
         ->assertSee('data-local-government-area', false)
-        ->assertSee('data-lga-url=', false)
+        ->assertSee('data-lga-url="/locations/states/', false)
+        ->assertDontSee('data-lga-url="http', false)
         ->assertSee('id="profile-image-preview"', false)
+        ->assertSee('data-profile-image-trigger', false)
+        ->assertSee('data-remove-profile-image', false)
         ->assertSee('data-file-kind="profile-image"', false)
         ->assertSee('data-min-width="200"', false)
+        ->assertSee('name="identification_type"', false)
+        ->assertSee('name="identification_document"', false)
+        ->assertSee('data-identification-document-dropzone', false)
+        ->assertSee('aria-disabled="true"', false)
+        ->assertSee('National Identity Card / NIN Slip')
+        ->assertSee('International Passport')
+        ->assertSee("Driver's License")
+        ->assertSee("Voter's Card")
+        ->assertDontSee('Bank Verification Number')
+        ->assertDontSee('NIN number')
         ->assertSee('Choose a photo to preview it before submission.')
         ->assertSee('Add another document');
 });
@@ -111,13 +136,20 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
         ->assertSessionHas('success', 'Your application has been submitted successfully.');
 
     $application = ApplicationForm::query()->firstOrFail();
-    $document = $application->documents()->firstOrFail();
+    $identityDocument = $application->documents()
+        ->where('document_type', ApplicationDocumentType::NationalIdentityCard->value)
+        ->firstOrFail();
+    $identification = $applicant->identificationDocument()->firstOrFail();
 
     expect($application->job_id)->toBe($job->id)
         ->and($application->user_id)->toBe($applicant->id)
         ->and($application->status)->toBe(CandidatePipelineStage::Submitted)
-        ->and($application->documents)->toHaveCount(4)
+        ->and($application->documents)->toHaveCount(3)
         ->and($application->statusHistories)->toHaveCount(1);
+
+    expect($identification->document_type)->toBe(ApplicationDocumentType::NationalIdentityCard)
+        ->and($identityDocument->identificationDocument->is($identification))->toBeTrue()
+        ->and($identityDocument->file_path)->toBe($identification->file_path);
 
     $applicant->refresh();
 
@@ -135,18 +167,18 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
         'email' => 'ada@example.com',
     ]);
 
-    Storage::disk('local')->assertExists($document->file_path);
+    Storage::disk('local')->assertExists($identityDocument->file_path);
 
     $this->actingAs($applicant)
-        ->get(route('application-documents.download', $document))
+        ->get(route('application-documents.download', $identityDocument))
         ->assertOk();
 
     $this->actingAs($employer)
-        ->get(route('application-documents.download', $document))
+        ->get(route('application-documents.download', $identityDocument))
         ->assertOk();
 
     $this->actingAs(User::factory()->applicant()->create())
-        ->get(route('application-documents.download', $document))
+        ->get(route('application-documents.download', $identityDocument))
         ->assertForbidden();
 
     $duplicatePayload = validApplicationPayload();
@@ -161,7 +193,7 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
     expect(ApplicationForm::count())->toBe(1);
 });
 
-it('requires nin and bvn numbers to be exactly eleven numeric digits', function () {
+it('requires a supported identification method and its document', function () {
     $employer = User::factory()->employer()->create();
     $job = Job::factory()->approved()->for($employer, 'employer')->create();
     $applicant = User::factory()->applicant()->create();
@@ -169,22 +201,36 @@ it('requires nin and bvn numbers to be exactly eleven numeric digits', function 
     $this->actingAs($applicant)
         ->from(route('applications.create', $job))
         ->post(route('applications.store', $job), validApplicationPayload([
-            'nin_number' => '1234567890',
-            'bvn_number' => '223456789012',
+            'identification_type' => 'bank_verification_number',
+            'identification_document' => null,
         ]))
         ->assertRedirect(route('applications.create', $job))
-        ->assertSessionHasErrors(['nin_number', 'bvn_number']);
+        ->assertSessionHasErrors(['identification_type', 'identification_document']);
+
+    expect(ApplicationForm::count())->toBe(0);
+});
+
+it('returns applicants to the identity step after identity validation fails', function () {
+    $employer = User::factory()->employer()->create();
+    $job = Job::factory()->approved()->for($employer, 'employer')->create();
+    $applicant = User::factory()->applicant()->create([
+        'profile_image_path' => 'profile-images/existing.jpg',
+    ]);
 
     $this->actingAs($applicant)
         ->from(route('applications.create', $job))
         ->post(route('applications.store', $job), validApplicationPayload([
-            'nin_number' => '1234567890A',
-            'bvn_number' => '2234567890B',
+            'identification_document' => null,
         ]))
         ->assertRedirect(route('applications.create', $job))
-        ->assertSessionHasErrors(['nin_number', 'bvn_number']);
+        ->assertSessionHasErrors('identification_document');
 
-    expect(ApplicationForm::count())->toBe(0);
+    $this->actingAs($applicant)
+        ->get(route('applications.create', $job))
+        ->assertOk()
+        ->assertSee('data-initial-step="1"', false)
+        ->assertSee('data-wizard-step="0"', false)
+        ->assertSee('data-wizard-step="1"', false);
 });
 
 it('validates profile photo and document uploads before storing an application', function () {
@@ -199,8 +245,7 @@ it('validates profile photo and document uploads before storing an application',
         ->from(route('applications.create', $job))
         ->post(route('applications.store', $job), validApplicationPayload([
             'profile_image' => tinyPngUpload(),
-            'nin_document' => UploadedFile::fake()->create('nin.svg', 100, 'image/svg+xml'),
-            'bvn_document' => UploadedFile::fake()->create('bvn.pdf', 6000, 'application/pdf'),
+            'identification_document' => UploadedFile::fake()->create('identity.svg', 100, 'image/svg+xml'),
             'education_documents' => [
                 [
                     'type' => 'bsc',
@@ -211,8 +256,7 @@ it('validates profile photo and document uploads before storing an application',
         ->assertRedirect(route('applications.create', $job))
         ->assertSessionHasErrors([
             'profile_image',
-            'nin_document',
-            'bvn_document',
+            'identification_document',
             'education_documents.0.file',
         ]);
 

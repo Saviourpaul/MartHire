@@ -5,6 +5,7 @@ use App\Enums\UserStatus;
 use App\Models\User;
 use Database\Seeders\NigeriaLocationSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -24,7 +25,6 @@ function validApplicantProfilePayload(array $overrides = []): array
     return array_merge([
         'first_name' => 'Test',
         'last_name' => 'User',
-        'username' => 'test-user',
         'email' => 'test@example.com',
         'date_of_birth' => '1995-05-15',
         'profile_image' => fakeProfileImage(),
@@ -33,7 +33,6 @@ function validApplicantProfilePayload(array $overrides = []): array
         'nationality' => 'Nigeria',
         'state_of_origin' => 'Lagos',
         'local_government_area' => 'Ikeja',
-        'zipcode' => '100001',
     ], $overrides);
 }
 
@@ -57,7 +56,8 @@ test('profile edit page starts in read only mode with edit controls', function (
         ->assertSee('Update Profile')
         ->assertSee('Save Changes')
         ->assertSee('Cancel')
-        ->assertSee('id="profile-actions" class="d-none mt-3"', false);
+        ->assertSee('id="profile-form"', false)
+        ->assertSee('profile-info-modal-title', false);
 });
 
 test('applicant profile information can be updated with required setup fields', function () {
@@ -81,7 +81,6 @@ test('applicant profile information can be updated with required setup fields', 
 
     $this->assertSame('Test', $user->first_name);
     $this->assertSame('User', $user->last_name);
-    $this->assertSame('test-user', $user->username);
     $this->assertSame($email, $user->email);
     $this->assertSame('1995-05-15', $user->date_of_birth->format('Y-m-d'));
     $this->assertSame('+2348012345678', $user->phone);
@@ -145,7 +144,6 @@ test('applicants must provide setup fields before saving profile changes', funct
         ->patch('/profile', [
             'first_name' => 'Test',
             'last_name' => 'User',
-            'username' => 'test-user',
             'email' => $user->email,
         ])
         ->assertSessionHasErrors([
@@ -156,7 +154,6 @@ test('applicants must provide setup fields before saving profile changes', funct
             'nationality',
             'state_of_origin',
             'local_government_area',
-            'zipcode',
         ]);
 });
 
@@ -167,7 +164,6 @@ test('employers and admins can update profile without applicant setup fields', f
             ->patch('/profile', [
                 'first_name' => 'Test',
                 'last_name' => 'User',
-                'username' => 'test-user-'.$user->id,
                 'email' => $user->email,
             ])
             ->assertSessionHasNoErrors()
@@ -244,11 +240,58 @@ test('correct password must be provided to delete account', function () {
     $this->assertNotNull($user->fresh());
 });
 
+test('user can update their password from the profile page', function () {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->from(route('profile.edit'))
+        ->put(route('password.update'), [
+            'current_password' => 'password',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('profile.edit'))
+        ->assertSessionHas('status', 'password-updated');
+
+    expect(Hash::check('NewPassword123!', $user->fresh()->password))->toBeTrue();
+});
+
+test('password errors are returned to the password update error bag', function () {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->from(route('profile.edit'))
+        ->put(route('password.update'), [
+            'current_password' => 'incorrect-password',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
+        ])
+        ->assertSessionHasErrorsIn('updatePassword', 'current_password')
+        ->assertRedirect(route('profile.edit'));
+});
+
+test('profile page renders accessible account dialogs', function () {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->get(route('profile.edit'))
+        ->assertOk()
+        ->assertSee('profile-info-modal-title', false)
+        ->assertSee('change-password-modal-title', false)
+        ->assertSee('delete-account-modal-title', false)
+        ->assertSee('x-cloak', false);
+});
+
 test('admin user management does not edit applicant profile setup fields', function () {
     $admin = User::factory()->admin()->create();
     $applicant = User::factory()->completeApplicantProfile()->create([
         'phone' => '+2348000000000',
     ]);
+    $originalFirstName = $applicant->first_name;
 
     $this
         ->actingAs($admin)
@@ -264,6 +307,6 @@ test('admin user management does not edit applicant profile setup fields', funct
         ->assertRedirect();
 
     expect($applicant->fresh())
-        ->first_name->toBe('Managed')
+        ->first_name->toBe($originalFirstName)
         ->phone->toBe('+2348000000000');
 });
