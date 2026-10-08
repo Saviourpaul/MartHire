@@ -30,9 +30,12 @@ Route::view('our-team', 'our-team')->name('our-team');
 Route::view('contact', 'contact')->name('contact');
 Route::get('jobs-listings', [JobController::class, 'listings'])->name('client.jobs-listings');
 
+
 Route::get('Dashboard', DashboardController::class)
     ->middleware('auth')
     ->name('dashboard');
+
+
 
 Route::get('Job-Application.', DashboardController::class)
     ->middleware(['auth', 'role:applicant'])

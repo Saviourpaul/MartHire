@@ -681,6 +681,7 @@
                             <dd data-summary-contact>{{ old('phone', $user->phone) ?: 'Not provided' }}</dd>
                         </div>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                         <div>
                             <dt>Origin</dt>
                             <dd data-summary-origin>
@@ -690,6 +691,18 @@
                         <div>
                             <dt>Qualification Documents</dt>
                             <dd data-summary-documents>{{ $educationRows->count() }}</dd>
+=======
+                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
+                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">State and city</dt>
+                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-origin>
+                                {{ collect([$selectedCity, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
+                            </dd>
+                        </div>
+                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
+                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Country</dt>
+                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-country>
+                                {{ $user->country ?: 'Not provided' }}</dd>
+>>>>>>> Stashed changes
                         </div>
                         <div>
                             <dt>Nationality</dt>

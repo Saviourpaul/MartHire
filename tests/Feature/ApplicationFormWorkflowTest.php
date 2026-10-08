@@ -2,8 +2,12 @@
 
 use App\Enums\ApplicationDocumentType;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
+=======
+use App\Enums\CandidatePipelineStage;
+>>>>>>> Stashed changes
 =======
 use App\Enums\CandidatePipelineStage;
 >>>>>>> Stashed changes
@@ -12,7 +16,10 @@ use App\Models\Job;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 >>>>>>> Stashed changes
@@ -104,6 +111,9 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee('data-location-city', false)
         ->assertSee('data-locations-cities="/api/locations/cities', false)
         ->assertDontSee('data-locations-cities="http', false)
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         ->assertSee('id="profile-image-preview"', false)
         ->assertSee('data-file-kind="profile-image"', false)
@@ -124,6 +134,9 @@ it('renders the application wizard with dependent location and document controls
         ->assertDontSee('NIN number')
         ->assertSee('Choose a photo to preview it')
         ->assertSee('data-add-document', false);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 });
 
