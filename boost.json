@@ -3,7 +3,6 @@
         "codex"
     ],
     "cloud": false,
-    "mcp": true,
-    "nightwatch": false,
+     "mcp": true,
     "sail": false
 }

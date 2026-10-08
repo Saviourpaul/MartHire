@@ -2,8 +2,10 @@
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Jobs\SendVerificationEmail;
 use App\Models\Job;
 use App\Models\User;
+use Illuminate\Support\Facades\Queue;
 
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');
@@ -11,15 +13,17 @@ test('registration screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('registration form exposes strong password guidance and visibility toggles', function () {
+test('registration form exposes password and confirmation fields', function () {
     $response = $this->get('/register');
 
     $response->assertStatus(200)
-        ->assertSee('Use at least 8 characters')
-        ->assertSee('Show password');
+        ->assertSee('Password')
+        ->assertSee('Confirm Password');
 });
 
-test('new users can register as active applicants', function () {
+test('new users register as pending applicants and queue verification delivery', function () {
+    Queue::fake();
+
     $response = $this->post('/register', [
         'first_name' => 'Test',
         'last_name' => 'User',
@@ -30,16 +34,20 @@ test('new users can register as active applicants', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('verification.notice', absolute: false));
 
     $user = User::where('email', 'test@example.com')->firstOrFail();
 
     expect($user->role)->toBe(UserRole::Applicant)
-        ->and($user->status)->toBe(UserStatus::Active)
-        ->and($user->approved_at)->not->toBeNull();
+        ->and($user->status)->toBe(UserStatus::Pending)
+        ->and($user->email_verified_at)->toBeNull()
+        ->and($user->approved_at)->toBeNull();
+
+    Queue::assertPushed(SendVerificationEmail::class, fn (SendVerificationEmail $job): bool => $job->userId === $user->id);
 });
 
-test('registration redirects applicants back to an intended job application', function () {
+test('registration keeps an intended job application until verification completes', function () {
+    Queue::fake();
     $job = Job::factory()->approved()->create();
 
     $response = $this
@@ -54,7 +62,7 @@ test('registration redirects applicants back to an intended job application', fu
         ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('applications.create', $job));
+    $response->assertRedirect(route('verification.notice', absolute: false));
 });
 
 test('active applicants can access their dashboard', function () {
@@ -63,5 +71,5 @@ test('active applicants can access their dashboard', function () {
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Applicant Dashboard');
+        ->assertSee('Welcome Back');
 });

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\NigeriaState;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,9 +20,6 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => $request->user(),
-            'states' => NigeriaState::query()
-                ->ordered()
-                ->get(),
         ]);
     }
 
@@ -47,6 +43,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $data = $request->safe()->except('profile_image', 'email');
+        $data = [...$data, ...$request->locationSelection()];
 
         if ($request->hasFile('profile_image')) {
             $uploadedImagePath = $request->file('profile_image')->store('profile-images', 'public');
@@ -59,6 +56,9 @@ class ProfileController extends Controller
         }
 
         $user->fill($data);
+        if ($request->locationSelection() !== []) {
+            $user->location_confirmed_at = filled($request->locationSelection()['country_code']) ? now() : null;
+        }
         $user->save();
 
         return Redirect::route('profile.edit')->with('success', 'Profile updated successfully.');

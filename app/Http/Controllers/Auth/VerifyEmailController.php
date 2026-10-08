@@ -14,8 +14,7 @@ class VerifyEmailController extends Controller
     public function __invoke(
         EmailVerificationRequest $request,
         EmailVerificationService $emailVerification,
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         if (! $emailVerification->verify($request->user())) {
             return $this->logoutSuspendedUser($request);
         }

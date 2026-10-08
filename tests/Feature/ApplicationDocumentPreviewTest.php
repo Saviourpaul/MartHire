@@ -21,8 +21,8 @@ function createPreviewableDocument(): array
     $document = ApplicationDocument::factory()
         ->for($application, 'applicationForm')
         ->create([
-            'file_path' => 'application-documents/1/nin.pdf',
-            'original_name' => 'nin.pdf',
+            'file_path' => 'application-documents/1/national-identity-card.pdf',
+            'original_name' => 'national-identity-card.pdf',
             'mime_type' => 'application/pdf',
         ]);
 
