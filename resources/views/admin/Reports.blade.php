@@ -101,7 +101,7 @@
                             ['label' => 'New Users In Period', 'value' => $metrics['new_users_in_period']],
                             ['label' => 'Active Job Postings', 'value' => $metrics['active_job_postings']],
                             ['label' => 'Applications In Period', 'value' => $metrics['new_applications_in_period']],
-                            ['label' => 'Pending Reviews', 'value' => $metrics['pending_applications'] + $metrics['pending_job_reviews']],
+                            ['label' => 'Submitted Candidates', 'value' => $metrics['submitted_candidates']],
                         ] as $metric)
                             <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <p class="text-theme-sm text-gray-500 dark:text-gray-400">{{ $metric['label'] }}</p>

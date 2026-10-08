@@ -15,49 +15,29 @@ class JobController extends Controller
 {
     public function listings(Request $request): View
     {
-        $search = trim((string) $request->input('search', ''));
-        $user = $request->user();
-        $appliedJobIds = collect();
+        return view('client.jobs-listings', $this->publicListingData($request, 6));
+    }
 
-        if ($user?->isApplicant()) {
-            $appliedJobIds = $user->applications()
-                ->pluck('job_id');
+    public function browse(Request $request): View|JsonResponse
+    {
+        $data = $this->publicListingData($request, 6);
+
+        $data['categories'] = Job::query()
+            ->acceptingApplications()
+            ->whereNotNull('category')
+            ->where('category', '<>', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('Browse-jobs', $data)->fragment('jobs-results'),
+                'total' => $data['jobs']->total(),
+            ]);
         }
 
-        $jobs = Job::query()
-            ->acceptingApplications()
-            ->with(['employer:id,first_name,last_name,email'])
-            ->withCount('applications')
-            ->when($search !== '', function ($query) use ($search) {
-                collect(preg_split('/\s+/', $search) ?: [])
-                    ->filter()
-                    ->each(function (string $term) use ($query) {
-                        $term = '%'.$term.'%';
-
-                        $query->where(function ($query) use ($term) {
-                            $query->where('title', 'like', $term)
-                                ->orWhere('company', 'like', $term)
-                                ->orWhere('category', 'like', $term)
-                                ->orWhere('location', 'like', $term)
-                                ->orWhere('employment_type', 'like', $term)
-                                ->orWhere('description', 'like', $term)
-                                ->orWhereHas('employer', function ($query) use ($term) {
-                                    $query->where('first_name', 'like', $term)
-                                        ->orWhere('last_name', 'like', $term)
-                                        ->orWhere('email', 'like', $term);
-                                });
-                        });
-                    });
-            })
-            ->latest('created_at')
-            ->paginate(6)
-            ->withQueryString();
-
-        return view('client.jobs-listings', [
-            'jobs' => $jobs,
-            'appliedJobIds' => $appliedJobIds,
-            'search' => $search,
-        ]);
+        return view('Browse-jobs', $data);
     }
 
     public function index(Request $request): View
@@ -179,7 +159,7 @@ class JobController extends Controller
 
     public function show(Request $request, Job $job): View
     {
-        $job->loadMissing(['employer:id,first_name,last_name,email'])
+        $job->loadMissing(['employer:id,first_name,last_name'])
             ->loadCount('applications');
 
         if (! $job->isAcceptingApplications()) {
@@ -239,5 +219,57 @@ class JobController extends Controller
     private function ensureEmployerOwnsJob(Request $request, Job $job): void
     {
         abort_unless($job->employer_id === $request->user()->id, 403);
+    }
+
+    /** @return array{jobs: \Illuminate\Pagination\LengthAwarePaginator, appliedJobIds: \Illuminate\Support\Collection, search: string, category: string, employmentType: string} */
+    private function publicListingData(Request $request, int $perPage): array
+    {
+        $searchInput = $request->query('search', '');
+        $categoryInput = $request->query('category', '');
+        $employmentTypeInput = $request->query('employment_type', '');
+        $search = is_string($searchInput) ? trim(mb_substr($searchInput, 0, 120)) : '';
+        $category = is_string($categoryInput) ? trim(mb_substr($categoryInput, 0, 255)) : '';
+        $employmentType = is_string($employmentTypeInput) ? $employmentTypeInput : '';
+        $employmentTypes = Job::employmentTypeOptions();
+
+        if (! array_key_exists($employmentType, $employmentTypes)) {
+            $employmentType = '';
+        }
+
+        $jobs = Job::query()
+            ->acceptingApplications()
+            ->with('employer:id,first_name,last_name')
+            ->withCount('applications')
+            ->when($search !== '', function ($query) use ($search) {
+                foreach (array_filter(preg_split('/\s+/', $search) ?: []) as $term) {
+                    $like = '%'.$term.'%';
+
+                    $query->where(function ($query) use ($like) {
+                        $query->where('title', 'like', $like)
+                            ->orWhere('company', 'like', $like)
+                            ->orWhere('category', 'like', $like)
+                            ->orWhere('location', 'like', $like)
+                            ->orWhere('employment_type', 'like', $like)
+                            ->orWhere('description', 'like', $like)
+                            ->orWhereHas('employer', function ($query) use ($like) {
+                                $query->where('first_name', 'like', $like)
+                                    ->orWhere('last_name', 'like', $like);
+                            });
+                    });
+                }
+            })
+            ->when($category !== '', fn ($query) => $query->where('category', $category))
+            ->when($employmentType !== '', fn ($query) => $query->where('employment_type', $employmentType))
+            ->latest('created_at')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $user = $request->user();
+        $pageJobIds = $jobs->getCollection()->modelKeys();
+        $appliedJobIds = $user?->isApplicant()
+            ? $user->applications()->whereIn('job_id', $pageJobIds)->pluck('job_id')
+            : collect();
+
+        return compact('jobs', 'appliedJobIds', 'search', 'category', 'employmentType');
     }
 }

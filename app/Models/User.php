@@ -8,6 +8,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -26,6 +27,7 @@ class User extends Authenticatable
     protected $fillable = [
         'first_name',
         'last_name',
+        'google_id',
         'email',
         'date_of_birth',
         'password',
@@ -89,6 +91,11 @@ class User extends Authenticatable
     public function applications(): HasMany
     {
         return $this->hasMany(ApplicationForm::class);
+    }
+
+    public function identificationDocument(): HasOne
+    {
+        return $this->hasOne(UserIdentificationDocument::class);
     }
 
     public function profileImageUrl(): string

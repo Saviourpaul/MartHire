@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\ApplicationDocumentType;
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm as ApplicationFormModel;
 use App\Models\Job;
@@ -40,10 +40,12 @@ class ApplicationForm extends Seeder
 
         foreach ($applicants as $index => $applicant) {
             $job = $jobs[$index % $jobs->count()];
-            $status = match ($index % 3) {
-                1 => ApplicationStatus::Approved,
-                2 => ApplicationStatus::Rejected,
-                default => ApplicationStatus::Pending,
+            $status = match ($index % 5) {
+                1 => CandidatePipelineStage::Shortlisted,
+                2 => CandidatePipelineStage::Interview,
+                3 => CandidatePipelineStage::Selected,
+                4 => CandidatePipelineStage::Rejected,
+                default => CandidatePipelineStage::Submitted,
             };
 
             $application = ApplicationFormModel::factory()
@@ -63,23 +65,23 @@ class ApplicationForm extends Seeder
                     'zipcode' => $applicant->zipcode,
                     'profile_image_path' => $applicant->profile_image_path,
                     'status' => $status,
-                    'reviewed_by' => $status === ApplicationStatus::Pending ? null : $employer->id,
-                    'reviewed_at' => $status === ApplicationStatus::Pending ? null : now(),
-                    'employer_remarks' => $status === ApplicationStatus::Pending ? null : 'Seeded '.$status->label().' application.',
+                    'reviewed_by' => $status === CandidatePipelineStage::Submitted ? null : $employer->id,
+                    'reviewed_at' => $status === CandidatePipelineStage::Submitted ? null : now(),
+                    'employer_remarks' => $status === CandidatePipelineStage::Submitted ? null : 'Seeded '.$status->label().' application.',
                 ])
                 ->create();
 
             $application->statusHistories()->create([
                 'from_status' => null,
-                'to_status' => ApplicationStatus::Pending,
+                'to_status' => CandidatePipelineStage::Submitted,
                 'changed_by' => $applicant->id,
                 'remarks' => 'Application submitted.',
                 'created_at' => $application->submitted_at,
             ]);
 
-            if ($status !== ApplicationStatus::Pending) {
+            if ($status !== CandidatePipelineStage::Submitted) {
                 $application->statusHistories()->create([
-                    'from_status' => ApplicationStatus::Pending,
+                    'from_status' => CandidatePipelineStage::Submitted,
                     'to_status' => $status,
                     'changed_by' => $employer->id,
                     'remarks' => $application->employer_remarks,
@@ -87,18 +89,30 @@ class ApplicationForm extends Seeder
                 ]);
             }
 
-            foreach (ApplicationDocumentType::cases() as $type) {
-                ApplicationDocument::factory()
-                    ->for($application, 'applicationForm')
-                    ->type($type)
-                    ->state([
-                        'status' => $status,
-                        'reviewed_by' => $status === ApplicationStatus::Pending ? null : $employer->id,
-                        'reviewed_at' => $status === ApplicationStatus::Pending ? null : now(),
-                        'employer_remarks' => $status === ApplicationStatus::Rejected ? 'Please upload a clearer copy.' : null,
-                    ])
-                    ->create();
-            }
+            $identificationType = fake()->randomElement(ApplicationDocumentType::identityTypes());
+            $identification = $applicant->identificationDocument()->create([
+                'document_type' => $identificationType,
+                'file_path' => "user-identification-documents/{$applicant->id}/seeded-identity.pdf",
+                'original_name' => 'seeded-identity.pdf',
+                'mime_type' => 'application/pdf',
+                'size' => 102400,
+            ]);
+
+            ApplicationDocument::factory()
+                ->for($application, 'applicationForm')
+                ->type($identificationType)
+                ->create([
+                    'user_identification_document_id' => $identification->id,
+                    'file_path' => $identification->file_path,
+                    'original_name' => $identification->original_name,
+                    'mime_type' => $identification->mime_type,
+                    'size' => $identification->size,
+                ]);
+
+            ApplicationDocument::factory()
+                ->for($application, 'applicationForm')
+                ->type(ApplicationDocumentType::Education)
+                ->create();
         }
     }
 }

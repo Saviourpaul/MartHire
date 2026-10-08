@@ -20,6 +20,13 @@ class EnsureAccountIsActive
             return $next($request);
         }
 
+        // This is deliberately defensive: every product route also has the
+        // verified middleware, but a future route that only uses this alias
+        // must never turn a pending session into a dashboard session.
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
         if ($user->isActive()) {
             return $next($request);
         }

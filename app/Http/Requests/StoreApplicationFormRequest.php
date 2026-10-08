@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ApplicationDocumentType;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\NigeriaState;
@@ -79,14 +80,15 @@ class StoreApplicationFormRequest extends FormRequest
             'local_government_area' => ['bail', 'required', 'string', 'max:255'],
             'address' => ['bail', 'required', 'string', 'min:5', 'max:255'],
             'zipcode' => ['bail', 'required', 'string', 'regex:'.self::ZIPCODE_PATTERN],
-            'nin_number' => ['bail', 'required', 'digits:11'],
-            'nin_document' => [
+            'identification_type' => [
                 'bail',
                 'required',
-                File::types(self::DOCUMENT_TYPES)->max(self::DOCUMENT_MAX_KB),
+                Rule::in(array_map(
+                    fn (ApplicationDocumentType $type): string => $type->value,
+                    ApplicationDocumentType::identityTypes()
+                )),
             ],
-            'bvn_number' => ['bail', 'required', 'digits:11'],
-            'bvn_document' => [
+            'identification_document' => [
                 'bail',
                 'required',
                 File::types(self::DOCUMENT_TYPES)->max(self::DOCUMENT_MAX_KB),
@@ -120,8 +122,7 @@ class StoreApplicationFormRequest extends FormRequest
             'date_of_birth.after_or_equal' => 'Enter a realistic date of birth.',
             'date_of_birth.before' => 'The date of birth must be before today.',
             'zipcode.regex' => 'The zipcode may only contain letters, numbers, spaces, and hyphens.',
-            'nin_number.digits' => 'The NIN number must be exactly 11 numeric digits.',
-            'bvn_number.digits' => 'The BVN number must be exactly 11 numeric digits.',
+            'identification_type.in' => 'Select a supported identification method.',
             'profile_image.dimensions' => sprintf(
                 'The profile photo must be between %dx%d and %dx%d pixels.',
                 self::PROFILE_IMAGE_MIN_WIDTH,
@@ -148,10 +149,8 @@ class StoreApplicationFormRequest extends FormRequest
             'date_of_birth' => 'date of birth',
             'state_of_origin' => 'state of origin',
             'local_government_area' => 'local government area',
-            'nin_number' => 'NIN number',
-            'nin_document' => 'NIN document',
-            'bvn_number' => 'BVN number',
-            'bvn_document' => 'BVN document',
+            'identification_type' => 'identification method',
+            'identification_document' => 'identification document',
             'education_documents' => 'education documents',
             'education_documents.*.type' => 'education document type',
             'education_documents.*.file' => 'education document file',

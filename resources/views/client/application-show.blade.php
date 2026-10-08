@@ -5,10 +5,29 @@
                 <h3 class="page-title">Application Status</h3>
                 <p class="text-muted mb-0">{{ $application->reference }} - {{ $application->job->title }}</p>
             </div>
-<<<<<<< Updated upstream
             <div class="col-auto">
                 <a href="{{ route('client.jobs') }}" class="btn btn-outline-secondary">Back to Jobs</a>
-=======
+
+<x-layout>
+    <main>
+        <div class="mx-auto max-w-(--breakpoint-2xl) p-4 pb-20 md:p-6 md:pb-6">
+            <!-- Breadcrumb Start -->
+            <div x-data="{ pageName: `Application Details` }">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90" x-text="pageName"></h2>
+                    <nav>
+                        <ol class="flex items-center gap-1.5">
+                            <li>
+                                <a href="{{ route('Client.Application') }} "
+                                    class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-theme-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300">Back to
+                                    Applications</a>
+
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+
+            </div>
             <!-- Breadcrumb End -->
 
             <!-- Content Start -->
@@ -110,10 +129,10 @@
                                     </div>
                                     <div>
                                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                            {{ $application->country ? 'Country' : 'Nationality (historical)' }}
+                                            Nationality
                                         </p>
                                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {{ $application->country ?: $application->nationality ?: 'Not provided' }}
+                                            {{ $application->nationality }}
                                         </p>
                                     </div>
 
@@ -135,18 +154,18 @@
                                     </div>
                                     <div>
                                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                            {{ $application->state ? 'State' : 'State of origin (historical)' }}
+                                            State of Origin
                                         </p>
                                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {{ $application->state ?: $application->state_of_origin ?: 'Not provided' }}
+                                            {{ $application->state_of_origin }}
                                         </p>
                                     </div>
                                     <div>
                                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                            {{ $application->city ? 'City' : 'LGA (historical)' }}
+                                            Local Government Area
                                         </p>
                                         <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {{ $application->city ?: $application->local_government_area ?: 'Not provided' }}
+                                            {{ $application->local_government_area }}
                                         </p>
                                     </div>
 
@@ -256,91 +275,9 @@
                         </section>
                     </aside>
                 </div>
->>>>>>> Stashed changes
             </div>
+
+            <!-- Content End -->
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                        <div>
-                            <h5 class="card-title mb-1">{{ $application->job->title }}</h5>
-                            <p class="mb-1">{{ $application->job->company }}</p>
-                            <p class="text-muted mb-0">Submitted {{ $application->submitted_at->format('M d, Y') }}</p>
-                        </div>
-                        <span class="badge {{ $application->status->badgeClass() }}">{{ $application->status->label() }}</span>
-                    </div>
-
-                    @if ($application->employer_remarks)
-                        <div class="alert alert-info mt-3 mb-0">{{ $application->employer_remarks }}</div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Document Review</h5>
-                    <div class="table-responsive">
-                        <table class="table table-center table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Document</th>
-                                    <th>Status</th>
-                                    
-                                    <th>Updated</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($application->documents as $document)
-                                    <tr>
-                                        <td>{{ $document->document_name }}</td>
-                                        <td><span class="badge {{ $document->status->badgeClass() }}">{{ $document->status->label() }}</span></td>
-                                        <td>{{ $document->reviewed_at?->format('M d, Y') ?: 'Pending review' }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Profile Information </h5>
-                    <p><strong>Name:</strong> {{ $application->first_name }} {{ $application->last_name }}</p>
-                    <p><strong>Email:</strong> {{ $application->email }}</p>
-                    <p><strong>Phone:</strong> {{ $application->phone }}</p>
-                    <p><strong>Nationality:</strong> {{ $application->nationality ?: 'Not provided' }}</p>
-                    <p><strong>Origin:</strong> {{ collect([$application->local_government_area, $application->state_of_origin])->filter()->implode(', ') ?: 'Not provided' }}</p>
-                    <p class="mb-0"><strong>Address:</strong> {{ $application->address ?: 'Not provided' }}</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Status History</h5>
-                    <div class="list-group">
-                        @forelse ($application->statusHistories->sortByDesc('created_at') as $history)
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <strong>{{ $history->to_status->label() }}</strong>
-                                    <small>{{ $history->created_at->diffForHumans() }}</small>
-                                </div>
-                                @if ($history->remarks)
-                                    <p class="mb-0">{{ $history->remarks }}</p>
-                                @endif
-                            </div>
-                        @empty
-                            <div class="list-group-item text-muted">No status changes yet.</div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</x-admin-layout>
+    </main>
+</x-layout>

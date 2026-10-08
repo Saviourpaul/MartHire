@@ -84,13 +84,13 @@
                         <div
                             class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                             <p class="text-theme-sm text-gray-500 dark:text-gray-400">
-                                Approved Candidates
+                                Selected Candidates
                             </p>
 
                             <div class="mt-3 flex items-end justify-between">
                                 <div>
                                     <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
-                                        {{ number_format($metrics['approved_candidates']) }}
+                                        {{ number_format($metrics['selected_candidates']) }}
                                     </h4>
                                 </div>
                                
@@ -100,13 +100,13 @@
                         <div
                             class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                             <p class="text-theme-sm text-gray-500 dark:text-gray-400">
-                                Pending Applications
+                                Submitted Candidates
                             </p>
 
                             <div class="mt-3 flex items-end justify-between">
                                 <div>
                                     <h4 class="text-2xl font-bold text-gray-800 dark:text-white/90">
-                                        {{ number_format($metrics['pending_applications']) }}
+                                        {{ number_format($metrics['submitted_candidates']) }}
                                     </h4>
                                 </div>
                                
