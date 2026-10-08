@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -46,6 +47,21 @@ class AppServiceProvider extends ServiceProvider
 
                 ]);
 
+        });
+
+        ResetPassword::toMailUsing(function ($notifiable, string $token) {
+            $url = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            return (new MailMessage)
+                ->subject('Reset Your MartHire Password')
+                ->markdown('emails.auth.reset-password', [
+                    'user' => $notifiable,
+                    'url' => $url,
+                    'expires' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60),
+                ]);
         });
     }
 }
