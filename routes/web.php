@@ -5,15 +5,34 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ApplicationDocumentDownloadController;
 use App\Http\Controllers\ApplicationDocumentPreviewController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployerApplicationController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GoogleAuthController;
 
+Route::middleware('auth')->group(function () {
+    Route::get('verify-email', EmailVerificationPromptController::class)
+        ->name('verification.notice');
+
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
+
+Route::get('Dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified', 'active.account'])
+    ->name('dashboard');
 Route::get('/', function () {
 
     return view('Home');
@@ -21,7 +40,7 @@ Route::get('/', function () {
 
 Route::get('job-details/{job}', [JobController::class, 'show'])->name('job-details');
 Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])
-    ->middleware('active.account')
+    ->middleware(['auth', 'verified', 'active.account'])
     ->name('applications.create');
 Route::get('about', fn () => view('about'))->name('about');
 Route::view('services', 'services')->name('services');
@@ -35,15 +54,11 @@ Route::get('locations/states/{nigeriaState}/local-government-areas', [LocationCo
     ->middleware('throttle:60,1')
     ->name('locations.states.local-government-areas');
 
-Route::get('Dashboard', DashboardController::class)
-    ->middleware('auth')
-    ->name('dashboard');
-
 Route::get('Job-Application.', DashboardController::class)
-    ->middleware(['auth', 'role:applicant'])
+    ->middleware(['auth', 'verified', 'active.account', 'role:applicant'])
     ->name('client.Job-Application.');
 
-Route::middleware(['auth', 'active.account', 'role:applicant'])->group(function () {
+Route::middleware(['auth', 'verified', 'active.account', 'role:applicant'])->group(function () {
     Route::get('profile', fn () => view('client.profile'))->name('client.profile');
     Route::get('Application', [JobApplicationController::class, 'index'])->name('Client.Application');
     Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])
@@ -56,13 +71,13 @@ Route::middleware(['auth', 'active.account', 'role:applicant'])->group(function 
     Route::get('settings', fn () => view('client.settings'))->name('client.settings');
 });
 /**Google Login */
-Route::controller(GoogleAuthController::class)->group(function(){
+Route::controller(GoogleAuthController::class)->group(function () {
     Route::get('auth/google', [GoogleAuthController::class, 'googleLogin'])->name('auth.google');
     Route::get('auth/google-callback', 'googleAuthentication')->name('auth.google-callback');
 
 });
 
-Route::middleware(['auth', 'active.account'])->group(function () {
+Route::middleware(['auth', 'verified', 'active.account'])->group(function () {
     Route::get('application-documents/{applicationDocument}/preview', ApplicationDocumentPreviewController::class)
         ->middleware('throttle:downloads')
         ->name('application-documents.preview');
@@ -136,7 +151,7 @@ Route::middleware(['auth', 'active.account'])->group(function () {
     });
 });
 
-Route::middleware(['auth', 'active.account'])->group(function () {
+Route::middleware(['auth', 'verified', 'active.account'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->middleware('throttle:uploads')
