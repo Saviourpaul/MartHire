@@ -22,9 +22,9 @@
 
                         <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">Phone Number</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $user->phone ?: 'N/A' }}</dd></div>
-                            <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">Nationality</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $user->nationality ?: 'N/A' }}</dd></div>
-                            <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">State of Origin</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $user->state_of_origin ?: 'N/A' }}</dd></div>
-                            <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">Local Government</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $user->local_government_area ?: 'N/A' }}</dd></div>
+                            <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">{{ $user->country ? 'Country' : 'Nationality (historical)' }}</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $user->country ?: $user->nationality ?: 'Not provided' }}</dd></div>
+                            <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">{{ $user->state ? 'State' : 'State of origin (historical)' }}</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $user->state ?: $user->state_of_origin ?: 'Not provided' }}</dd></div>
+                            <div><dt class="mb-1 text-theme-xs text-gray-500 dark:text-gray-400">{{ $user->city ? 'City' : 'LGA (historical)' }}</dt><dd class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $user->city ?: $user->local_government_area ?: 'Not provided' }}</dd></div>
                         </dl>
                     </section>
                 </div>

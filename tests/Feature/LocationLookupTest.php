@@ -1,22 +1,14 @@
 <?php
 
-use App\Models\NigeriaState;
-use Database\Seeders\NigeriaLocationSeeder;
+use Illuminate\Support\Facades\Http;
 
-beforeEach(function () {
-    $this->seed(NigeriaLocationSeeder::class);
-});
-
-it('returns local government areas for the selected state as json', function () {
-    $state = NigeriaState::query()
-        ->where('name', 'Lagos')
-        ->firstOrFail();
-
-    $this->getJson(route('locations.states.local-government-areas', $state))
+it('returns canonical country-scoped state and city options without lookup tables', function () {
+    config(['locations.cache.driver' => 'unavailable']);
+    Http::preventStrayRequests();
+    $this->getJson(route('locations.states', ['country' => 'NG']))
         ->assertOk()
-        ->assertJsonPath('data.0.name', 'Agege')
-        ->assertJsonFragment([
-            'name' => 'Ikeja',
-            'slug' => 'ikeja',
-        ]);
+        ->assertJsonFragment(['value' => 'Lagos', 'label' => 'Lagos']);
+    $this->getJson(route('locations.cities', ['country' => 'NG', 'state' => 'Lagos']))
+        ->assertOk()->assertJsonFragment(['value' => 'Ikeja', 'label' => 'Ikeja']);
+    $this->getJson('/locations/states/1/local-government-areas')->assertNotFound();
 });

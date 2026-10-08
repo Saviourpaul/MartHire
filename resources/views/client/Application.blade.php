@@ -17,8 +17,8 @@
         ];
         $educationRows = collect(old('education_documents', [['type' => '']]))->values();
         $educationRows = $educationRows->isEmpty() ? collect([['type' => '']]) : $educationRows;
-        $selectedState = old('state_of_origin', $user->state_of_origin);
-        $selectedLga = old('local_government_area', $user->local_government_area);
+        $selectedState = old('state', $user->state);
+        $selectedCity = old('city', $user->city);
         $profileImageAccept = collect(StoreApplicationFormRequest::PROFILE_IMAGE_TYPES)
             ->map(fn($type) => '.' . $type)
             ->implode(',');
@@ -79,6 +79,16 @@
         <div data-application-wizard-container>
             <x-application-wizard-progress :steps="$wizardSteps" />
 
+        <form action="{{ route('applications.store', $job) }}" method="POST" enctype="multipart/form-data"
+            data-application-wizard data-confirm data-confirm-title="Submit application?"
+            data-confirm-text="Please confirm your information and uploaded documents are correct."
+            data-confirm-icon="question" data-confirm-button="Submit Application" novalidate>
+            @csrf
+
+            <div class="alert alert-danger d-none" data-validation-summary role="alert" tabindex="-1">
+                Please correct the highlighted fields before continuing.
+            </div>
+
             <noscript>
                 <style>
                     [data-application-wizard] [data-wizard-step][hidden] {
@@ -87,6 +97,7 @@
                 </style>
             </noscript>
             
+
 
             <form class="mt-6 space-y-6" action="{{ route('applications.store', $job) }}" method="POST"
                 enctype="multipart/form-data" data-application-wizard data-initial-step="{{ $initialStep }}"
@@ -98,6 +109,21 @@
                 <div class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-theme-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
                     data-validation-summary role="alert" tabindex="-1"></div>
 
+                                <div class="upload-files">
+                                    <label class="file-upload image-upbtn">
+                                        <i class="feather-upload me-2"></i>Upload Photo
+                                        <input id="profile-image-input" type="file" name="profile_image"
+                                            class="form-control @error('profile_image') is-invalid @enderror"
+                                            accept="{{ $profileImageAccept }}" @required(blank($user->profile_image_path))
+                                            data-file-input data-file-kind="profile-image"
+                                            data-max-kb="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_KB }}"
+                                            data-allowed-types='@json(StoreApplicationFormRequest::PROFILE_IMAGE_TYPES)'
+                                            data-min-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_WIDTH }}"
+                                            data-min-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MIN_HEIGHT }}"
+                                            data-max-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_WIDTH }}"
+                                            data-max-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_HEIGHT }}"
+                                            aria-describedby="profile-image-help profile-image-feedback">
+=======
                 @if ($errors->any())
                     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-theme-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
                         data-server-validation-summary role="alert">
@@ -127,6 +153,7 @@
                                         class="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]"
                                         data-profile-image-trigger>
                                         Choose photo
+
                                     </label>
                                     <button type="button" hidden data-remove-profile-image
                                         class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-3 text-theme-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]">Remove</button>
@@ -581,9 +608,9 @@
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-contact>
                                 {{ old('phone', $user->phone) ?: 'Not provided' }}</dd>
                         </div>
-                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
-                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Origin</dt>
-                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-origin>
+                        <div>
+                            <dt>Origin</dt>
+                            <dd data-summary-origin>
                                 {{ collect([$selectedLga, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
                             </dd>
                         </div>
@@ -591,6 +618,18 @@
                             <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Nationality</dt>
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-nationality>
                                 {{ old('nationality', $user->nationality ?? 'Nigeria') ?: 'Not provided' }}</dd>
+
+                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
+                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">State and city</dt>
+                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-origin>
+                                {{ collect([$selectedCity, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
+                            </dd>
+                        </div>
+                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
+                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Country</dt>
+                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-country>
+                                {{ $user->country ?: 'Not provided' }}</dd>
+
                         </div>
                         <div class="border-t border-gray-100 p-4 dark:border-gray-800 sm:col-span-2">
                             <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Qualification documents</dt>

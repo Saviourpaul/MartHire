@@ -1,18 +1,20 @@
 <?php
 
 use App\Enums\ApplicationDocumentType;
-use App\Enums\CandidatePipelineStage;
+use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
-use Database\Seeders\NigeriaLocationSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->seed(NigeriaLocationSeeder::class);
+    config(['locations.cache.path' => sys_get_temp_dir().'/marthire-locations-'.bin2hex(random_bytes(8))]);
+    config(['locations.cache.lock_path' => config('locations.cache.path')]);
+    Http::fake(['*' => Http::response([], 503)]);
 });
 
 function validApplicationPayload(array $overrides = []): array
@@ -23,12 +25,12 @@ function validApplicationPayload(array $overrides = []): array
         'last_name' => 'Lovelace',
         'email' => 'ada@example.com',
         'phone' => '+2348012345678',
-        'nationality' => 'Nigeria',
+        'country_code' => 'NG',
         'date_of_birth' => '1995-01-01',
         'gender' => 'female',
         'marital_status' => 'single',
-        'state_of_origin' => 'Lagos',
-        'local_government_area' => 'Ikeja',
+        'state' => 'Lagos',
+        'city' => 'Ikeja',
         'address' => '12 Market Road',
         'zipcode' => '100001',
         'nin_number' => '12345678901',
@@ -124,9 +126,9 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
     expect($applicant->first_name)->toBe('Ada')
         ->and($applicant->last_name)->toBe('Lovelace')
         ->and($applicant->phone)->toBe('+2348012345678')
-        ->and($applicant->nationality)->toBe('Nigeria')
-        ->and($applicant->state_of_origin)->toBe('Lagos')
-        ->and($applicant->local_government_area)->toBe('Ikeja')
+        ->and($applicant->country)->toBe('Nigeria')
+        ->and($applicant->state)->toBe('Lagos')
+        ->and($applicant->city)->toBe('Ikeja')
         ->and($applicant->profile_image_path)->toBe('profile-images/existing.jpg');
 
     $this->assertDatabaseHas('application_forms', [
