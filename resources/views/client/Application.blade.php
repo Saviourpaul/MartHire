@@ -123,7 +123,7 @@
                                             data-max-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_WIDTH }}"
                                             data-max-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_HEIGHT }}"
                                             aria-describedby="profile-image-help profile-image-feedback">
-=======
+
                 @if ($errors->any())
                     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-theme-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
                         data-server-validation-summary role="alert">
