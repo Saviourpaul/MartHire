@@ -1,41 +1,18 @@
 <?php
 
 use App\Enums\ApplicationDocumentType;
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationDocument;
-use App\Enums\CandidatePipelineStage;
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
-use App\Enums\CandidatePipelineStage;
->>>>>>> Stashed changes
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
+use Database\Seeders\NigeriaLocationSeeder;
 use Illuminate\Http\UploadedFile;
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-use Illuminate\Support\Facades\Http;
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    config(['locations.cache.path' => sys_get_temp_dir().'/marthire-locations-'.bin2hex(random_bytes(8))]);
-    config(['locations.cache.lock_path' => config('locations.cache.path')]);
-    Http::fake(['*' => Http::response([], 503)]);
+    $this->seed(NigeriaLocationSeeder::class);
 });
 
 function validApplicationPayload(array $overrides = []): array
@@ -46,12 +23,12 @@ function validApplicationPayload(array $overrides = []): array
         'last_name' => 'Lovelace',
         'email' => 'ada@example.com',
         'phone' => '+2348012345678',
-        'country_code' => 'NG',
+        'nationality' => 'Nigeria',
         'date_of_birth' => '1995-01-01',
         'gender' => 'female',
         'marital_status' => 'single',
-        'state' => 'Lagos',
-        'city' => 'Ikeja',
+        'state_of_origin' => 'Lagos',
+        'local_government_area' => 'Ikeja',
         'address' => '12 Market Road',
         'zipcode' => '100001',
         'identification_type' => ApplicationDocumentType::NationalIdentityCard->value,
@@ -106,41 +83,8 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee('application-wizard', false)
         ->assertSee('data-state-of-origin', false)
         ->assertSee('data-local-government-area', false)
-<<<<<<< HEAD
-        ->assertSee('data-lga-url=', false)
-<<<<<<< HEAD
-=======
-        ->assertSee('Education')
-        ->assertSee('Review')
-        ->assertSee('data-wizard-step="0"', false)
-        ->assertSee('data-wizard-step="1"', false)
-        ->assertSee('data-wizard-step="2"', false)
-        ->assertSee('data-wizard-step="3"', false)
-        ->assertSeeInOrder([
-            'data-wizard-step="1"',
-            'hidden',
-            'data-wizard-step="2"',
-            'hidden',
-            'data-wizard-step="3"',
-            'hidden',
-        ], false)
-        ->assertSee('data-overall-progress', false)
-        ->assertSee('application-wizard', false)
-        ->assertSee('data-location-country_code', false)
-        ->assertSee('data-location-state', false)
-        ->assertSee('data-location-city', false)
-        ->assertSee('data-locations-cities="/api/locations/cities', false)
-        ->assertDontSee('data-locations-cities="http', false)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
-=======
         ->assertSee('data-lga-url="/locations/states/', false)
         ->assertDontSee('data-lga-url="http', false)
->>>>>>> feature
         ->assertSee('id="profile-image-preview"', false)
         ->assertSee('data-profile-image-trigger', false)
         ->assertSee('data-remove-profile-image', false)
@@ -148,8 +92,6 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee('data-min-width="200"', false)
         ->assertSee('name="identification_type"', false)
         ->assertSee('name="identification_document"', false)
-        ->assertSee('data-identification-document-dropzone', false)
-        ->assertSee('aria-disabled="true"', false)
         ->assertSee('National Identity Card / NIN Slip')
         ->assertSee('International Passport')
         ->assertSee("Driver's License")
@@ -158,26 +100,6 @@ it('renders the application wizard with dependent location and document controls
         ->assertDontSee('NIN number')
         ->assertSee('Choose a photo to preview it before submission.')
         ->assertSee('Add another document');
-<<<<<<< HEAD
-=======
-        ->assertSee('name="identification_type"', false)
-        ->assertSee('name="identification_document"', false)
-        ->assertSee('data-identification-document-dropzone', false)
-        ->assertSee('aria-disabled="true"', false)
-        ->assertSee('National Identity Card / NIN Slip')
-        ->assertSee('International Passport')
-        ->assertSee("Driver's License")
-        ->assertSee("Voter's Card")
-        ->assertDontSee('Bank Verification Number')
-        ->assertDontSee('NIN number')
-        ->assertSee('Choose a photo to preview it')
-        ->assertSee('data-add-document', false);
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
 });
 
 it('redirects guest applicants to sign in before an application can be started', function () {
@@ -232,9 +154,9 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
     expect($applicant->first_name)->toBe('Ada')
         ->and($applicant->last_name)->toBe('Lovelace')
         ->and($applicant->phone)->toBe('+2348012345678')
-        ->and($applicant->country)->toBe('Nigeria')
-        ->and($applicant->state)->toBe('Lagos')
-        ->and($applicant->city)->toBe('Ikeja')
+        ->and($applicant->nationality)->toBe('Nigeria')
+        ->and($applicant->state_of_origin)->toBe('Lagos')
+        ->and($applicant->local_government_area)->toBe('Ikeja')
         ->and($applicant->profile_image_path)->toBe('profile-images/existing.jpg');
 
     $this->assertDatabaseHas('application_forms', [

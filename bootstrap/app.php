@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureUserHasRole;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +14,6 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -30,6 +30,20 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return response()->view('errors.419', [], 419);
+        });
+
+        $exceptions->render(function (AuthorizationException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            if ($request->routeIs('verification.verify') && $request->user()) {
+                return redirect()
+                    ->route('verification.notice')
+                    ->withErrors(['verification' => 'This verification link is invalid or belongs to a different account. Request a new link.']);
+            }
+
+            return response()->view('errors.403', ['exception' => $exception], 403);
         });
 
         $exceptions->render(function (InvalidSignatureException $exception, Request $request) {
@@ -49,19 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
-            if ($request->expectsJson()) {
-                return null;
-            }
-
-            if ($exception->getStatusCode() === 403
-                && $request->route()?->getName() === 'verification.verify'
-                && $request->user()) {
-                return redirect()
-                    ->route('verification.notice')
-                    ->withErrors(['verification' => 'This verification link is invalid or belongs to a different account. Request a new link.']);
-            }
-
-            if ($exception->getStatusCode() !== 403) {
+            if ($exception->getStatusCode() !== 403 || $request->expectsJson()) {
                 return null;
             }
 

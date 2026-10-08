@@ -3,6 +3,8 @@
     @php
         $requiresApplicantProfile = $user->isApplicant();
         $requiredMark = $requiresApplicantProfile ? ' *' : '';
+        $selectedState = old('state_of_origin', $user->state_of_origin);
+        $selectedLga = old('local_government_area', $user->local_government_area);
         $inputClass = 'dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30';
         $selectClass = $inputClass.' h-11 appearance-none pr-11';
         $todayLimit = now()->subDay()->format('Y-m-d');
@@ -16,9 +18,9 @@
             'phone' => $user->phone,
             'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
             'address' => $user->address,
-            'country_code' => $user->country_code,
-            'state' => $user->state,
-            'city' => $user->city,
+            'nationality' => $user->nationality,
+            'state_of_origin' => $user->state_of_origin,
+            'local_government_area' => $user->local_government_area,
             'profile_image_src' => $user->profileImageUrl(),
             'profile_image_path' => $user->profile_image_path,
         ];
@@ -186,28 +188,28 @@
                                 </div>
                                 <div>
                                     <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                        {{ $user->country ? 'Country' : 'Nationality (historical)' }}
+                                        Nationality
                                     </p>
                                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                                        {{ $user->country ?: $user->nationality ?: 'N/A' }}
+                                        {{ $user->nationality ?: 'N/A' }}
                                     </p>
                                 </div>
 
                                 <div>
                                     <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                        {{ $user->state ? 'State' : 'State of origin (historical)' }}
+                                        State of Origin
                                     </p>
                                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                                        {{ $user->state ?: $user->state_of_origin ?: 'N/A' }}
+                                        {{ $user->state_of_origin  ?: 'N/A' }}
                                     </p>
                                 </div>
 
                                 <div>
                                     <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                        {{ $user->city ? 'City' : 'LGA (historical)' }}
+                                        Local Government
                                     </p>
                                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">
-                                        {{ $user->city ?: $user->local_government_area ?: 'N/A' }}
+                                        {{ $user->local_government_area  ?: 'N/A' }}
                                     </p>
                                 </div>
 
@@ -332,7 +334,7 @@
                 </p>
             </div>
 
-            <form class="flex flex-col" id="profile-form" data-location-selector data-location-required="{{ $requiresApplicantProfile ? 'true' : 'false' }}" data-locations-countries="{{ route('locations.countries', [], false) }}" data-locations-states="{{ route('locations.states', [], false) }}" data-locations-cities="{{ route('locations.cities', [], false) }}" action="{{ route('profile.update') }}" method="POST"
+            <form class="flex flex-col" id="profile-form" action="{{ route('profile.update') }}" method="POST"
                 enctype="multipart/form-data">
                 <div class="custom-scrollbar h-[450px] overflow-y-auto px-2">
                     @csrf
@@ -435,13 +437,55 @@
 
                            
                             <div class="col-span-2 lg:col-span-1">
-                                <x-location-select field="country_code" label="Country" :selected="old('country_code', $user->country_code)" :input-class="$selectClass" :label-class="$labelClass" :error-class="$errorClass" :required="$requiresApplicantProfile" />
+                                <label for="nationality" class="{{ $labelClass }}">
+                                    Nationality @if ($requiresApplicantProfile)<span class="text-error-500">*</span>@endif
+                                </label>
+                                <input id="nationality" name="nationality" type="text"
+                                    value="{{ old('nationality', $user->nationality) }}" maxlength="255"
+                                    autocomplete="country-name" {{ $requiresApplicantProfile }} class="{{ $inputClass }}">
+                                @error('nationality')
+                                    <p class="{{ $errorClass }}">{{ $message }}</p>
+                                @enderror
                             </div>
                               <div class="col-span-2 lg:col-span-1">
-                                <x-location-select field="state" label="State" :selected="old('state', $user->state)" :input-class="$selectClass" :label-class="$labelClass" :error-class="$errorClass" :required="$requiresApplicantProfile" />
+                                <label for="state_of_origin" class="{{ $labelClass }}">
+                                    State of Origin @if ($requiresApplicantProfile)<span class="text-error-500">*</span>@endif
+                                </label>
+                                <div class="relative">
+                                    <select id="state_of_origin" name="state_of_origin" data-profile-state
+                                        class="{{ $selectClass }}">
+                                         <option value="">Select state</option>
+                                            @foreach ($states as $state)
+                                            <option value="{{ $state->name }}"
+                                                data-lga-url="{{ route('locations.states.local-government-areas', $state) }}"
+                                                @selected($selectedState === $state->name)>
+                                                {{ $state->name }}</option>
+                                        @endforeach
+                                    </select>
+                                   
+                                </div>
+                                @error('state_of_origin')
+                                    <p class="{{ $errorClass }}">{{ $message }}</p>
+                                @enderror
                             </div>
                            <div class="col-span-2 lg:col-span-1">
-                                <x-location-select field="city" label="City" :selected="old('city', $user->city)" :input-class="$selectClass" :label-class="$labelClass" :error-class="$errorClass" :required="$requiresApplicantProfile" />
+                                <label for="local_government_are" class="{{ $labelClass }}">
+                                    Local Government Area @if ($requiresApplicantProfile)<span class="text-error-500">*</span>@endif
+                                </label>
+                                <div class="relative">
+                                    <select id="local_government_area" name="local_government_area" 
+                                        data-profile-lga data-selected-lga="{{ $selectedLga }}"
+                                        class="{{ $selectClass }}">
+                                        <option value="">Select local government Area</option>
+                                        @if ($selectedLga)
+                                            <option value="{{ $selectedLga }}" selected>{{ $selectedLga }}</option>
+                                        @endif
+                                    </select>
+                                   
+                                </div>
+                                @error('local_government_area')
+                                    <p class="{{ $errorClass }}">{{ $message }}</p>
+                                @enderror
                             </div>
                         
 
@@ -463,22 +507,7 @@
 
                 </div>
                 <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                    <button @click="isProfileInfoModal = false" type="button"
-=======
-                    <button @click="closeModal('isProfileInfoModal')" data-profile-cancel type="button"
->>>>>>> Stashed changes
-=======
-                    <button @click="closeModal('isProfileInfoModal')" data-profile-cancel type="button"
->>>>>>> Stashed changes
-=======
-                    <button @click="isProfileInfoModal = false" type="button"
-
                     <button @click="closeModal('isProfileInfoModal')" type="button"
-
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
                         class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">
                         Cancel
                     </button>
@@ -531,16 +560,76 @@
             (function() {
                 const form = document.getElementById('profile-form');
                 const editButton = document.getElementById('edit-profile-button');
-                const cancelButton = form?.querySelector('[data-profile-cancel]');
+                const cancelButton = document.getElementById('cancel-profile-edit');
                 const profileActions = document.getElementById('profile-actions');
                 const profileImageInput = document.getElementById('profile-image-input');
                 const profileImagePreview = document.getElementById('profile-image-preview');
+                const stateSelect = form?.querySelector('[data-profile-state]');
+                const lgaSelect = form?.querySelector('[data-profile-lga]');
                 const originalProfile = @json($originalProfile);
                
 
                 if (!form) {
                     return;
                 }
+
+                const resetLgaOptions = (placeholder = 'Select LGA') => {
+                    if (!lgaSelect) {
+                        return;
+                    }
+
+                    lgaSelect.innerHTML = '';
+                    lgaSelect.append(new Option(placeholder, ''));
+                };
+
+                const populateLgas = async (selectedLga = '') => {
+                    if (!stateSelect || !lgaSelect) {
+                        return;
+                    }
+
+                    const selectedOption = stateSelect.selectedOptions[0];
+                    const lgaUrl = selectedOption?.dataset.lgaUrl || '';
+
+                    resetLgaOptions(lgaUrl ? 'Loading LGAs...' : 'Select state first');
+                    lgaSelect.disabled = true;
+
+                    if (!lgaUrl) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(lgaUrl, {
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Unable to load LGAs.');
+                        }
+
+                        const payload = await response.json();
+                        const localGovernmentAreas = Array.isArray(payload.data) ? payload.data : [];
+
+                        resetLgaOptions(localGovernmentAreas.length > 0 ? 'Select LGA' : 'No LGAs available');
+
+                        localGovernmentAreas.forEach((lga) => {
+                            const option = new Option(lga.name, lga.name, false, lga.name === selectedLga);
+                            option.dataset.lgaId = lga.id;
+                            option.dataset.lgaSlug = lga.slug;
+                            lgaSelect.append(option);
+                        });
+
+                        lgaSelect.disabled = localGovernmentAreas.length === 0;
+                    } catch (error) {
+                        resetLgaOptions('Unable to load LGAs');
+                        lgaSelect.disabled = true;
+                        console.error(error);
+                    }
+                };
+
+            
 
                 const resetToOriginalValues = () => {
                     form.querySelectorAll('input, select').forEach((field) => {
@@ -551,7 +640,7 @@
                         field.value = originalProfile[field.name] || '';
                     });
 
-                    form.dispatchEvent(new CustomEvent('location:reset', { detail: originalProfile }));
+                    populateLgas(originalProfile.local_government_area || '');
 
                     if (profileImageInput) {
                         profileImageInput.value = '';
@@ -562,6 +651,7 @@
                     }
                 };
 
+                populateLgas(lgaSelect?.dataset.selectedLga || '');
                 editButton?.addEventListener('click', () => {
                     editButton.classList.add('d-none');
                     profileActions?.classList.remove('d-none');
@@ -590,7 +680,10 @@
                     reader.readAsDataURL(file);
                 });
 
+                stateSelect?.addEventListener('change', () => {
+                    lgaSelect.dataset.selectedLga = '';
+                    populateLgas();
+                });
             })();
     </script>
-    @vite('resources/js/location-selector.js')
 </x-layout>
