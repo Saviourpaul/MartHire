@@ -23,6 +23,34 @@
             'profile_image_path' => $user->profile_image_path,
         ];
     @endphp
+    <div
+        x-data="{
+            isProfileInfoModal: @js($errors->getBag('default')->isNotEmpty()),
+            isChangePasswordModal: @js($errors->updatePassword->isNotEmpty()),
+            isDeleteAccountModal: @js($errors->userDeletion->isNotEmpty()),
+            activeTrigger: null,
+            init() {
+                this.$nextTick(() => {
+                    if (this.isProfileInfoModal) this.$refs.isProfileInfoModalPanel?.focus();
+                    if (this.isChangePasswordModal) this.$refs.isChangePasswordModalPanel?.focus();
+                    if (this.isDeleteAccountModal) this.$refs.isDeleteAccountModalPanel?.focus();
+                });
+            },
+            openModal(name, trigger) {
+                this.activeTrigger = trigger;
+                this[name] = true;
+                this.$nextTick(() => this.$refs[`${name}Panel`]?.focus());
+            },
+            closeModal(name) {
+                this[name] = false;
+                this.$nextTick(() => this.activeTrigger?.focus());
+            }
+        }"
+        @keydown.escape.window="
+            if (isDeleteAccountModal) closeModal('isDeleteAccountModal');
+            else if (isChangePasswordModal) closeModal('isChangePasswordModal');
+            else if (isProfileInfoModal) closeModal('isProfileInfoModal');
+        ">
     <!-- ===== Main Content Start ===== -->
     <main>
         <div class="mx-auto max-w-(--breakpoint-2xl) p-4 pb-20 md:p-6 md:pb-6">
@@ -124,7 +152,8 @@
                             </div>
                         </div>
                         <div>
-                            <button @click="isProfileInfoModal = true"
+                            <button type="button" @click="openModal('isProfileInfoModal', $el)"
+                                aria-haspopup="dialog" :aria-expanded="isProfileInfoModal.toString()"
                                 class="shadow-theme-xs flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 lg:inline-flex lg:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
                                 <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18"
                                     fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -222,7 +251,8 @@
                                     @endif
                                 </div>
                             </div>
-                            <button type="button" x-on:click="isChangePasswordModal = true"
+                            <button type="button" x-on:click="openModal('isChangePasswordModal', $el)"
+                                aria-haspopup="dialog" :aria-expanded="isChangePasswordModal.toString()"
                                 class="shadow-theme-xs inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-800 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -258,7 +288,8 @@
                                     </p>
                                 </div>
                             </div>
-                            <button type="button" x-on:click="isDeleteAccountModal = true"
+                            <button type="button" x-on:click="openModal('isDeleteAccountModal', $el)"
+                                aria-haspopup="dialog" :aria-expanded="isDeleteAccountModal.toString()"
                                 class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-error-500 px-4 py-2.5 text-sm font-medium text-error-500 transition hover:bg-error-50 focus:outline-hidden focus:ring-3 focus:ring-error-500/10 sm:w-auto dark:border-error-500/40 dark:text-error-400 dark:hover:bg-error-500/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -276,19 +307,14 @@
         </div>
     </main>
     <!-- ===== Main Content End ===== -->
-    </div>
-    <!-- ===== Content Area End ===== -->
-    </div>
-    <!-- ===== Page Wrapper End ===== -->
 
    <!-- BEGIN MODAL -->
-    <div x-show="isProfileInfoModal"
-        class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto p-5">
-        <div class="modal-close-btn fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"></div>
-        <div @click.outside="isProfileInfoModal = false"
+    <div x-cloak x-show="isProfileInfoModal" x-transition.opacity @click.self="closeModal('isProfileInfoModal')"
+        class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto bg-gray-400/50 p-5 backdrop-blur-[32px]">
+        <div x-show="isProfileInfoModal" x-transition.scale @click.stop x-ref="isProfileInfoModalPanel" role="dialog" aria-modal="true" aria-labelledby="profile-info-modal-title" tabindex="-1"
             class="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 lg:p-11 dark:bg-gray-900">
             <!-- close btn -->
-            <button @click="isProfileInfoModal = false"
+            <button type="button" @click="closeModal('isProfileInfoModal')" aria-label="Close edit profile dialog"
                 class="transition-color absolute top-5 right-5 z-999 flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-700 dark:bg-white/[0.05] dark:text-gray-400 dark:hover:bg-white/[0.07] dark:hover:text-gray-300">
                 <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
@@ -298,7 +324,7 @@
                 </svg>
             </button>
             <div class="px-2 pr-14">
-                <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                <h4 id="profile-info-modal-title" class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
                     Edit Personal Information
                 </h4>
                 <p class="mb-6 text-sm text-gray-500 lg:mb-7 dark:text-gray-400">
@@ -370,12 +396,15 @@
                                 @enderror
                             </div>
                             <div class="col-span-2 lg:col-span-1">
-                                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                <label for="email" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                     Email Address
                                 </label>
-                                <input type="text" name="email" value="{{ old('email', $user->email) }}"
+                                <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}"
                                     readonly
                                     class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                                @error('email')
+                                    <p class="{{ $errorClass }}">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             
@@ -434,6 +463,7 @@
 
                 </div>
                 <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
                     <button @click="isProfileInfoModal = false" type="button"
@@ -443,11 +473,17 @@
 =======
                     <button @click="closeModal('isProfileInfoModal')" data-profile-cancel type="button"
 >>>>>>> Stashed changes
+=======
+                    <button @click="isProfileInfoModal = false" type="button"
+
+                    <button @click="closeModal('isProfileInfoModal')" type="button"
+
+>>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
                         class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="bg-brand-500 hover:bg-brand-600 flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">
+                        class="btn btn-primary  justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">
                         Save Changes
                     </button>
                 </div>
@@ -456,13 +492,11 @@
     </div>
     
     <!-- END MODAL -->
-    <div x-show="isChangePasswordModal"
-        x-init="@if ($errors->updatePassword->isNotEmpty()) isChangePasswordModal = true @endif"
-        class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto p-4 sm:p-5">
-        <div class="modal-close-btn fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"></div>
-        <div @click.outside="isChangePasswordModal = false"
+    <div x-cloak x-show="isChangePasswordModal" x-transition.opacity @click.self="closeModal('isChangePasswordModal')"
+        class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto bg-gray-400/50 p-4 backdrop-blur-[32px] sm:p-5">
+        <div x-show="isChangePasswordModal" x-transition.scale @click.stop x-ref="isChangePasswordModalPanel" role="dialog" aria-modal="true" aria-labelledby="change-password-modal-title" tabindex="-1"
             class="no-scrollbar relative max-h-[calc(100vh-2rem)] w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 sm:p-6 lg:p-11 dark:bg-gray-900">
-            <button type="button" @click="isChangePasswordModal = false"
+            <button type="button" @click="closeModal('isChangePasswordModal')" aria-label="Close change password dialog"
                 class="transition-color absolute top-5 right-5 z-999 flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-700 dark:bg-white/[0.05] dark:text-gray-400 dark:hover:bg-white/[0.07] dark:hover:text-gray-300">
                 <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
@@ -475,13 +509,11 @@
         </div>
     </div>
 
-    <div x-show="isDeleteAccountModal"
-        x-init="@if ($errors->userDeletion->isNotEmpty()) isDeleteAccountModal = true @endif"
-        class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto p-4 sm:p-5">
-        <div class="modal-close-btn fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"></div>
-        <div @click.outside="isDeleteAccountModal = false"
+    <div x-cloak x-show="isDeleteAccountModal" x-transition.opacity @click.self="closeModal('isDeleteAccountModal')"
+        class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto bg-gray-400/50 p-4 backdrop-blur-[32px] sm:p-5">
+        <div x-show="isDeleteAccountModal" x-transition.scale @click.stop x-ref="isDeleteAccountModalPanel" role="dialog" aria-modal="true" aria-labelledby="delete-account-modal-title" tabindex="-1"
             class="no-scrollbar relative max-h-[calc(100vh-2rem)] w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 sm:p-6 lg:p-11 dark:bg-gray-900">
-            <button type="button" @click="isDeleteAccountModal = false"
+            <button type="button" @click="closeModal('isDeleteAccountModal')" aria-label="Close delete account dialog"
                 class="transition-color absolute top-5 right-5 z-999 flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-700 dark:bg-white/[0.05] dark:text-gray-400 dark:hover:bg-white/[0.07] dark:hover:text-gray-300">
                 <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
@@ -492,6 +524,7 @@
             </button>
             @include('profile.partials.delete-user-form')
         </div>
+    </div>
     </div>
 
     <script>

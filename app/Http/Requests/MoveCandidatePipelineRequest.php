@@ -2,25 +2,19 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationForm;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ReviewApplicationFormRequest extends FormRequest
+class MoveCandidatePipelineRequest extends FormRequest
 {
     public function authorize(): bool
     {
         $application = $this->route('applicationForm');
-        $user = $this->user();
 
-        if (! $application instanceof ApplicationForm || ! $user?->isEmployer()) {
-            return false;
-        }
-
-        $application->loadMissing('job');
-
-        return $application->job->employer_id === $user->id;
+        return $application instanceof ApplicationForm
+            && $this->user()?->can('managePipeline', $application);
     }
 
     /**
@@ -29,7 +23,7 @@ class ReviewApplicationFormRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', Rule::in(ApplicationStatus::values())],
+            'stage' => ['required', Rule::enum(CandidatePipelineStage::class)],
             'remarks' => ['nullable', 'string', 'max:2000'],
         ];
     }

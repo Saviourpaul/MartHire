@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use Database\Factories\ApplicationFormFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,11 +43,11 @@ class ApplicationForm extends Model
     protected function casts(): array
     {
         return [
-            'status' => ApplicationStatus::class,
+            'status' => CandidatePipelineStage::class,
             'submitted_at' => 'datetime',
             'date_of_birth' => 'date',
             'reviewed_at' => 'datetime',
-            
+
         ];
     }
 
@@ -81,9 +81,9 @@ class ApplicationForm extends Model
         return $query->whereHas('job', fn (Builder $jobQuery) => $jobQuery->where('employer_id', $employer->id));
     }
 
-    public function scopeStatus(Builder $query, ApplicationStatus|string $status): Builder
+    public function scopeStatus(Builder $query, CandidatePipelineStage|string $status): Builder
     {
-        return $query->where('status', $status instanceof ApplicationStatus ? $status->value : $status);
+        return $query->where('status', $status instanceof CandidatePipelineStage ? $status->value : $status);
     }
 
     public function scopeSearch(Builder $query, ?string $search): Builder

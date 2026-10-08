@@ -40,9 +40,9 @@
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
                         @foreach ([
                             ['label' => 'Total Applicants', 'value' => $metrics['total_applicants']],
-                            ['label' => 'Jobs Posted', 'value' => $metrics['total_jobs']],
+                            ['label' => 'Total Jobs Posted', 'value' => $metrics['total_jobs']],
                             ['label' => 'Total Applications', 'value' => $metrics['total_applications']],
-                            ['label' => 'Pending Applications', 'value' => $metrics['pending_applications']],
+                            ['label' => 'Submitted Candidates', 'value' => $metrics['submitted_candidates']],
                         ] as $metric)
                             <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <p class="text-theme-sm text-gray-500 dark:text-gray-400">{{ $metric['label'] }}</p>
@@ -59,7 +59,7 @@
                 <div class="col-span-12">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
                         @foreach ([
-                            ['label' => 'Approved Candidates', 'value' => $metrics['approved_candidates']],
+                            ['label' => 'Selected Candidates', 'value' => $metrics['selected_candidates']],
                             ['label' => 'Rejected Candidates', 'value' => $metrics['rejected_candidates']],
                         ] as $metric)
                             <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">

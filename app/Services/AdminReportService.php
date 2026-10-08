@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Enums\JobStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
@@ -116,7 +116,7 @@ class AdminReportService
             ->count();
         $periodApprovedApplications = ApplicationForm::query()
             ->whereBetween('submitted_at', [$dateRange->start, $dateRange->end])
-            ->status(ApplicationStatus::Approved)
+            ->status(CandidatePipelineStage::Selected)
             ->count();
 
         return [
@@ -141,9 +141,9 @@ class AdminReportService
             'new_applications_in_period' => $periodApplications,
             'application_conversion_rate' => $this->percentage($uniqueApplicantsWithApplications, $totalApplicants),
             'hiring_success_rate' => $this->percentage($periodApprovedApplications, $periodApplications),
-            'average_time_to_hire_days' => $this->averageDecisionDays($dateRange, ApplicationStatus::Approved),
+            'average_time_to_hire_days' => $this->averageDecisionDays($dateRange, CandidatePipelineStage::Selected),
             'average_time_to_decision_days' => $this->averageDecisionDays($dateRange),
-            'pending_applications' => ApplicationForm::query()->status(ApplicationStatus::Pending)->count(),
+            'submitted_candidates' => ApplicationForm::query()->status(CandidatePipelineStage::Submitted)->count(),
             'pending_job_reviews' => Job::query()->status(JobStatus::Pending)->count(),
         ];
     }
@@ -222,8 +222,8 @@ class AdminReportService
             ->pluck('total', 'status');
 
         return [
-            'labels' => array_map(fn (ApplicationStatus $status): string => $status->label(), ApplicationStatus::cases()),
-            'series' => array_map(fn (ApplicationStatus $status): int => (int) ($counts[$status->value] ?? 0), ApplicationStatus::cases()),
+            'labels' => array_map(fn (CandidatePipelineStage $status): string => $status->label(), CandidatePipelineStage::cases()),
+            'series' => array_map(fn (CandidatePipelineStage $status): int => (int) ($counts[$status->value] ?? 0), CandidatePipelineStage::cases()),
             'colors' => ['#ffc107', '#28a745', '#dc3545'],
         ];
     }
@@ -480,7 +480,7 @@ class AdminReportService
         ];
     }
 
-    private function averageDecisionDays(AdminDashboardDateRange $dateRange, ?ApplicationStatus $status = null): float
+    private function averageDecisionDays(AdminDashboardDateRange $dateRange, ?CandidatePipelineStage $status = null): float
     {
         $applications = ApplicationForm::query()
             ->whereNotNull('reviewed_at')

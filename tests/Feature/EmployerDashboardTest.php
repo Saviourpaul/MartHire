@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ApplicationStatus;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
@@ -26,11 +26,11 @@ it('renders an employer dashboard scoped to the authenticated employer', functio
     ApplicationForm::factory()->create([
         'job_id' => $ownJob->id,
         'user_id' => $applicant->id,
-        'status' => ApplicationStatus::Pending,
+        'status' => CandidatePipelineStage::Submitted,
         'submitted_at' => now()->startOfMonth()->addDays(3),
     ]);
 
-    ApplicationForm::factory()->approved($employer)->create([
+    ApplicationForm::factory()->selected($employer)->create([
         'job_id' => $ownJob->id,
         'user_id' => User::factory()->applicant()->create()->id,
         'submitted_at' => now()->startOfMonth()->addDays(4),
@@ -48,14 +48,13 @@ it('renders an employer dashboard scoped to the authenticated employer', functio
         ->assertSee('Total Jobs Posted')
         ->assertSee('Total Applicants')
         ->assertSee('Total Applications')
-        ->assertSee('Approved Candidates')
+        ->assertSee('Selected Candidates')
         ->assertSee('Rejected Candidates')
-        ->assertSee('Pending Applications')
-        ->assertSee('Applications Received Over Time')
-        ->assertSee('Jobs Posted Over Time')
+        ->assertSee('Submitted Candidates')
+        ->assertSee('Analytics')
         ->assertSee('Application Status')
         ->assertSee('Most Applied-To Jobs')
-        ->assertSee('Recent Job Applications')
+        ->assertSee('Recent Applications')
         ->assertSee($ownJob->title)
         ->assertDontSee($otherJob->title);
 });
