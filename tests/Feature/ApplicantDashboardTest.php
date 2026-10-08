@@ -63,12 +63,9 @@ test('user model calculates applicant profile completion', function () {
     expect($user->missingApplicantProfileFields())->toHaveKeys([
         'profile_image_path',
         'date_of_birth',
-        'nationality',
-        'state_of_origin',
-        'local_government_area',
-        'zipcode',
+        'location_confirmed_at',
     ])
-        ->and($user->applicantProfileCompletionPercentage())->toBe(25)
+        ->and($user->applicantProfileCompletionPercentage())->toBe(40)
         ->and($user->hasCompletedApplicantProfile())->toBeFalse()
         ->and($user->profileImageUrl())->toContain('Avatar.png');
 

@@ -24,9 +24,144 @@
                 <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 5000)" class="mb-6 rounded-lg border border-success-500/30 bg-success-50 px-4 py-3 text-sm font-medium text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-400">{{ session('success') }}</div>
             @endif
 
+<<<<<<< Updated upstream
             @if ($errors->any())
                 <div class="mb-6 rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-sm font-medium text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">Please review the highlighted fields and try again.</div>
             @endif
+=======
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                    <div class="lg:col-span-8 2xl:col-span-9">
+                        @if (session('success'))
+                            <div class="rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-theme-sm text-success-700"
+                                role="status">{{ session('success') }}</div>
+                        @endif
+                        @if ($errors->any())
+                            <div class="rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-theme-sm text-error-700"
+                                role="alert">{{ $errors->first() }}</div>
+                        @endif
+
+                    </div>
+
+                    <div class="space-y-6 lg:col-span-4 2xl:col-span-3">
+                        <div
+                            class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/3">
+                            <h2 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
+                                Candidate Details
+                            </h2>
+                            <div class="flex-1">
+                                <div class="mb-6 flex flex-col gap-5 sm:flex-row xl:items-center xl:justify-between">
+                                    <div class="flex w-full flex-col items-start gap-6 sm:flex-row sm:items-center">
+                                        <div
+                                            class="border-gray-20 overflow-hidden rounded-full border dark:border-gray-800">
+                                            <img {{ $application->profile_image_path }} class="size-20"
+                                                alt="user" />
+                                        </div>
+                                        <div class="text-left">
+                                            <h4 class="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+                                                {{ $application->first_name }}
+                                                {{ $application->last_name }}
+                                            </h4>
+                                            <div class="flex items-center gap-1 sm:gap-3">
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                                    email Address |
+                                                </p>
+                                                <div class="hidden h-3.5 w-px bg-gray-300 sm:block dark:bg-gray-700">
+                                                </div>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                                    {{ $application->email }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="relative grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-x-11 xl:gap-y-7">
+                                    <div class="w-full">
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            First Name
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->first_name }}
+                                        </p>
+                                    </div>
+                                    <div class="w-full">
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            Last Name
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->last_name }}
+                                        </p>
+                                    </div>
+                                    <div class="w-full">
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            Middle Name
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->middle_name ?: 'Not Provided' }}
+                                        </p>
+                                    </div>
+                                    <div class="w-full">
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            Gender
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->gender ?: 'Not Provided' }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            Phone
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->phone }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            {{ $application->country ? 'Country' : 'Nationality (historical)' }}
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->country ?: $application->nationality ?: 'Not provided' }}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            Date of Birth
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->date_of_birth->format('M d, Y  ') }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            Marital status
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->marital_status }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            {{ $application->state ? 'State' : 'State of origin (historical)' }}
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->state ?: $application->state_of_origin ?: 'Not provided' }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                                            {{ $application->city ? 'City' : 'LGA (historical)' }}
+                                        </p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+                                            {{ $application->city ?: $application->local_government_area ?: 'Not provided' }}
+                                        </p>
+                                    </div>
+
+                                    <div class="hidden xl:block"></div>
+>>>>>>> Stashed changes
 
             <div class="grid grid-cols-12 gap-4 md:gap-6">
                 <div class="col-span-12 space-y-6 xl:col-span-8">

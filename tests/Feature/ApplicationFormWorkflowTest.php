@@ -1,17 +1,27 @@
 <?php
 
 use App\Enums\ApplicationDocumentType;
+<<<<<<< Updated upstream
 use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
+=======
+use App\Enums\CandidatePipelineStage;
+>>>>>>> Stashed changes
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
-use Database\Seeders\NigeriaLocationSeeder;
 use Illuminate\Http\UploadedFile;
+<<<<<<< Updated upstream
+=======
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route;
+>>>>>>> Stashed changes
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->seed(NigeriaLocationSeeder::class);
+    config(['locations.cache.path' => sys_get_temp_dir().'/marthire-locations-'.bin2hex(random_bytes(8))]);
+    config(['locations.cache.lock_path' => config('locations.cache.path')]);
+    Http::fake(['*' => Http::response([], 503)]);
 });
 
 function validApplicationPayload(array $overrides = []): array
@@ -22,12 +32,12 @@ function validApplicationPayload(array $overrides = []): array
         'last_name' => 'Lovelace',
         'email' => 'ada@example.com',
         'phone' => '+2348012345678',
-        'nationality' => 'Nigeria',
+        'country_code' => 'NG',
         'date_of_birth' => '1995-01-01',
         'gender' => 'female',
         'marital_status' => 'single',
-        'state_of_origin' => 'Lagos',
-        'local_government_area' => 'Ikeja',
+        'state' => 'Lagos',
+        'city' => 'Ikeja',
         'address' => '12 Market Road',
         'zipcode' => '100001',
         'nin_number' => '12345678901',
@@ -66,16 +76,55 @@ it('renders the application wizard with dependent location and document controls
         ->assertOk()
         ->assertSee('Personal Information')
         ->assertSee('Identification')
+<<<<<<< Updated upstream
         ->assertSee('Educational Qualification')
         ->assertSee('Application Summary')
         ->assertSee('data-state-of-origin', false)
         ->assertSee('data-local-government-area', false)
         ->assertSee('data-lga-url=', false)
+=======
+        ->assertSee('Education')
+        ->assertSee('Review')
+        ->assertSee('data-wizard-step="0"', false)
+        ->assertSee('data-wizard-step="1"', false)
+        ->assertSee('data-wizard-step="2"', false)
+        ->assertSee('data-wizard-step="3"', false)
+        ->assertSeeInOrder([
+            'data-wizard-step="1"',
+            'hidden',
+            'data-wizard-step="2"',
+            'hidden',
+            'data-wizard-step="3"',
+            'hidden',
+        ], false)
+        ->assertSee('data-overall-progress', false)
+        ->assertSee('application-wizard', false)
+        ->assertSee('data-location-country_code', false)
+        ->assertSee('data-location-state', false)
+        ->assertSee('data-location-city', false)
+        ->assertSee('data-locations-cities="/api/locations/cities', false)
+        ->assertDontSee('data-locations-cities="http', false)
+>>>>>>> Stashed changes
         ->assertSee('id="profile-image-preview"', false)
         ->assertSee('data-file-kind="profile-image"', false)
         ->assertSee('data-min-width="200"', false)
+<<<<<<< Updated upstream
         ->assertSee('Choose a photo to preview it before submission.')
         ->assertSee('Add another document');
+=======
+        ->assertSee('name="identification_type"', false)
+        ->assertSee('name="identification_document"', false)
+        ->assertSee('data-identification-document-dropzone', false)
+        ->assertSee('aria-disabled="true"', false)
+        ->assertSee('National Identity Card / NIN Slip')
+        ->assertSee('International Passport')
+        ->assertSee("Driver's License")
+        ->assertSee("Voter's Card")
+        ->assertDontSee('Bank Verification Number')
+        ->assertDontSee('NIN number')
+        ->assertSee('Choose a photo to preview it')
+        ->assertSee('data-add-document', false);
+>>>>>>> Stashed changes
 });
 
 it('redirects guest applicants to registration and resumes the intended application after registration', function () {
@@ -138,9 +187,9 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
     expect($applicant->first_name)->toBe('Ada')
         ->and($applicant->last_name)->toBe('Lovelace')
         ->and($applicant->phone)->toBe('+2348012345678')
-        ->and($applicant->nationality)->toBe('Nigeria')
-        ->and($applicant->state_of_origin)->toBe('Lagos')
-        ->and($applicant->local_government_area)->toBe('Ikeja')
+        ->and($applicant->country)->toBe('Nigeria')
+        ->and($applicant->state)->toBe('Lagos')
+        ->and($applicant->city)->toBe('Ikeja')
         ->and($applicant->profile_image_path)->toBe('profile-images/existing.jpg');
 
     $this->assertDatabaseHas('application_forms', [

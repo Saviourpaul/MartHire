@@ -44,6 +44,11 @@ class UserFactory extends Factory
             'nationality' => null,
             'state_of_origin' => null,
             'local_government_area' => null,
+            'country_code' => null,
+            'country' => null,
+            'state' => null,
+            'city' => null,
+            'location_confirmed_at' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -90,9 +95,11 @@ class UserFactory extends Factory
             'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->streetAddress(),
-            'nationality' => 'Nigeria',
-            'state_of_origin' => 'Lagos',
-            'local_government_area' => 'Ikeja',
+            'country_code' => 'NG',
+            'country' => 'Nigeria',
+            'state' => 'Lagos',
+            'city' => 'Ikeja',
+            'location_confirmed_at' => now(),
         ]);
     }
 

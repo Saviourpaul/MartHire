@@ -17,8 +17,8 @@
 
         $educationRows = collect(old('education_documents', [['type' => '']]))->values();
         $educationRows = $educationRows->isEmpty() ? collect([['type' => '']]) : $educationRows;
-        $selectedState = old('state_of_origin', $user->state_of_origin);
-        $selectedLga = old('local_government_area', $user->local_government_area);
+        $selectedState = old('state', $user->state);
+        $selectedCity = old('city', $user->city);
         $profileImageAccept = collect(StoreApplicationFormRequest::PROFILE_IMAGE_TYPES)
             ->map(fn($type) => '.'.$type)
             ->implode(',');
@@ -58,9 +58,18 @@
             data-confirm-icon="question" data-confirm-button="Submit Application" novalidate>
             @csrf
 
+<<<<<<< Updated upstream
             <div class="alert alert-danger d-none" data-validation-summary role="alert" tabindex="-1">
                 Please correct the highlighted fields before continuing.
             </div>
+=======
+            <form class="mt-6 space-y-6" action="{{ route('applications.store', $job) }}" method="POST"
+                enctype="multipart/form-data" data-application-wizard data-location-selector data-location-required="true" data-locations-countries="{{ route('locations.countries', [], false) }}" data-locations-states="{{ route('locations.states', [], false) }}" data-locations-cities="{{ route('locations.cities', [], false) }}" data-initial-step="{{ $initialStep }}"
+                data-confirm-title="Submit application?"
+                data-confirm-text="Please confirm your information and uploaded documents are correct."
+                data-confirm-button="Submit application" novalidate>
+                @csrf
+>>>>>>> Stashed changes
 
             <x-application-wizard-step title="Personal Information" :index="0">
                 <div class="application-form-panel">
@@ -74,6 +83,7 @@
                                         height="100" style="object-fit: cover;">
                                 </div>
 
+<<<<<<< Updated upstream
                                 <div class="upload-files">
                                     <label class="file-upload image-upbtn">
                                         <i class="feather-upload me-2"></i>Upload Photo
@@ -88,6 +98,208 @@
                                             data-max-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_WIDTH }}"
                                             data-max-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_HEIGHT }}"
                                             aria-describedby="profile-image-help profile-image-feedback">
+=======
+                        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                            <div data-field>
+                                <label for="first-name" class="{{ $labelClass }}">First name <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <input id="first-name" type="text" name="first_name"
+                                    class="{{ $inputClass }} @error('first_name') border-red-500 @enderror"
+                                    value="{{ old('first_name', $user->first_name) }}" minlength="2" maxlength="100"
+                                    autocomplete="given-name" required aria-describedby="first-name-error">
+                                <p id="first-name-error"
+                                    class="{{ $errorClass }} {{ $errors->has('first_name') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('first_name')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <div data-field>
+                                <label for="middle-name" class="{{ $labelClass }}">Middle name</label>
+                                <input id="middle-name" type="text" name="middle_name"
+                                    class="{{ $inputClass }} @error('middle_name') border-red-500 @enderror"
+                                    value="{{ old('middle_name') }}" maxlength="100" autocomplete="additional-name"
+                                    aria-describedby="middle-name-error">
+                                <p id="middle-name-error"
+                                    class="{{ $errorClass }} {{ $errors->has('middle_name') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('middle_name')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <div data-field>
+                                <label for="last-name" class="{{ $labelClass }}">Last name <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <input id="last-name" type="text" name="last_name"
+                                    class="{{ $inputClass }} @error('last_name') border-red-500 @enderror"
+                                    value="{{ old('last_name', $user->last_name) }}" minlength="2" maxlength="100"
+                                    autocomplete="family-name" required aria-describedby="last-name-error">
+                                <p id="last-name-error"
+                                    class="{{ $errorClass }} {{ $errors->has('last_name') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('last_name')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <div data-field>
+                                <label for="phone" class="{{ $labelClass }}">Phone number <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <input id="phone" type="tel" name="phone"
+                                    class="{{ $inputClass }} @error('phone') border-red-500 @enderror"
+                                    value="{{ old('phone', $user->phone) }}" autocomplete="tel"
+                                    pattern="\+?[0-9\s().-]{7,20}" maxlength="20" required
+                                    aria-describedby="phone-error">
+                                <p id="phone-error"
+                                    class="{{ $errorClass }} {{ $errors->has('phone') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('phone')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <div data-field>
+                                <label for="email" class="{{ $labelClass }}">Email address <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <input id="email" type="email" name="email"
+                                    class="{{ $inputClass }} @error('email') border-red-500 @enderror"
+                                    value="{{ old('email', $user->email) }}" autocomplete="email" maxlength="255"
+                                    required aria-describedby="email-error">
+                                <p id="email-error"
+                                    class="{{ $errorClass }} {{ $errors->has('email') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('email')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <x-location-select field="country_code" label="Country" :selected="old('country_code', $user->country_code)" :input-class="$inputClass" :label-class="$labelClass" :error-class="$errorClass" :required="true" />
+                            <div data-field>
+                                <label for="date-of-birth" class="{{ $labelClass }}">Date of birth <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <input id="date-of-birth" type="date" name="date_of_birth"
+                                    class="{{ $inputClass }} @error('date_of_birth') border-red-500 @enderror"
+                                    value="{{ old('date_of_birth', $user->date_of_birth?->format('Y-m-d')) }}"
+                                    min="1900-01-01" max="{{ now()->subDay()->toDateString() }}" required
+                                    aria-describedby="date-of-birth-error">
+                                <p id="date-of-birth-error"
+                                    class="{{ $errorClass }} {{ $errors->has('date_of_birth') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('date_of_birth')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <div data-field>
+                                <label for="gender" class="{{ $labelClass }}">Gender <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <select id="gender" name="gender"
+                                    class="{{ $inputClass }} @error('gender') border-red-500 @enderror" required
+                                    aria-describedby="gender-error">
+                                    <option value="">Select gender</option>
+                                    @foreach (['male' => 'Male', 'female' => 'Female', 'other' => 'Other'] as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('gender') === $value)>
+                                            {{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="gender-error"
+                                    class="{{ $errorClass }} {{ $errors->has('gender') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('gender')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <div data-field>
+                                <label for="marital-status" class="{{ $labelClass }}">Marital status <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <select id="marital-status" name="marital_status"
+                                    class="{{ $inputClass }} @error('marital_status') border-red-500 @enderror"
+                                    required aria-describedby="marital-status-error">
+                                    <option value="">Select status</option>
+                                    @foreach (['single' => 'Single', 'married' => 'Married', 'Other' => 'Other'] as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('marital_status') === $value)>
+                                            {{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="marital-status-error"
+                                    class="{{ $errorClass }} {{ $errors->has('marital_status') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('marital_status')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <div data-field>
+                                <label for="zipcode" class="{{ $labelClass }}">Zipcode <span
+                                        class="text-red-600 dark:text-red-400">*</span></label>
+                                <input id="zipcode" type="text" name="zipcode"
+                                    class="{{ $inputClass }} @error('zipcode') border-red-500 @enderror"
+                                    value="{{ old('zipcode', $user->zipcode) }}" minlength="3" maxlength="20"
+                                    pattern="[A-Za-z0-9\s-]{3,20}" autocomplete="postal-code" required
+                                    aria-describedby="zipcode-error">
+                                <p id="zipcode-error"
+                                    class="{{ $errorClass }} {{ $errors->has('zipcode') ? 'block' : 'hidden' }}"
+                                    data-validation-message aria-live="polite">
+                                    @error('zipcode')
+                                        {{ $message }}
+                                    @enderror
+                                </p>
+                            </div>
+                            <x-location-select field="state" label="State" :selected="$selectedState" :input-class="$inputClass" :label-class="$labelClass" :error-class="$errorClass" :required="true" />
+                            <x-location-select field="city" label="City" :selected="$selectedCity" :input-class="$inputClass" :label-class="$labelClass" :error-class="$errorClass" :required="true" />
+                        </div>
+
+                        <div data-field>
+                            <label for="address" class="{{ $labelClass }}">Address <span
+                                    class="text-red-600 dark:text-red-400">*</span></label>
+                            <textarea id="address" name="address" rows="3"
+                                class="{{ $inputClass }} resize-y @error('address') border-red-500 @enderror" minlength="5" maxlength="255"
+                                autocomplete="street-address" required aria-describedby="address-error">{{ old('address', $user->address) }}</textarea>
+                            <p id="address-error"
+                                class="{{ $errorClass }} {{ $errors->has('address') ? 'block' : 'hidden' }}"
+                                data-validation-message aria-live="polite">
+                                @error('address')
+                                    {{ $message }}
+                                @enderror
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <button type="button" data-wizard-next
+                            class="inline-flex h-10 items-center justify-center rounded-lg  px-4 text-theme-sm font-medium text-white transition  focus:outline-none focus:ring-2 focus:ring-brand-500/30 btn btn-primary">Next</button>
+                    </div>
+                </x-application-wizard-step>
+
+                <x-application-wizard-step :title="$wizardSteps[1]" :index="1" :initially-hidden="$initialStep !== 1"
+                    description="Choose one accepted identification method and upload its document.">
+                    <div class="space-y-6">
+                        <fieldset class="rounded-lg border border-gray-200 p-4 dark:border-gray-800 sm:p-5" data-field>
+                            <legend class="text-theme-sm font-semibold text-gray-900 dark:text-white/90">Identification
+                                method <span class="text-red-600 dark:text-red-400">*</span></legend>
+                            <p id="identification-type-help"
+                                class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">Select the document you
+                                will use to verify your identity.</p>
+
+                            <div class="mt-5 grid gap-3 sm:grid-cols-2"
+                                aria-describedby="identification-type-help identification-type-error">
+                                @foreach ($identificationTypes as $identificationType)
+                                    @php($isSelected = old('identification_type') === $identificationType->value)
+                                    <label
+                                        class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition focus-within:ring-2 focus-within:ring-brand-500/20 {{ $isSelected ? 'border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/10' : 'border-gray-200 bg-white hover:border-brand-300 dark:border-gray-800 dark:bg-white/[0.02] dark:hover:border-brand-500/50' }}"
+                                        data-identification-option>
+                                        <input id="identification-type-{{ $identificationType->value }}"
+                                            type="radio" name="identification_type"
+                                            value="{{ $identificationType->value }}"
+                                            class="mt-0.5 size-4 shrink-0 accent-brand-500" required
+                                            @checked($isSelected) data-identification-type
+                                            data-identification-label="{{ $identificationType->label() }}">
+                                        <span
+                                            class="text-theme-sm font-medium text-gray-800 dark:text-white/90">{{ $identificationType->label() }}</span>
+>>>>>>> Stashed changes
                                     </label>
                                     <span id="profile-image-help">
                                         JPG, PNG, or WebP. Max {{ $profileImageMaxMb }}MB. Dimensions
@@ -468,6 +680,7 @@
                             <dt>Contact</dt>
                             <dd data-summary-contact>{{ old('phone', $user->phone) ?: 'Not provided' }}</dd>
                         </div>
+<<<<<<< Updated upstream
                         <div>
                             <dt>Origin</dt>
                             <dd data-summary-origin>
@@ -482,6 +695,18 @@
                             <dt>Nationality</dt>
                             <dd data-summary-nationality>
                                 {{ old('nationality', $user->nationality ?? 'Nigeria') ?: 'Not provided' }}</dd>
+=======
+                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
+                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">State and city</dt>
+                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-origin>
+                                {{ collect([$selectedCity, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
+                            </dd>
+                        </div>
+                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
+                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Country</dt>
+                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-country>
+                                {{ $user->country ?: 'Not provided' }}</dd>
+>>>>>>> Stashed changes
                         </div>
                     </dl>
                 </div>
