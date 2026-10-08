@@ -74,12 +74,7 @@ return new class extends Migration
             $this->dropColumnsIfTheyExist('application_forms', ['country', 'state', 'city']);
         }
 
-        Schema::withoutForeignKeyConstraints(function () {
-            Schema::dropIfExists('city');
-            Schema::dropIfExists('cities');
-            Schema::dropIfExists('country');
-            Schema::dropIfExists('countries');
-        });
+        // Reference-table cleanup is now an explicit, backup-gated deployment step.
     }
 
     /**

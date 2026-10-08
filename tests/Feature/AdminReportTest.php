@@ -4,6 +4,8 @@ use App\Enums\JobStatus;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
+use App\Services\AdminReportService;
+use Illuminate\Http\Request;
 
 it('renders administrative reports with live recruitment and platform metrics', function () {
     $admin = User::factory()->admin()->create();
@@ -98,4 +100,15 @@ it('prevents non-admin users from viewing or exporting administrative reports', 
     $this->actingAs($employer)
         ->get(route('Reports.export'))
         ->assertForbidden();
+});
+
+it('reports canonical states by country while retaining historical geography', function () {
+    User::factory()->applicant()->create(['country_code' => 'IN', 'country' => 'India', 'state' => 'Punjab', 'city' => 'Amritsar']);
+    User::factory()->applicant()->create(['country_code' => 'PK', 'country' => 'Pakistan', 'state' => 'Punjab', 'city' => 'Lahore']);
+    User::factory()->applicant()->create(['nationality' => 'Nigerian', 'state_of_origin' => 'Bayelsa']);
+
+    $report = app(AdminReportService::class)->getReport(Request::create('/Reports'));
+    $geography = collect($report['geography']['applicantsByState'])->pluck('total', 'state')->all();
+
+    expect($geography)->toMatchArray(['Punjab, India' => 1, 'Punjab, Pakistan' => 1, 'Bayelsa, Nigerian' => 1]);
 });

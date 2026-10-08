@@ -1,3 +1,13 @@
+<x-admin-layout title="Application Status">
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h3 class="page-title">Application Status</h3>
+                <p class="text-muted mb-0">{{ $application->reference }} - {{ $application->job->title }}</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ route('client.jobs') }}" class="btn btn-outline-secondary">Back to Jobs</a>
+
 <x-layout>
     <main>
         <div class="mx-auto max-w-(--breakpoint-2xl) p-4 pb-20 md:p-6 md:pb-6">
@@ -16,6 +26,7 @@
                         </ol>
                     </nav>
                 </div>
+
             </div>
             <!-- Breadcrumb End -->
 

@@ -38,16 +38,16 @@
             <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->address ?? 'Not provided' }}</dd>
         </div>
         <div>
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">Nationality</dt>
-            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->nationality ?? 'Not provided' }}</dd>
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ $user->country ? 'Country' : 'Nationality (historical)' }}</dt>
+            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->country ?: $user->nationality ?: 'Not provided' }}</dd>
         </div>
         <div>
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">State of Origin</dt>
-            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->stateOfOrigin->name ?? 'Not provided' }}</dd>
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ $user->state ? 'State' : 'State of origin (historical)' }}</dt>
+            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->state ?: $user->state_of_origin ?: 'Not provided' }}</dd>
         </div>
         <div>
-            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">LGA</dt>
-            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->localGovernment->name ?? 'Not provided' }}</dd>
+            <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">{{ $user->city ? 'City' : 'LGA (historical)' }}</dt>
+            <dd class="mt-1 text-sm font-medium text-gray-900">{{ $user->city ?: $user->local_government_area ?: 'Not provided' }}</dd>
         </div>
         <div>
             <dt class="text-xs font-medium uppercase tracking-wide text-gray-500">Registered</dt>

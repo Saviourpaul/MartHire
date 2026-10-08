@@ -168,6 +168,26 @@
 
                                     <div class="hidden xl:block"></div>
 
+            @if (session('success'))
+                <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 5000)" class="mb-6 rounded-lg border border-success-500/30 bg-success-50 px-4 py-3 text-sm font-medium text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-400">{{ session('success') }}</div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-6 rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-sm font-medium text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">Please review the highlighted fields and try again.</div>
+            @endif
+
+            <div class="grid grid-cols-12 gap-4 md:gap-6">
+                <div class="col-span-12 space-y-6 xl:col-span-8">
+                    <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+                            <img src="{{ $application->applicant->profileImageUrl() }}" alt="{{ $application->first_name }} {{ $application->last_name }}" class="size-24 rounded-full object-cover">
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ $application->first_name }} {{ $application->last_name }}</h2>
+                                <p class="text-theme-sm text-gray-500 dark:text-gray-400">{{ $application->email }} - {{ $application->phone }}</p>
+                                <div class="mt-3 flex flex-wrap items-center gap-3">
+                                    <span class="rounded-full px-2.5 py-1 text-theme-xs font-medium {{ $statusClass($application->status->label()) }}">{{ $application->status->label() }}</span>
+                                    <a href="{{ route('applicants.profile.show', $application->applicant) }}" class="text-theme-sm font-medium text-brand-500 hover:text-brand-600">View linked profile</a>
+
                                 </div>
                             </div>
                         </div>

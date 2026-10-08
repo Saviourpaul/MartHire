@@ -101,3 +101,16 @@ it('protects admins from modifying or deleting themselves', function () {
         'deleted_at' => null,
     ]);
 });
+
+it('searches canonical locations and preserves historical location search', function () {
+    $admin = User::factory()->admin()->create();
+    $canonical = User::factory()->applicant()->create(['country_code' => 'CA', 'country' => 'Canada', 'state' => 'Ontario', 'city' => 'Toronto']);
+    $legacy = User::factory()->applicant()->create(['nationality' => 'Nigerian', 'state_of_origin' => 'Lagos', 'local_government_area' => 'Historical LGA']);
+
+    $this->actingAs($admin)->get(route('applicants', ['search' => 'Canada Ontario Toronto']))
+        ->assertOk()->assertViewHas('users', fn ($users): bool => $users->count() === 1 && $users->first()->id === $canonical->id
+            && $users->first()->city === 'Toronto');
+    $this->actingAs($admin)->get(route('applicants', ['search' => 'Historical LGA']))
+        ->assertOk()->assertViewHas('users', fn ($users): bool => $users->count() === 1 && $users->first()->id === $legacy->id
+            && $users->first()->local_government_area === 'Historical LGA');
+});
