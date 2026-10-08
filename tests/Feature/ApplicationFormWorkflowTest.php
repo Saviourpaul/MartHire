@@ -1,34 +1,20 @@
 <?php
 
 use App\Enums\ApplicationDocumentType;
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
 use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
 use App\Enums\CandidatePipelineStage;
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
+
 use App\Enums\CandidatePipelineStage;
->>>>>>> Stashed changes
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
+use App\Enums\ApplicationStatus;
+use App\Models\ApplicationDocument;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
 use Illuminate\Support\Facades\Http;
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -106,10 +92,6 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee('application-wizard', false)
         ->assertSee('data-state-of-origin', false)
         ->assertSee('data-local-government-area', false)
-<<<<<<< HEAD
-        ->assertSee('data-lga-url=', false)
-<<<<<<< HEAD
-=======
         ->assertSee('Education')
         ->assertSee('Review')
         ->assertSee('data-wizard-step="0"', false)
@@ -131,16 +113,9 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee('data-location-city', false)
         ->assertSee('data-locations-cities="/api/locations/cities', false)
         ->assertDontSee('data-locations-cities="http', false)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
-=======
+
         ->assertSee('data-lga-url="/locations/states/', false)
         ->assertDontSee('data-lga-url="http', false)
->>>>>>> feature
         ->assertSee('id="profile-image-preview"', false)
         ->assertSee('data-profile-image-trigger', false)
         ->assertSee('data-remove-profile-image', false)
@@ -158,8 +133,6 @@ it('renders the application wizard with dependent location and document controls
         ->assertDontSee('NIN number')
         ->assertSee('Choose a photo to preview it before submission.')
         ->assertSee('Add another document');
-<<<<<<< HEAD
-=======
         ->assertSee('name="identification_type"', false)
         ->assertSee('name="identification_document"', false)
         ->assertSee('data-identification-document-dropzone', false)
@@ -172,12 +145,7 @@ it('renders the application wizard with dependent location and document controls
         ->assertDontSee('NIN number')
         ->assertSee('Choose a photo to preview it')
         ->assertSee('data-add-document', false);
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
+
 });
 
 it('redirects guest applicants to sign in before an application can be started', function () {

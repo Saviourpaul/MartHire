@@ -463,22 +463,14 @@
 
                 </div>
                 <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                    <button @click="isProfileInfoModal = false" type="button"
-=======
                     <button @click="closeModal('isProfileInfoModal')" data-profile-cancel type="button"
->>>>>>> Stashed changes
-=======
+
                     <button @click="closeModal('isProfileInfoModal')" data-profile-cancel type="button"
->>>>>>> Stashed changes
-=======
+
                     <button @click="isProfileInfoModal = false" type="button"
 
                     <button @click="closeModal('isProfileInfoModal')" type="button"
 
->>>>>>> a7e00aad67a3c0bcd84f8f4c127f628b90733b69
                         class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">
                         Cancel
                     </button>

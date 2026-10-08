@@ -4,18 +4,12 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
+
 use Illuminate\Support\Facades\Hash;
->>>>>>> feature
+
+
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -42,25 +36,19 @@ function validApplicantProfilePayload(array $overrides = []): array
         'profile_image' => fakeProfileImage(),
         'phone' => '+2348012345678',
         'address' => '12 Market Road',
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        'nationality' => 'Nigeria',
-        'state_of_origin' => 'Lagos',
-        'local_government_area' => 'Ikeja',
-<<<<<<< HEAD
+        'country_code' => 'NG',
+        'state' => 'Lagos',
+        'city' => 'Ikeja',
+
+        'country_code' => 'NG',
+        'state' => 'Lagos',
+        'city' => 'Ikeja',
+
         'zipcode' => '100001',
-=======
         'country_code' => 'NG',
         'state' => 'Lagos',
         'city' => 'Ikeja',
->>>>>>> Stashed changes
-=======
-        'country_code' => 'NG',
-        'state' => 'Lagos',
-        'city' => 'Ikeja',
->>>>>>> Stashed changes
-=======
->>>>>>> feature
+
     ], $overrides);
 }
 
@@ -191,21 +179,11 @@ test('applicants must provide setup fields before saving profile changes', funct
             'date_of_birth',
             'phone',
             'address',
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
             'nationality',
             'state_of_origin',
             'local_government_area',
-<<<<<<< HEAD
             'zipcode',
-=======
-            'country_code',
->>>>>>> Stashed changes
-=======
-            'country_code',
->>>>>>> Stashed changes
-=======
->>>>>>> feature
+
         ]);
 });
 

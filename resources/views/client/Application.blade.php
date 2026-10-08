@@ -123,7 +123,7 @@
                                             data-max-width="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_WIDTH }}"
                                             data-max-height="{{ StoreApplicationFormRequest::PROFILE_IMAGE_MAX_HEIGHT }}"
                                             aria-describedby="profile-image-help profile-image-feedback">
-=======
+
                 @if ($errors->any())
                     <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-theme-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
                         data-server-validation-summary role="alert">
@@ -608,22 +608,10 @@
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-contact>
                                 {{ old('phone', $user->phone) ?: 'Not provided' }}</dd>
                         </div>
-
                         <div>
                             <dt>Origin</dt>
                             <dd data-summary-origin>
                                 {{ collect([$selectedLga, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
-                            </dd>
-                        </div>
-
-                        <div>
-                            <dt>Qualification Documents</dt>
-                            <dd data-summary-documents>{{ $educationRows->count() }}</dd>
-
-                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
-                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">State and city</dt>
-                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-origin>
-                                {{ collect([$selectedCity, $selectedState])->filter()->implode(', ') ?:'Not provided' }}
                             </dd>
                         </div>
                         <div class="border-t border-gray-100 p-4 dark:border-gray-800">
