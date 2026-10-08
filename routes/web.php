@@ -37,7 +37,6 @@ Route::get('Dashboard', DashboardController::class)
     ->name('dashboard');
 
 
-
 Route::get('Job-Application.', DashboardController::class)
     ->middleware(['auth', 'role:applicant'])
     ->name('client.Job-Application.');
