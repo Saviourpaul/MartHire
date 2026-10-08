@@ -41,38 +41,38 @@ class UserManagementController extends Controller
         );
     }
 
-   /*
-    public function store(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', 'min:8', Rules\Password::defaults()],
-            'role' => ['required', Rule::in($this->getAllowedRoles())],
-            'status' => ['required', Rule::in(UserStatus::values())],
-        ]);
+    /*
+     public function store(Request $request): RedirectResponse
+     {
+         $data = $request->validate([
+             'first_name' => ['required', 'string', 'max:255'],
+             'last_name' => ['required', 'string', 'max:255'],
+             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+             'password' => ['required', 'confirmed', 'min:8', Rules\Password::defaults()],
+             'role' => ['required', Rule::in($this->getAllowedRoles())],
+             'status' => ['required', Rule::in(UserStatus::values())],
+         ]);
 
-        $user = new User([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => UserRole::from($data['role']),
-        ]);
+         $user = new User([
+             'first_name' => $data['first_name'],
+             'last_name' => $data['last_name'],
+             'email' => $data['email'],
+             'password' => $data['password'],
+             'role' => UserRole::from($data['role']),
+         ]);
 
-        $this->setStatus($user, UserStatus::from($data['status']));
-        $user->save();
+         $this->setStatus($user, UserStatus::from($data['status']));
+         $user->save();
 
-        return back()->with('success', 'User created successfully.');
-    } */
+         return back()->with('success', 'User created successfully.');
+     } */
 
     public function update(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
-            //'first_name' => ['required', 'string', 'max:255'],
-            //'last_name' => ['required', 'string', 'max:255'],
-           // 'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user)],
+            // 'first_name' => ['required', 'string', 'max:255'],
+            // 'last_name' => ['required', 'string', 'max:255'],
+            // 'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user)],
             'role' => ['required', Rule::in($this->getAllowedRoles())],
             'status' => ['required', Rule::in(UserStatus::values())],
         ]);
@@ -85,9 +85,9 @@ class UserManagementController extends Controller
         }
 
         $user->fill([
-            //'first_name' => $data['first_name'],
-           // 'last_name' => $data['last_name'],
-           // 'email' => $data['email'],
+            // 'first_name' => $data['first_name'],
+            // 'last_name' => $data['last_name'],
+            // 'email' => $data['email'],
             'role' => $role,
         ]);
 
@@ -168,17 +168,24 @@ class UserManagementController extends Controller
                 'status',
                 'phone',
                 'profile_image_path',
+                'country_code',
+                'country',
+                'state',
+                'city',
+                'nationality',
+                'state_of_origin',
+                'local_government_area',
                 'created_at',
                 'approved_at',
                 'suspended_at',
             ])
-            ->when($role, fn($query) => $query->role($role))
-            ->when($status, fn($query) => $query->status($status))
+            ->when($role, fn ($query) => $query->role($role))
+            ->when($status, fn ($query) => $query->status($status))
             ->when($search !== '', function ($query) use ($search) {
                 collect(preg_split('/\s+/', $search) ?: [])
                     ->filter()
                     ->each(function (string $term) use ($query) {
-                        $term = '%' . $term . '%';
+                        $term = '%'.$term.'%';
 
                         $query->where(function ($query) use ($term) {
                             $query->where('first_name', 'like', $term)
@@ -188,6 +195,10 @@ class UserManagementController extends Controller
                                 ->orWhere('local_government_area', 'like', $term)
                                 ->orWhere('state_of_origin', 'like', $term)
                                 ->orWhere('nationality', 'like', $term);
+                            $query->orWhere('country', 'like', $term)
+                                ->orWhere('country_code', 'like', $term)
+                                ->orWhere('state', 'like', $term)
+                                ->orWhere('city', 'like', $term);
                         });
                     });
             })
@@ -198,18 +209,18 @@ class UserManagementController extends Controller
                 $query->whereDate('created_at', '<=', $request->input('created_to'));
             })
             ->when($request->filled('email'), function ($query) use ($request) {
-                $query->where('email', 'like', '%' . $request->string('email')->trim() . '%');
+                $query->where('email', 'like', '%'.$request->string('email')->trim().'%');
             })
             ->when($request->filled('phone'), function ($query) use ($request) {
-                $query->where('phone', 'like', '%' . $request->string('phone')->trim() . '%');
+                $query->where('phone', 'like', '%'.$request->string('phone')->trim().'%');
             })
-            ->when(!$role && $request->filled('role'), function ($query) use ($request) {
+            ->when(! $role && $request->filled('role'), function ($query) use ($request) {
                 if (in_array($request->input('role'), UserRole::values(), true)) {
                     $query->role($request->input('role'));
                 }
 
             })
-            ->when(!$status && $request->filled('status'), function ($query) use ($request) {
+            ->when(! $status && $request->filled('status'), function ($query) use ($request) {
                 if (in_array($request->input('status'), UserStatus::values(), true)) {
                     $query->status($request->input('status'));
                 }

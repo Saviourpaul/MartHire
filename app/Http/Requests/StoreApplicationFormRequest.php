@@ -3,9 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Enums\ApplicationDocumentType;
+use App\Http\Requests\Concerns\ValidatesLocationSelection;
 use App\Models\ApplicationForm;
 use App\Models\Job;
-use App\Models\NigeriaState;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
@@ -13,6 +13,8 @@ use Illuminate\Validation\Validator;
 
 class StoreApplicationFormRequest extends FormRequest
 {
+    use ValidatesLocationSelection;
+
     public const PROFILE_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'webp'];
 
     public const PROFILE_IMAGE_MAX_KB = 5120;
@@ -72,12 +74,12 @@ class StoreApplicationFormRequest extends FormRequest
             'last_name' => ['bail', 'required', 'string', 'min:2', 'max:100', 'regex:'.self::PERSON_NAME_PATTERN],
             'email' => ['bail', 'required', 'string', 'lowercase', 'email:rfc', 'max:255'],
             'phone' => ['bail', 'required', 'string', 'regex:'.self::PHONE_PATTERN],
-            'nationality' => ['bail', 'required', 'string', 'min:2', 'max:100', 'regex:'.self::PERSON_NAME_PATTERN],
+            'country_code' => ['bail', 'required', 'string', 'regex:/^[A-Z]{2}$/D'],
             'date_of_birth' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:1900-01-01', 'before:today'],
             'gender' => ['bail', 'required', Rule::in(['male', 'female', 'other'])],
             'marital_status' => ['bail', 'required', Rule::in(['single', 'married', 'Other'])],
-            'state_of_origin' => ['bail', 'required', 'string', 'max:255', Rule::exists('nigeria_states', 'name')],
-            'local_government_area' => ['bail', 'required', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
             'address' => ['bail', 'required', 'string', 'min:5', 'max:255'],
             'zipcode' => ['bail', 'required', 'string', 'regex:'.self::ZIPCODE_PATTERN],
             'identification_type' => [
@@ -117,7 +119,7 @@ class StoreApplicationFormRequest extends FormRequest
             'middle_name.regex' => 'The middle name may only contain letters, spaces, hyphens, and apostrophes.',
             'last_name.regex' => 'The last name may only contain letters, spaces, hyphens, and apostrophes.',
             'phone.regex' => 'Enter a valid phone number using 7 to 20 digits, with an optional leading plus sign.',
-            'nationality.regex' => 'The nationality may only contain letters, spaces, hyphens, and apostrophes.',
+            'country_code.regex' => 'Select a valid country from the list.',
             'date_of_birth.date_format' => 'Enter the date of birth in YYYY-MM-DD format.',
             'date_of_birth.after_or_equal' => 'Enter a realistic date of birth.',
             'date_of_birth.before' => 'The date of birth must be before today.',
@@ -147,8 +149,7 @@ class StoreApplicationFormRequest extends FormRequest
             'middle_name' => 'middle name',
             'last_name' => 'last name',
             'date_of_birth' => 'date of birth',
-            'state_of_origin' => 'state of origin',
-            'local_government_area' => 'local government area',
+            'country_code' => 'country',
             'identification_type' => 'identification method',
             'identification_document' => 'identification document',
             'education_documents' => 'education documents',
@@ -176,21 +177,7 @@ class StoreApplicationFormRequest extends FormRequest
                 $validator->errors()->add('job', 'You have already applied for this job.');
             }
 
-            $state = NigeriaState::query()
-                ->where('name', (string) $this->input('state_of_origin'))
-                ->first();
-
-            if (! $state) {
-                return;
-            }
-
-            $hasLga = $state->localGovernmentAreas()
-                ->where('name', (string) $this->input('local_government_area'))
-                ->exists();
-
-            if (! $hasLga) {
-                $validator->errors()->add('local_government_area', 'Select a local government area in the selected state.');
-            }
+            $this->validateLocation($validator);
         });
     }
 }

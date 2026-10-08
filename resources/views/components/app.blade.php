@@ -92,26 +92,26 @@
                         <a href="{{ route('home') }}" class="mb-4 inline-block">
                             <img src="{{ asset('assets/images/logo2.png') }}" height="100" width="300" alt="MartHire">
                         </a>
-                        <p>One platform to manage recruitment across Africa.</p>
+                        <p>One platform to manage recruitment across  African businesses, and international organisations</p>
                         <span class="inline-block font-semibold text-lg font-primary mt-2 mb-2">Follow us</span>
                     <ul class="social-icons footer-social-icons">
                             <li>
-                                <a href="#">
+                                <a href="https://www.facebook.com/MartHirerecruit" target="_blank">
                                     <i class="fa-brands fa-facebook-f"></i>
                                 </a>
                             </li>
                             <li>
-                                <a href="#">
+                                <a href="https://x.com/MartHirerecruit" target="_blank">
                                     <i class="fa-brands fa-twitter"></i>
                                 </a>
                             </li>
                             <li>
-                                <a href="#">
+                                <a href="https://www.instagram.com/marthirerecruit" target="_blank">
                                     <i class="fa-brands fa-instagram"></i>
                                 </a>
                             </li>
                             <li>
-                                <a href="#">
+                                <a href="https://www.linkedin.com/company/marthire/" target="_blank">
                                     <i class="fa-brands fa-linkedin-in"></i>
                                 </a>
                             </li>

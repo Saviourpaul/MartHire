@@ -53,12 +53,13 @@ class ApplicationFormService
                         'last_name',
                         'email',
                         'phone',
-                        'nationality',
+                        'country_code',
+                        'country',
+                        'state',
+                        'city',
                         'date_of_birth',
                         'gender',
                         'marital_status',
-                        'state_of_origin',
-                        'local_government_area',
                         'address',
                         'zipcode',
                     ]),
@@ -148,9 +149,10 @@ class ApplicationFormService
             'date_of_birth',
             'phone',
             'address',
-            'nationality',
-            'state_of_origin',
-            'local_government_area',
+            'country_code',
+            'country',
+            'state',
+            'city',
             'zipcode',
         ]);
 
@@ -158,7 +160,9 @@ class ApplicationFormService
             $profileData['profile_image_path'] = $profileImagePath;
         }
 
-        $applicant->fill($profileData)->save();
+        $applicant->fill($profileData);
+        $applicant->location_confirmed_at = now();
+        $applicant->save();
     }
 
     /**

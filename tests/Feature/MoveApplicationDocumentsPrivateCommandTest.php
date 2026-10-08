@@ -8,10 +8,10 @@ it('previews public application documents without moving files by default', func
     Storage::fake('local');
 
     $document = ApplicationDocument::factory()->create([
-        'file_path' => 'application-documents/1/nin.pdf',
+        'file_path' => 'application-documents/1/national-identity-card.pdf',
     ]);
 
-    Storage::disk('public')->put($document->file_path, 'NIN document');
+    Storage::disk('public')->put($document->file_path, 'National identity document');
 
     $this->artisan('app:move-application-documents-private')
         ->expectsOutputToContain('Dry run')
@@ -26,10 +26,10 @@ it('moves public application documents into private storage when committed', fun
     Storage::fake('local');
 
     $document = ApplicationDocument::factory()->create([
-        'file_path' => 'application-documents/1/bvn.pdf',
+        'file_path' => 'application-documents/1/international-passport.pdf',
     ]);
 
-    Storage::disk('public')->put($document->file_path, 'BVN document');
+    Storage::disk('public')->put($document->file_path, 'Passport document');
 
     $this->artisan('app:move-application-documents-private', ['--commit' => true])
         ->assertSuccessful();

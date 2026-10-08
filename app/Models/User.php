@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Jobs\SendVerificationEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
@@ -42,6 +44,10 @@ class User extends Authenticatable
         'nationality',
         'state_of_origin',
         'local_government_area',
+        'country_code',
+        'country',
+        'state',
+        'city',
     ];
 
     /**
@@ -73,7 +79,10 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'welcome_email_queued_at' => 'datetime',
+            'welcome_email_sent_at' => 'datetime',
             'date_of_birth' => 'date',
+            'location_confirmed_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
             'status' => UserStatus::class,
@@ -135,9 +144,7 @@ class User extends Authenticatable
             'date_of_birth' => 'Date of birth',
             'phone' => 'Phone number',
             'address' => 'Address',
-            'nationality' => 'Nationality',
-            'state_of_origin' => 'State of origin',
-            'local_government_area' => 'Local government area',
+            'location_confirmed_at' => 'Country, state and city',
         ];
     }
 
@@ -150,9 +157,19 @@ class User extends Authenticatable
             return [];
         }
 
-        return collect(self::applicantProfileFields())
-            ->filter(fn (string $label, string $field): bool => blank($this->{$field}))
-            ->all();
+        $fields = self::applicantProfileFields();
+        // Grandfather completed legacy locations only until the next successful edit/application.
+        $legacyComplete = filled($this->nationality) && filled($this->state_of_origin) && filled($this->local_government_area);
+
+        return collect($fields)->filter(function (string $label, string $field) use ($legacyComplete): bool {
+            if ($field === 'location_confirmed_at') {
+                return $this->location_confirmed_at
+                    ? blank($this->country_code) || blank($this->country)
+                    : ! $legacyComplete;
+            }
+
+            return blank($this->{$field});
+        })->all();
     }
 
     public function applicantProfileCompletionPercentage(): int
@@ -234,6 +251,15 @@ class User extends Authenticatable
         $this->suspended_at = null;
 
         return $this->save();
+    }
+
+    /**
+     * Queue Laravel's standard signed verification notification instead of
+     * performing SMTP work during registration or a resend HTTP request.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        SendVerificationEmail::dispatch((int) $this->getKey())->afterCommit();
     }
 
     public function suspend(): bool

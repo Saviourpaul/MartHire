@@ -1,18 +1,16 @@
 <x-mail::message>
+# Welcome to MartHire, <small>{{ $user->first_name }}</small>
 
-# Welcome to NextHire
+Your email Has been verified. Here is what to do next:
 
-Hello {{ trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: $user->username }},
+- Browse open vacancies
+- Apply and track your application status in one place
 
-Your account has been successfully created.
-
-<x-mail::button :url="url('/login')">
-Login
+<x-mail::button :url="$dashboardUrl">
+Go to My Dashboard
 </x-mail::button>
 
-Thank you for choosing NextHire.
-
 Thanks,<br>
-{{ config('app.name') }}
+The MartHire Team
 
 </x-mail::message>

@@ -62,13 +62,20 @@
                 No problem. Just let us know your email address and we will email you a password reset link.
               </p>
             </div>
-            @if (session('success'))
+            @if (session('status'))
               <div x-data="{ show: true }" x-show="show" x-transition
                 x-init="setTimeout(() => show = false, 6000)"
+                role="status"
                 class="mb-5 rounded-lg border border-success-500/30 bg-success-50 px-4 py-3 text-sm font-medium text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-400">
-                {{ session('success') }}
+                {{ session('status') }}
               </div>
             @endif
+            @error('mail')
+              <div role="alert"
+                class="mb-5 rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-sm font-medium text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">
+                {{ $message }}
+              </div>
+            @enderror
             <div>
               
               <form method="POST" action="{{ route('password.email') }}">
@@ -79,7 +86,7 @@
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                       Email<span class="text-error-500">*</span>
                     </label>
-                    <input type="email" id="email" name="email" placeholder="info@gmail.com" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" 
+                    <input type="email" id="email" name="email" placeholder="info@gmail.com" value="{{ old('email') }}" required autofocus autocomplete="email"
                       class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                       <x-input-error :messages="$errors->get('email')" />
                   </div>
