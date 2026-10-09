@@ -4,10 +4,17 @@ use App\Enums\ApplicationDocumentType;
 use App\Enums\ApplicationStatus;
 use App\Models\ApplicationDocument;
 use App\Enums\CandidatePipelineStage;
+
+use App\Enums\CandidatePipelineStage;
+use App\Enums\ApplicationStatus;
+use App\Models\ApplicationDocument;
+use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -85,6 +92,28 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee('application-wizard', false)
         ->assertSee('data-state-of-origin', false)
         ->assertSee('data-local-government-area', false)
+        ->assertSee('Education')
+        ->assertSee('Review')
+        ->assertSee('data-wizard-step="0"', false)
+        ->assertSee('data-wizard-step="1"', false)
+        ->assertSee('data-wizard-step="2"', false)
+        ->assertSee('data-wizard-step="3"', false)
+        ->assertSeeInOrder([
+            'data-wizard-step="1"',
+            'hidden',
+            'data-wizard-step="2"',
+            'hidden',
+            'data-wizard-step="3"',
+            'hidden',
+        ], false)
+        ->assertSee('data-overall-progress', false)
+        ->assertSee('application-wizard', false)
+        ->assertSee('data-location-country_code', false)
+        ->assertSee('data-location-state', false)
+        ->assertSee('data-location-city', false)
+        ->assertSee('data-locations-cities="/api/locations/cities', false)
+        ->assertDontSee('data-locations-cities="http', false)
+
         ->assertSee('data-lga-url="/locations/states/', false)
         ->assertDontSee('data-lga-url="http', false)
         ->assertSee('id="profile-image-preview"', false)
@@ -104,6 +133,19 @@ it('renders the application wizard with dependent location and document controls
         ->assertDontSee('NIN number')
         ->assertSee('Choose a photo to preview it before submission.')
         ->assertSee('Add another document');
+        ->assertSee('name="identification_type"', false)
+        ->assertSee('name="identification_document"', false)
+        ->assertSee('data-identification-document-dropzone', false)
+        ->assertSee('aria-disabled="true"', false)
+        ->assertSee('National Identity Card / NIN Slip')
+        ->assertSee('International Passport')
+        ->assertSee("Driver's License")
+        ->assertSee("Voter's Card")
+        ->assertDontSee('Bank Verification Number')
+        ->assertDontSee('NIN number')
+        ->assertSee('Choose a photo to preview it')
+        ->assertSee('data-add-document', false);
+
 });
 
 it('redirects guest applicants to sign in before an application can be started', function () {

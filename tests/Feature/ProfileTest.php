@@ -6,6 +6,10 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+
+use Illuminate\Support\Facades\Hash;
+
+
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -32,10 +36,19 @@ function validApplicantProfilePayload(array $overrides = []): array
         'profile_image' => fakeProfileImage(),
         'phone' => '+2348012345678',
         'address' => '12 Market Road',
+        'country_code' => 'NG',
+        'state' => 'Lagos',
+        'city' => 'Ikeja',
+
+        'country_code' => 'NG',
+        'state' => 'Lagos',
+        'city' => 'Ikeja',
+
         'zipcode' => '100001',
         'country_code' => 'NG',
         'state' => 'Lagos',
         'city' => 'Ikeja',
+
     ], $overrides);
 }
 
@@ -166,8 +179,10 @@ test('applicants must provide setup fields before saving profile changes', funct
             'date_of_birth',
             'phone',
             'address',
+            'nationality',
+            'state_of_origin',
+            'local_government_area',
             'zipcode',
-            'country_code',
 
         ]);
 });

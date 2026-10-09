@@ -15,7 +15,7 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class SendVerificationEmail implements ShouldBeEncrypted, ShouldBeUnique, ShouldQueue
+class SendVerificationEmail implements ShouldQueue, ShouldBeEncrypted, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
@@ -34,7 +34,9 @@ class SendVerificationEmail implements ShouldBeEncrypted, ShouldBeUnique, Should
      */
     public int $uniqueFor = 3600;
 
-    public function __construct(public int $userId) {}
+    public function __construct(public int $userId)
+    {
+    }
 
     public function uniqueId(): string
     {
@@ -76,7 +78,7 @@ class SendVerificationEmail implements ShouldBeEncrypted, ShouldBeUnique, Should
 
         // Do not call User::sendEmailVerificationNotification() here: that method
         // dispatches this job and would create a recursion loop.
-        $user->notify(new VerifyEmail);
+        $user->notify(new VerifyEmail());
     }
 
     public function failed(Throwable $exception): void

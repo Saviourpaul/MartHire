@@ -13,7 +13,7 @@ class WelcomeEmail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Welcome to MartHire');
+        return new Envelope(subject: 'Welcome to Marthire');
     }
 
     public function content(): Content

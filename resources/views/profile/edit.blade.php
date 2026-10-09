@@ -463,6 +463,10 @@
 
                 </div>
                 <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+                    <button @click="closeModal('isProfileInfoModal')" data-profile-cancel type="button"
+
+                    <button @click="closeModal('isProfileInfoModal')" data-profile-cancel type="button"
+
                     <button @click="isProfileInfoModal = false" type="button"
 
                     <button @click="closeModal('isProfileInfoModal')" type="button"

@@ -6,7 +6,6 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Jobs\SendVerificationEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -44,10 +44,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'nationality',
         'state_of_origin',
         'local_government_area',
-        'country_code',
-        'country',
-        'state',
-        'city',
     ];
 
     /**
@@ -82,7 +78,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'welcome_email_queued_at' => 'datetime',
             'welcome_email_sent_at' => 'datetime',
             'date_of_birth' => 'date',
-            'location_confirmed_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
             'status' => UserStatus::class,
@@ -144,7 +139,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'date_of_birth' => 'Date of birth',
             'phone' => 'Phone number',
             'address' => 'Address',
-            'location_confirmed_at' => 'Country, state and city',
+            'nationality' => 'Nationality',
+            'state_of_origin' => 'State of origin',
+            'local_government_area' => 'Local government area',
         ];
     }
 
@@ -157,19 +154,9 @@ class User extends Authenticatable implements MustVerifyEmail
             return [];
         }
 
-        $fields = self::applicantProfileFields();
-        // Grandfather completed legacy locations only until the next successful edit/application.
-        $legacyComplete = filled($this->nationality) && filled($this->state_of_origin) && filled($this->local_government_area);
-
-        return collect($fields)->filter(function (string $label, string $field) use ($legacyComplete): bool {
-            if ($field === 'location_confirmed_at') {
-                return $this->location_confirmed_at
-                    ? blank($this->country_code) || blank($this->country)
-                    : ! $legacyComplete;
-            }
-
-            return blank($this->{$field});
-        })->all();
+        return collect(self::applicantProfileFields())
+            ->filter(fn (string $label, string $field): bool => blank($this->{$field}))
+            ->all();
     }
 
     public function applicantProfileCompletionPercentage(): int

@@ -615,6 +615,16 @@
                             </dd>
                         </div>
                         <div class="border-t border-gray-100 p-4 dark:border-gray-800">
+                            <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Country</dt>
+                            <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-country>
+                                {{ $user->country ?: 'Not provided' }}</dd>
+
+                        </div>
+                        <div>
+                            <dt>Nationality</dt>
+                            <dd data-summary-nationality>
+
+                        <div class="border-t border-gray-100 p-4 dark:border-gray-800">
                             <dt class="text-theme-xs text-gray-500 dark:text-gray-400">Nationality</dt>
                             <dd class="mt-1 font-medium text-gray-800 dark:text-white/90" data-summary-nationality>
                                 {{ old('nationality', $user->nationality ?? 'Nigeria') ?: 'Not provided' }}</dd>
