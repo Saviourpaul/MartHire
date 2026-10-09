@@ -24,7 +24,6 @@ function validApplicantProfilePayload(array $overrides = []): array
     return array_merge([
         'first_name' => 'Test',
         'last_name' => 'User',
-        'username' => 'test-user',
         'email' => 'test@example.com',
         'date_of_birth' => '1995-05-15',
         'profile_image' => fakeProfileImage(),
@@ -33,7 +32,6 @@ function validApplicantProfilePayload(array $overrides = []): array
         'nationality' => 'Nigeria',
         'state_of_origin' => 'Lagos',
         'local_government_area' => 'Ikeja',
-        'zipcode' => '100001',
     ], $overrides);
 }
 
@@ -47,7 +45,7 @@ test('profile page is displayed', function () {
     $response->assertOk();
 });
 
-test('profile edit page starts in read only mode with edit controls', function () {
+test('profile edit page displays profile details and an accessible edit dialog', function () {
     $user = User::factory()->create();
 
     $this
@@ -57,7 +55,10 @@ test('profile edit page starts in read only mode with edit controls', function (
         ->assertSee('Update Profile')
         ->assertSee('Save Changes')
         ->assertSee('Cancel')
-        ->assertSee('id="profile-actions" class="d-none mt-3"', false);
+        ->assertSee('isProfileInfoModal: false', false)
+        ->assertSee('x-cloak x-show="isProfileInfoModal"', false)
+        ->assertSee('aria-labelledby="profile-info-modal-title"', false)
+        ->assertSee('aria-label="Close edit profile dialog"', false);
 });
 
 test('applicant profile information can be updated with required setup fields', function () {
@@ -81,7 +82,6 @@ test('applicant profile information can be updated with required setup fields', 
 
     $this->assertSame('Test', $user->first_name);
     $this->assertSame('User', $user->last_name);
-    $this->assertSame('test-user', $user->username);
     $this->assertSame($email, $user->email);
     $this->assertSame('1995-05-15', $user->date_of_birth->format('Y-m-d'));
     $this->assertSame('+2348012345678', $user->phone);
@@ -145,7 +145,6 @@ test('applicants must provide setup fields before saving profile changes', funct
         ->patch('/profile', [
             'first_name' => 'Test',
             'last_name' => 'User',
-            'username' => 'test-user',
             'email' => $user->email,
         ])
         ->assertSessionHasErrors([
@@ -156,7 +155,6 @@ test('applicants must provide setup fields before saving profile changes', funct
             'nationality',
             'state_of_origin',
             'local_government_area',
-            'zipcode',
         ]);
 });
 
@@ -167,7 +165,6 @@ test('employers and admins can update profile without applicant setup fields', f
             ->patch('/profile', [
                 'first_name' => 'Test',
                 'last_name' => 'User',
-                'username' => 'test-user-'.$user->id,
                 'email' => $user->email,
             ])
             ->assertSessionHasNoErrors()
@@ -247,6 +244,8 @@ test('correct password must be provided to delete account', function () {
 test('admin user management does not edit applicant profile setup fields', function () {
     $admin = User::factory()->admin()->create();
     $applicant = User::factory()->completeApplicantProfile()->create([
+        'first_name' => 'Original',
+        'email' => 'original@example.com',
         'phone' => '+2348000000000',
     ]);
 
@@ -255,15 +254,17 @@ test('admin user management does not edit applicant profile setup fields', funct
         ->put(route('admin.users.update', $applicant), [
             'first_name' => 'Managed',
             'last_name' => 'Applicant',
-            'username' => 'managed-applicant',
             'email' => 'managed@example.com',
             'role' => UserRole::Applicant->value,
-            'status' => UserStatus::Active->value,
+            'status' => UserStatus::Suspended->value,
             'phone' => '+2348999999999',
         ])
-        ->assertRedirect();
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
 
     expect($applicant->fresh())
-        ->first_name->toBe('Managed')
-        ->phone->toBe('+2348000000000');
+        ->first_name->toBe('Original')
+        ->email->toBe('original@example.com')
+        ->phone->toBe('+2348000000000')
+        ->status->toBe(UserStatus::Suspended);
 });

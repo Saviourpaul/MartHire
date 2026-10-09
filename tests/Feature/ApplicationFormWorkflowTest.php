@@ -2,7 +2,6 @@
 
 use App\Enums\ApplicationDocumentType;
 use App\Enums\CandidatePipelineStage;
-use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
@@ -98,8 +97,9 @@ it('renders the application wizard with dependent location and document controls
         ->assertSee("Voter's Card")
         ->assertDontSee('Bank Verification Number')
         ->assertDontSee('NIN number')
-        ->assertSee('Choose a photo to preview it before submission.')
-        ->assertSee('Add another document');
+        ->assertSee('data-profile-preview-status', false)
+        ->assertSeeText('Choose a photo to preview it')
+        ->assertSee('data-add-document', false);
 });
 
 it('redirects guest applicants to sign in before an application can be started', function () {

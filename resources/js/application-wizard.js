@@ -1,5 +1,3 @@
-import { initLocationSelector } from './location-selector';
-
 const ready = (callback) => {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', callback, { once: true });
@@ -25,7 +23,8 @@ ready(() => {
     const progressPercent = wizardContainer.querySelector('[data-overall-percent]');
     const progressSteps = Array.from(wizardContainer.querySelectorAll('[data-progress-step]'));
     const validationSummary = form.querySelector('[data-validation-summary]');
-    const locationSelector = initLocationSelector(form);
+    const stateSelect = form.querySelector('[data-state-of-origin]');
+    const lgaSelect = form.querySelector('[data-local-government-area]');
     const identificationTypeInputs = Array.from(form.querySelectorAll('[data-identification-type]'))
         .filter((input) => input instanceof HTMLInputElement);
     const identificationDocumentInput = form.querySelector('[data-identification-document]');
@@ -57,6 +56,7 @@ ready(() => {
         ? Math.min(Math.max(parsedInitialStep, 0), steps.length - 1)
         : 0;
     let profilePreviewUrl = null;
+    let lgaRequest = null;
 
     const fieldsFor = (step) => {
         const radioGroups = new Set();
@@ -416,11 +416,15 @@ ready(() => {
             return true;
         }
 
-        if (field.dataset.loading === 'true' || field.dataset.unavailable === 'true') {
-            setError(field, 'Wait for the location list to load, or retry, before continuing.');
-            return false;
+        if (field.disabled) {
+            if (field === lgaSelect && stateSelect?.value) {
+                setError(field, 'Wait for local government areas to load before continuing.');
+
+                return false;
+            }
+
+            return true;
         }
-        if (field.disabled) return true;
 
         const value = field.value.trim();
 
@@ -436,7 +440,7 @@ ready(() => {
             return true;
         }
 
-        if (['first_name', 'middle_name', 'last_name'].includes(field.name) && !namePattern.test(value)) {
+        if (['first_name', 'middle_name', 'last_name', 'nationality'].includes(field.name) && !namePattern.test(value)) {
             setError(field, `${labelFor(field)} may only contain letters, spaces, hyphens, and apostrophes.`);
 
             return false;
@@ -499,13 +503,13 @@ ready(() => {
 
     const updateSummary = () => {
         const applicantName = [valueFor('first_name'), valueFor('last_name')].filter(Boolean).join(' ');
-        const origin = [valueFor('city'), valueFor('state')].filter(Boolean).join(', ');
+        const origin = [valueFor('local_government_area'), valueFor('state_of_origin')].filter(Boolean).join(', ');
         const documentCount = documentsContainer?.querySelectorAll('[data-education-document]').length ?? 0;
 
         setSummaryValue('[data-summary-full-name]', applicantName);
         setSummaryValue('[data-summary-contact]', valueFor('phone'));
         setSummaryValue('[data-summary-origin]', origin);
-        setSummaryValue('[data-summary-country]', valueFor('country_code') ? form.querySelector('[name="country_code"]')?.selectedOptions[0]?.textContent : '');
+        setSummaryValue('[data-summary-nationality]', valueFor('nationality'));
         setSummaryValue('[data-summary-documents]', String(documentCount));
     };
 
@@ -733,6 +737,79 @@ ready(() => {
         updateSummary();
     };
 
+    const populateLgas = async (selectedLga = '') => {
+        if (!(stateSelect instanceof HTMLSelectElement) || !(lgaSelect instanceof HTMLSelectElement)) {
+            return;
+        }
+
+        const lgaUrl = stateSelect.selectedOptions[0]?.dataset.lgaUrl;
+
+        if (lgaRequest) {
+            lgaRequest.abort();
+        }
+
+        lgaSelect.innerHTML = '';
+        lgaSelect.disabled = true;
+        lgaSelect.dataset.loading = lgaUrl ? 'true' : 'false';
+        lgaSelect.append(new Option(lgaUrl ? 'Loading LGAs...' : 'Select state first', ''));
+
+        if (!lgaUrl) {
+            clearError(lgaSelect);
+            updateSummary();
+
+            return;
+        }
+
+        const request = new AbortController();
+        lgaRequest = request;
+
+        try {
+            const response = await fetch(lgaUrl, {
+                signal: request.signal,
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Unable to load local government areas.');
+            }
+
+            const payload = await response.json();
+            const localGovernmentAreas = Array.isArray(payload.data) ? payload.data : [];
+
+            if (lgaRequest !== request) {
+                return;
+            }
+
+            lgaSelect.innerHTML = '';
+            lgaSelect.append(new Option(localGovernmentAreas.length ? 'Select LGA' : 'No LGAs available', ''));
+
+            localGovernmentAreas.forEach((lga) => {
+                lgaSelect.append(new Option(lga.name, lga.name, false, lga.name === selectedLga));
+            });
+
+            lgaSelect.disabled = localGovernmentAreas.length === 0;
+            clearError(lgaSelect);
+        } catch (error) {
+            if (error?.name === 'AbortError' || lgaRequest !== request) {
+                return;
+            }
+
+            lgaSelect.innerHTML = '';
+            lgaSelect.append(new Option('Unable to load LGAs', ''));
+            lgaSelect.disabled = true;
+            setError(lgaSelect, 'Unable to load local government areas. Please select the state again.');
+        } finally {
+            if (lgaRequest === request) {
+                lgaSelect.dataset.loading = 'false';
+                lgaRequest = null;
+                updateSummary();
+            }
+        }
+    };
+
     const nextStep = async () => {
         const isValid = await validateFields(fieldsFor(steps[currentStep]));
 
@@ -820,6 +897,10 @@ ready(() => {
             return;
         }
 
+        if (event.target === stateSelect) {
+            await populateLgas();
+        }
+
         if (event.target.matches('[data-identification-type]')) {
             updateIdentificationMethod({ clearDocument: true });
         }
@@ -890,7 +971,6 @@ ready(() => {
     bindDropzone(identificationDocumentDropzone, promptForIdentificationMethod);
     updateIdentificationMethod();
     refreshEducationRows();
-    form.addEventListener('location:updated', updateSummary);
-    void locationSelector?.ready.then(updateSummary);
+    void populateLgas(lgaSelect?.dataset.selectedLga ?? '');
     showStep(currentStep);
 });
