@@ -4,5 +4,13 @@
     ],
     "cloud": false,
     "mcp": true,
-    "sail": false
+    "sail": false,
+    "skills": [
+        "laravel-best-practices",
+        "socialite-development",
+        "pest-testing",
+        "tailwindcss-development",
+        "laravel-patterns",
+        "security-review"
+    ]
 }
