@@ -3,6 +3,14 @@
         "codex"
     ],
     "cloud": false,
-     "mcp": true,
-    "sail": false
+    "mcp": true,
+    "sail": false,
+    "skills": [
+        "laravel-best-practices",
+        "socialite-development",
+        "pest-testing",
+        "tailwindcss-development",
+        "laravel-patterns",
+        "security-review"
+    ]
 }

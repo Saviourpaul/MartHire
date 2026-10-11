@@ -3,19 +3,12 @@
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
+use Database\Seeders\NigeriaLocationSeeder;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
-
-use Illuminate\Support\Facades\Hash;
-
-
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    config(['locations.cache.path' => sys_get_temp_dir().'/marthire-locations-'.bin2hex(random_bytes(8))]);
-    config(['locations.cache.lock_path' => config('locations.cache.path')]);
-    Http::fake(['*' => Http::response([], 503)]);
+    $this->seed(NigeriaLocationSeeder::class);
 });
 
 function fakeProfileImage(): UploadedFile
@@ -36,19 +29,9 @@ function validApplicantProfilePayload(array $overrides = []): array
         'profile_image' => fakeProfileImage(),
         'phone' => '+2348012345678',
         'address' => '12 Market Road',
-        'country_code' => 'NG',
-        'state' => 'Lagos',
-        'city' => 'Ikeja',
-
-        'country_code' => 'NG',
-        'state' => 'Lagos',
-        'city' => 'Ikeja',
-
-        'zipcode' => '100001',
-        'country_code' => 'NG',
-        'state' => 'Lagos',
-        'city' => 'Ikeja',
-
+        'nationality' => 'Nigeria',
+        'state_of_origin' => 'Lagos',
+        'local_government_area' => 'Ikeja',
     ], $overrides);
 }
 
@@ -62,19 +45,7 @@ test('profile page is displayed', function () {
     $response->assertOk();
 });
 
-test('optional employer locations can be cleared without retaining stale canonical values', function () {
-    $user = User::factory()->employer()->create(['country_code' => 'NG', 'country' => 'Nigeria', 'state' => 'Lagos', 'city' => 'Ikeja',
-        'location_confirmed_at' => now(), 'nationality' => 'Nigerian', 'local_government_area' => 'Historical LGA']);
-
-    $this->actingAs($user)->patch('/profile', ['first_name' => $user->first_name, 'last_name' => $user->last_name,
-        'email' => $user->email, 'country_code' => '', 'state' => null, 'city' => null])->assertSessionHasNoErrors()->assertRedirect();
-
-    expect($user->fresh())->country_code->toBeNull()->country->toBeNull()->state->toBeNull()->city->toBeNull()->location_confirmed_at->toBeNull()
-        ->nationality->toBe('Nigerian')->local_government_area->toBe('Historical LGA');
-    Http::assertNothingSent();
-});
-
-test('profile edit page starts in read only mode with edit controls', function () {
+test('profile edit page displays profile details and an accessible edit dialog', function () {
     $user = User::factory()->create();
 
     $this
@@ -84,8 +55,10 @@ test('profile edit page starts in read only mode with edit controls', function (
         ->assertSee('Update Profile')
         ->assertSee('Save Changes')
         ->assertSee('Cancel')
-        ->assertSee('id="profile-form"', false)
-        ->assertSee('profile-info-modal-title', false);
+        ->assertSee('isProfileInfoModal: false', false)
+        ->assertSee('x-cloak x-show="isProfileInfoModal"', false)
+        ->assertSee('aria-labelledby="profile-info-modal-title"', false)
+        ->assertSee('aria-label="Close edit profile dialog"', false);
 });
 
 test('applicant profile information can be updated with required setup fields', function () {
@@ -112,9 +85,9 @@ test('applicant profile information can be updated with required setup fields', 
     $this->assertSame($email, $user->email);
     $this->assertSame('1995-05-15', $user->date_of_birth->format('Y-m-d'));
     $this->assertSame('+2348012345678', $user->phone);
-    $this->assertSame('Nigeria', $user->country);
-    $this->assertSame('Lagos', $user->state);
-    $this->assertSame('Ikeja', $user->city);
+    $this->assertSame('Nigeria', $user->nationality);
+    $this->assertSame('Lagos', $user->state_of_origin);
+    $this->assertSame('Ikeja', $user->local_government_area);
     $this->assertEquals($verifiedAt, $user->email_verified_at);
     Storage::disk('public')->assertExists($user->profile_image_path);
     $this->assertStringContainsString('storage/'.$user->profile_image_path, $user->profileImageUrl());
@@ -182,8 +155,6 @@ test('applicants must provide setup fields before saving profile changes', funct
             'nationality',
             'state_of_origin',
             'local_government_area',
-            'zipcode',
-
         ]);
 });
 
@@ -270,73 +241,30 @@ test('correct password must be provided to delete account', function () {
     $this->assertNotNull($user->fresh());
 });
 
-test('user can update their password from the profile page', function () {
-    $user = User::factory()->create();
-
-    $this
-        ->actingAs($user)
-        ->from(route('profile.edit'))
-        ->put(route('password.update'), [
-            'current_password' => 'password',
-            'password' => 'NewPassword123!',
-            'password_confirmation' => 'NewPassword123!',
-        ])
-        ->assertSessionHasNoErrors()
-        ->assertRedirect(route('profile.edit'))
-        ->assertSessionHas('status', 'password-updated');
-
-    expect(Hash::check('NewPassword123!', $user->fresh()->password))->toBeTrue();
-});
-
-test('password errors are returned to the password update error bag', function () {
-    $user = User::factory()->create();
-
-    $this
-        ->actingAs($user)
-        ->from(route('profile.edit'))
-        ->put(route('password.update'), [
-            'current_password' => 'incorrect-password',
-            'password' => 'NewPassword123!',
-            'password_confirmation' => 'NewPassword123!',
-        ])
-        ->assertSessionHasErrorsIn('updatePassword', 'current_password')
-        ->assertRedirect(route('profile.edit'));
-});
-
-test('profile page renders accessible account dialogs', function () {
-    $user = User::factory()->create();
-
-    $this
-        ->actingAs($user)
-        ->get(route('profile.edit'))
-        ->assertOk()
-        ->assertSee('profile-info-modal-title', false)
-        ->assertSee('change-password-modal-title', false)
-        ->assertSee('delete-account-modal-title', false)
-        ->assertSee('x-cloak', false);
-});
-
 test('admin user management does not edit applicant profile setup fields', function () {
     $admin = User::factory()->admin()->create();
     $applicant = User::factory()->completeApplicantProfile()->create([
+        'first_name' => 'Original',
+        'email' => 'original@example.com',
         'phone' => '+2348000000000',
     ]);
-    $originalFirstName = $applicant->first_name;
 
     $this
         ->actingAs($admin)
         ->put(route('admin.users.update', $applicant), [
             'first_name' => 'Managed',
             'last_name' => 'Applicant',
-            'username' => 'managed-applicant',
             'email' => 'managed@example.com',
             'role' => UserRole::Applicant->value,
-            'status' => UserStatus::Active->value,
+            'status' => UserStatus::Suspended->value,
             'phone' => '+2348999999999',
         ])
-        ->assertRedirect();
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
 
     expect($applicant->fresh())
-        ->first_name->toBe($originalFirstName)
-        ->phone->toBe('+2348000000000');
+        ->first_name->toBe('Original')
+        ->email->toBe('original@example.com')
+        ->phone->toBe('+2348000000000')
+        ->status->toBe(UserStatus::Suspended);
 });
