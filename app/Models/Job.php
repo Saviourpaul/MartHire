@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-
 class Job extends Model
 {
     /** @use HasFactory<JobFactory> */
@@ -33,6 +32,7 @@ class Job extends Model
         'due_date',
         'status',
     ];
+
     public const EMPLOYMENT_TYPES = [
         'full_time' => 'Full-time',
         'part_time' => 'Part-time',
@@ -41,12 +41,11 @@ class Job extends Model
         'freelance' => 'Freelance',
     ];
 
-
     /**
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'status' => 'pending',
+        'status' => 'open',
     ];
 
     protected function casts(): array
@@ -55,6 +54,7 @@ class Job extends Model
             'start_date' => 'date',
             'due_date' => 'date',
             'status' => JobStatus::class,
+            'suspended_at' => 'datetime',
         ];
     }
 
@@ -69,7 +69,7 @@ class Job extends Model
         $i = 1;
 
         while (static::where('slug', $slug)->exists()) {
-            $slug = "{$base}-" . $i++;
+            $slug = "{$base}-".$i++;
         }
 
         return $slug;
@@ -79,7 +79,6 @@ class Job extends Model
     {
         return 'slug';
     }
-   
 
     public function employer(): BelongsTo
     {
@@ -89,6 +88,11 @@ class Job extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(ApplicationForm::class);
+    }
+
+    public function suspendedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'suspended_by');
     }
 
     /**
@@ -104,41 +108,41 @@ class Job extends Model
         return $query->where('status', $status instanceof JobStatus ? $status->value : $status);
     }
 
-    public function scopeApproved(Builder $query): Builder
+    public function scopeOpen(Builder $query): Builder
     {
-        return $query->status(JobStatus::Approved);
+        return $query->status(JobStatus::Open);
     }
 
     public function scopeActive(Builder $query): Builder
     {
-        return $query->approved();
+        return $query->open();
     }
 
     public function scopeAcceptingApplications(Builder $query): Builder
     {
         return $query
-            ->approved()
-            ->whereDate('due_date', '>=', now()->toDateString());
+            ->active()
+            ->where('due_date', '>=', today()->toDateString());
     }
 
-    public function isApproved(): bool
+    public function isOpen(): bool
     {
-        return $this->status === JobStatus::Approved;
+        return $this->status === JobStatus::Open;
     }
 
     public function isAcceptingApplications(): bool
     {
-        return $this->isApproved() && ! $this->due_date?->isBefore(today());
+        return $this->isOpen() && ! $this->due_date?->isBefore(today());
     }
 
-    public function isPending(): bool
+    public function isSuspended(): bool
     {
-        return $this->status === JobStatus::Pending;
+        return $this->status === JobStatus::Suspended;
     }
 
-    public function isRejected(): bool
+    public function isClosed(): bool
     {
-        return $this->status === JobStatus::Rejected;
+        return $this->status === JobStatus::Closed;
     }
 
     public function employmentTypeLabel(): string
@@ -197,14 +201,4 @@ class Job extends Model
 
         return Storage::disk('public')->exists($path) ? $path : null;
     }
-
-
-   
 }
-
-
-
-
-
-
-

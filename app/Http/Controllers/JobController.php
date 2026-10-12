@@ -3,13 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Enums\JobStatus;
+use App\Http\Requests\CloseJobRequest;
 use App\Models\Job;
+use App\Support\JobDescription;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class JobController extends Controller
 {
@@ -50,6 +59,7 @@ class JobController extends Controller
 
         $jobs = Job::query()
             ->where('employer_id', $request->user()->id)
+            ->when(is_string($request->query('status')) && JobStatus::tryFrom($request->query('status')), fn ($query) => $query->status($request->query('status')))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%'.$request->string('search')->trim().'%';
 
@@ -82,49 +92,103 @@ class JobController extends Controller
             $data['logo'] = $request->file('logo')->store('job-logos', 'public');
         }
 
-        $data['status'] = JobStatus::Pending;
+        $data['status'] = JobStatus::Open;
 
         $request->user()->jobs()->create($data);
 
         if ($request->expectsJson()) {
+            $request->session()->flash('success', 'Job published and open for applications.');
+
             return response()->json([
-                'message' => 'Job submitted for admin review.',
+                'message' => 'Job published and open for applications.',
                 'redirect' => route('jobs'),
             ]);
         }
 
         return redirect()
             ->route('jobs')
-            ->with('success', 'Job submitted for admin review.');
+            ->with('success', 'Job published and open for applications.');
     }
 
     public function update(Request $request, Job $job): RedirectResponse|JsonResponse
     {
         $this->ensureEmployerOwnsJob($request, $job);
 
+        Gate::authorize('update', $job);
         $data = $request->validate($this->rules($request));
-
         if ($request->hasFile('logo')) {
-            $this->deleteStoredLogo($job);
-            $data['logo'] = $request->file('logo')->store('job-logos', 'public');
-        } elseif (array_key_exists('logo', $data) && $data['logo'] !== $job->logo) {
-            $this->deleteStoredLogo($job);
+            unset($data['logo']);
         }
 
-        $data['status'] = JobStatus::Pending;
+        $oldLogoPath = null;
+        $newLogoPath = null;
+        try {
+            $reopened = DB::transaction(function () use ($request, $job, $data, &$oldLogoPath, &$newLogoPath): bool {
+                $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+                $reopen = $currentJob->isSuspended();
+                $previousLogoPath = $currentJob->storedLogoPath();
+                $currentJob->fill($data);
 
-        $job->update($data);
+                if ($reopen) {
+                    if ($currentJob->due_date->isBefore(today())) {
+                        throw ValidationException::withMessages(['due_date' => 'Choose a current or future deadline before reopening.']);
+                    }
+                    $currentJob->status = JobStatus::Open;
+                }
+
+                if ($request->hasFile('logo')) {
+                    $oldLogoPath = $previousLogoPath;
+                    $newLogoPath = $request->file('logo')->store('job-logos', 'public');
+                    $currentJob->logo = $newLogoPath;
+                } elseif ($currentJob->isDirty('logo')) {
+                    $oldLogoPath = $previousLogoPath;
+                }
+                $currentJob->save();
+
+                return $reopen;
+            });
+        } catch (Throwable $exception) {
+            if ($newLogoPath !== null) {
+                Storage::disk('public')->delete($newLogoPath);
+            }
+            throw $exception;
+        }
+
+        if ($oldLogoPath !== null) {
+            Storage::disk('public')->delete($oldLogoPath);
+        }
+        $message = $reopened ? 'Corrections saved. Job reopened for applications.' : 'Job updated successfully.';
 
         if ($request->expectsJson()) {
+            $request->session()->flash('success', $message);
+
             return response()->json([
-                'message' => 'Job updated and submitted for admin review.',
-                'redirect' => $request->input('redirect_to', route('jobs')),
+                'message' => $message,
+                'redirect' => route('jobs.show', $job),
             ]);
         }
 
         return redirect()
             ->route('jobs')
-            ->with('success', 'Job updated and submitted for admin review.');
+            ->with('success', $message);
+    }
+
+    public function close(CloseJobRequest $request, Job $job): RedirectResponse|JsonResponse
+    {
+        $updated = Job::query()->whereKey($job->id)->where('status', '<>', JobStatus::Closed->value)
+            ->update(['status' => JobStatus::Closed]);
+
+        if ($updated === 0) {
+            throw ValidationException::withMessages(['confirm_closure' => 'This job is already closed.']);
+        }
+
+        if ($request->expectsJson()) {
+            $request->session()->flash('success', 'Job closed. Existing applications remain available.');
+
+            return response()->json(['message' => 'Job closed. Existing applications remain available.', 'redirect' => route('jobs.show', $job)]);
+        }
+
+        return redirect()->route('jobs.show', $job)->with('success', 'Job closed. Existing applications remain available.');
     }
 
     public function destroy(Request $request, Job $job): RedirectResponse|JsonResponse
@@ -162,7 +226,7 @@ class JobController extends Controller
         $job->loadMissing(['employer:id,first_name,last_name'])
             ->loadCount('applications');
 
-        if (! $job->isAcceptingApplications()) {
+        if ($job->isSuspended()) {
             $user = $request->user();
 
             abort_unless(
@@ -196,7 +260,14 @@ class JobController extends Controller
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
+            'description' => [
+                'bail', 'required', 'string', 'max:'.JobDescription::MAX_LENGTH,
+                static function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! app(JobDescription::class)->hasText($value)) {
+                        $fail('The description must contain text about the role.');
+                    }
+                },
+            ],
             'company' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
@@ -205,7 +276,7 @@ class JobController extends Controller
                 ? ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048']
                 : ['nullable', 'string', 'max:2048'],
             'start_date' => ['required', 'date'],
-            'due_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'due_date' => ['required', 'date', 'after_or_equal:start_date', ...($request->routeIs('jobs.store') ? ['after_or_equal:today'] : [])],
         ];
     }
 
@@ -221,7 +292,7 @@ class JobController extends Controller
         abort_unless($job->employer_id === $request->user()->id, 403);
     }
 
-    /** @return array{jobs: \Illuminate\Pagination\LengthAwarePaginator, appliedJobIds: \Illuminate\Support\Collection, search: string, category: string, employmentType: string} */
+    /** @return array{jobs: LengthAwarePaginator, appliedJobIds: Collection, search: string, category: string, employmentType: string} */
     private function publicListingData(Request $request, int $perPage): array
     {
         $searchInput = $request->query('search', '');

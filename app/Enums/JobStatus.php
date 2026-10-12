@@ -4,9 +4,9 @@ namespace App\Enums;
 
 enum JobStatus: string
 {
-    case Pending = 'pending';
-    case Approved = 'approved';
-    case Rejected = 'rejected';
+    case Open = 'open';
+    case Suspended = 'suspended';
+    case Closed = 'closed';
 
     /**
      * @return list<string>
@@ -19,18 +19,18 @@ enum JobStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Pending => 'Pending',
-            self::Approved => 'Approved',
-            self::Rejected => 'Rejected',
+            self::Open => 'Open',
+            self::Suspended => 'Suspended',
+            self::Closed => 'Closed',
         };
     }
 
     public function badgeClass(): string
     {
         return match ($this) {
-            self::Pending => 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400',
-            self::Approved => 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400',
-            self::Rejected => 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400',
+            self::Open => 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400',
+            self::Suspended => 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400',
+            self::Closed => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
         };
     }
 }
