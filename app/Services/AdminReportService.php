@@ -131,8 +131,7 @@ class AdminReportService
                 ->whereBetween('created_at', [$dateRange->start, $dateRange->end])
                 ->count(),
             'active_job_postings' => Job::query()
-                ->approved()
-                ->whereDate('due_date', '>=', now()->toDateString())
+                ->acceptingApplications()
                 ->count(),
             'submitted_jobs_in_period' => Job::query()
                 ->whereBetween('created_at', [$dateRange->start, $dateRange->end])
@@ -144,7 +143,7 @@ class AdminReportService
             'average_time_to_hire_days' => $this->averageDecisionDays($dateRange, CandidatePipelineStage::Selected),
             'average_time_to_decision_days' => $this->averageDecisionDays($dateRange),
             'submitted_candidates' => ApplicationForm::query()->status(CandidatePipelineStage::Submitted)->count(),
-            'pending_job_reviews' => Job::query()->status(JobStatus::Pending)->count(),
+            'suspended_jobs' => Job::query()->status(JobStatus::Suspended)->count(),
         ];
     }
 
@@ -402,9 +401,9 @@ class AdminReportService
                     ->count(),
             ],
             [
-                'label' => 'Expired approved jobs',
+                'label' => 'Expired open jobs awaiting closure',
                 'value' => Job::query()
-                    ->approved()
+                    ->open()
                     ->whereDate('due_date', '<', now()->toDateString())
                     ->count(),
             ],

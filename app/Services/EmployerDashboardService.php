@@ -30,6 +30,7 @@ class EmployerDashboardService
             'dateRange' => $dateRange,
             'filterValues' => ['period' => $request->input('period', '12_months')],
             'metrics' => $this->metrics($employer),
+            'jobStatusCounts' => $employer->jobs()->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'),
             'charts' => [
                 'applicationsOverTime' => [
                     'label' => $analytics['series'][1]['name'],

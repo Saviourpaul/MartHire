@@ -38,6 +38,12 @@ class ApplicationFormService
 
         try {
             $application = DB::transaction(function () use ($job, $applicant, $data, &$storedFiles, &$newProfileImagePath): ApplicationForm {
+                $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+
+                if (! $currentJob->isAcceptingApplications()) {
+                    throw ValidationException::withMessages(['job' => 'This job is not accepting applications.']);
+                }
+
                 $profileImagePath = $applicant->profile_image_path;
 
                 if (($data['profile_image'] ?? null) instanceof UploadedFile) {
