@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\JobStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DeleteModeratedJobRequest;
+use App\Http\Requests\SuspendJobRequest;
 use App\Models\Job;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class JobManagementController extends Controller
 {
@@ -18,65 +21,67 @@ class JobManagementController extends Controller
         return $this->listing($request, null, 'All Jobs');
     }
 
-    public function approved(Request $request): View
+    public function open(Request $request): View
     {
-        return $this->listing($request, JobStatus::Approved, 'Approved Jobs');
+        return $this->listing($request, JobStatus::Open, 'Open Jobs');
     }
 
-    public function pending(Request $request): View
+    public function closed(Request $request): View
     {
-        return $this->listing($request, JobStatus::Pending, 'Pending Jobs');
+        return $this->listing($request, JobStatus::Closed, 'Closed Jobs');
     }
 
-    public function rejected(Request $request): View
+    public function suspended(Request $request): View
     {
-        return $this->listing($request, JobStatus::Rejected, 'Rejected Jobs');
+        return $this->listing($request, JobStatus::Suspended, 'Suspended Jobs');
     }
 
     public function show(Job $job): View
     {
         return view('admin.jobs.show', [
-            'job' => $job->load('employer')->loadCount('applications'),
-            'statuses' => JobStatus::cases(),
+            'job' => $job->load(['employer', 'suspendedBy:id,first_name,last_name'])->loadCount('applications'),
         ]);
     }
 
-
-
-    public function update(Request $request, Job $job): RedirectResponse|JsonResponse
+    public function suspend(SuspendJobRequest $request, Job $job): RedirectResponse|JsonResponse
     {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'company' => ['required', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:255'],
-            'start_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'description' => ['required', 'string'],
-            'status' => ['required', Rule::in(JobStatus::values())],
+        $updated = Job::query()->whereKey($job->id)->where('status', '<>', JobStatus::Suspended->value)->update([
+            'status' => JobStatus::Suspended,
+            'suspended_at' => now(),
+            'suspension_reason' => $request->validated('suspension_reason'),
+            'suspended_by' => $request->user()->id,
         ]);
 
-        $data['status'] = JobStatus::from($data['status']);
-        $job->update($data);
+        if ($updated === 0) {
+            throw ValidationException::withMessages(['suspension_reason' => 'This job has already been suspended.']);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
                 'ok' => true,
-                'message' => 'Job updated successfully.',
-                'status' => $data['status']->value,
+                'message' => 'Job suspended.',
+                'status' => JobStatus::Suspended->value,
+                'redirect' => route('admin.jobs.show', $job),
             ]);
         }
 
-        return back()->with('success', 'Job updated successfully.');
+        return back()->with('success', 'Job suspended.');
     }
 
-    public function destroy(Request $request, Job $job): RedirectResponse|JsonResponse
+    public function destroy(DeleteModeratedJobRequest $request, Job $job): RedirectResponse|JsonResponse
     {
+        $logoPath = $job->storedLogoPath();
         $job->delete();
+
+        if ($logoPath !== null) {
+            Storage::disk('public')->delete($logoPath);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
                 'ok' => true,
                 'message' => 'Job deleted successfully.',
+                'redirect' => route('admin.jobs.index'),
             ]);
         }
 
@@ -92,29 +97,21 @@ class JobManagementController extends Controller
             ? $request->input('sort')
             : 'created_at';
         $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
-        $perPageOptions = [10];
         $perPage = 10;
-        $search = trim((string) $request->input('search', ''));
+        $searchInput = $request->query('search', '');
+        $search = is_string($searchInput) ? mb_substr(trim($searchInput), 0, 120) : '';
+        $categoryInput = $request->query('category', '');
+        $category = is_string($categoryInput) ? mb_substr(trim($categoryInput), 0, 255) : '';
         $statusFilter = $this->statusFilter($request, $statusConstraint);
 
         $query = Job::query()
             ->select('job_posts.*')
-            ->with(['employer:id,first_name,last_name,email,profile_image_path'])
-            ->withCount('applications')
+            ->with(['employer:id,first_name,last_name,email'])
             ->when($statusConstraint, fn ($query) => $query->status($statusConstraint))
             ->when(! $statusConstraint && $statusFilter, fn ($query) => $query->status($statusFilter))
-            ->when($request->filled('category'), function ($query) use ($request) {
-                $query->where('category', $request->input('category'));
+            ->when($category !== '', function ($query) use ($category) {
+                $query->where('category', $category);
             })
-
-            /*
-            ->when($request->filled('submitted_from'), function ($query) use ($request) {
-                $query->whereDate('job_posts.created_at', '>=', $request->input('submitted_from'));
-            })
-            ->when($request->filled('submitted_to'), function ($query) use ($request) {
-                $query->whereDate('job_posts.created_at', '<=', $request->input('submitted_to'));
-            })  */
-
             ->when($search !== '', function ($query) use ($search) {
                 collect(preg_split('/\s+/', $search) ?: [])
                     ->filter()
@@ -153,17 +150,13 @@ class JobManagementController extends Controller
             'title' => $title,
             'statusConstraint' => $statusConstraint,
             'statuses' => JobStatus::cases(),
-            'statusCounts' => $this->statusCounts(),
             'categories' => $this->categories(),
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
-            'perPageOptions' => $perPageOptions,
             'filterValues' => [
                 'search' => $search,
                 'status' => $statusFilter?->value,
-                'category' => $request->input('category'),
-                //'submitted_from' => $request->input('submitted_from'),
-                //'submitted_to' => $request->input('submitted_to'),
+                'category' => $category,
                 'per_page' => $perPage,
             ],
         ]);
@@ -180,27 +173,6 @@ class JobManagementController extends Controller
         }
 
         return JobStatus::from($request->input('status'));
-    }
-
-    /**
-     * @return array<string, int>
-     */
-    private function statusCounts(): array
-    {
-        $counts = Job::query()
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        $normalized = [
-            'all' => (int) $counts->sum(),
-        ];
-
-        foreach (JobStatus::cases() as $status) {
-            $normalized[$status->value] = (int) ($counts[$status->value] ?? 0);
-        }
-
-        return $normalized;
     }
 
     /**
