@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\ApplicationDocumentType;
+use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Scopes\OrganizationScope;
 use Database\Factories\ApplicationDocumentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ApplicationDocument extends Model
 {
     /** @use HasFactory<ApplicationDocumentFactory> */
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     public const PREVIEWABLE_MIME_TYPES = [
         'application/pdf',
@@ -20,6 +22,7 @@ class ApplicationDocument extends Model
     ];
 
     protected $fillable = [
+        'organization_id',
         'application_form_id',
         'user_identification_document_id',
         'document_type',
@@ -40,6 +43,12 @@ class ApplicationDocument extends Model
     public function applicationForm(): BelongsTo
     {
         return $this->belongsTo(ApplicationForm::class);
+    }
+
+    protected function parentOrganizationId(): ?int
+    {
+        return ApplicationForm::withoutGlobalScope(OrganizationScope::class)
+            ->whereKey($this->application_form_id)->value('organization_id');
     }
 
     public function identificationDocument(): BelongsTo

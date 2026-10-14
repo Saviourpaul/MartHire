@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ApplicationDocument;
 use App\Models\User;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class ApplicationDocumentFileService
@@ -28,9 +29,7 @@ class ApplicationDocumentFileService
             return false;
         }
 
-        return ($user->isApplicant() && $application->user_id === $user->id)
-            || ($user->isEmployer() && $application->job?->employer_id === $user->id)
-            || $user->isAdmin();
+        return Gate::forUser($user)->allows('viewDocuments', $application);
     }
 
     public function diskFor(ApplicationDocument $document): FilesystemAdapter
@@ -39,15 +38,17 @@ class ApplicationDocumentFileService
 
         abort_if($path === '', 404);
 
-        foreach (['local', 'public'] as $diskName) {
-            $disk = Storage::disk($diskName);
+        $disk = Storage::disk(config('filesystems.application_documents_disk', 'local'));
+        abort_unless($disk->exists($path), 404);
 
-            if ($disk->exists($path)) {
-                return $disk;
-            }
-        }
+        return $disk;
+    }
 
-        abort(404);
+    public function logView(User $user, ApplicationDocument $document, string $action): void
+    {
+        app(ActivityLogger::class)->record($document->organization_id, $document->applicationForm, $user, 'document_view', [
+            'document_id' => $document->id, 'action' => $action,
+        ]);
     }
 
     public function assertPreviewable(ApplicationDocument $document, FilesystemAdapter $disk): void

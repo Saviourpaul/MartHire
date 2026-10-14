@@ -18,6 +18,7 @@ class ApplicationDocumentPreviewController extends Controller
 
         $disk = $documents->diskFor($applicationDocument);
         $documents->assertPreviewable($applicationDocument, $disk);
+        $documents->logView($request->user(), $applicationDocument, 'preview');
 
         return $disk->response(
             $applicationDocument->file_path,

@@ -8,9 +8,12 @@ use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\NigeriaState;
 use App\Services\ApplicationFormService;
+use App\Support\ExpirationResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Throwable;
 
@@ -32,9 +35,9 @@ class JobApplicationController extends Controller
         ]);
     }
 
-    public function create(Request $request, Job $job): View|RedirectResponse
+    public function create(Request $request, Job $job): View|RedirectResponse|Response|JsonResponse
     {
-        abort_unless($job->isAcceptingApplications(), 404);
+        abort_if($job->isSuspended(), 404);
 
         $user = $request->user();
 
@@ -47,6 +50,10 @@ class JobApplicationController extends Controller
         }
 
         abort_unless($user->isApplicant(), 403);
+
+        if (! $job->isAcceptingApplications()) {
+            return app(ExpirationResponse::class)->gone($request, 'application_closed');
+        }
 
         $existingApplication = $user
             ->applications()

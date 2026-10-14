@@ -3,23 +3,27 @@
 namespace App\Models;
 
 use App\Enums\JobStatus;
+use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Scopes\OrganizationScope;
 use Database\Factories\JobFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Job extends Model
 {
     /** @use HasFactory<JobFactory> */
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $table = 'job_posts';
 
     protected $fillable = [
+        'organization_id',
         'employer_id',
         'title',
         'description',
@@ -68,7 +72,7 @@ class Job extends Model
         $slug = $base = Str::slug($title);
         $i = 1;
 
-        while (static::where('slug', $slug)->exists()) {
+        while (static::withoutGlobalScope(OrganizationScope::class)->where('slug', $slug)->exists()) {
             $slug = "{$base}-".$i++;
         }
 
@@ -82,7 +86,19 @@ class Job extends Model
 
     public function employer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'employer_id');
+        return $this->belongsTo(User::class, 'employer_id')->withTrashed();
+    }
+
+    public function members(): HasMany
+    {
+        return $this->hasMany(JobPostMember::class);
+    }
+
+    public function teamMembers(): HasManyThrough
+    {
+        return $this->hasManyThrough(OrganizationMember::class, JobPostMember::class, 'job_id', 'user_id', 'id', 'user_id')
+            ->where('organization_members.organization_id', $this->organization_id)
+            ->with('user');
     }
 
     public function applications(): HasMany

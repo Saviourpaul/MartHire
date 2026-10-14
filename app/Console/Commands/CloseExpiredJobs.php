@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\JobStatus;
 use App\Models\Job;
+use App\Models\Scopes\OrganizationScope;
 use Illuminate\Console\Command;
 
 class CloseExpiredJobs extends Command
@@ -27,7 +28,7 @@ class CloseExpiredJobs extends Command
      */
     public function handle(): int
     {
-        $count = Job::query()->open()->where('due_date', '<', today()->toDateString())
+        $count = Job::withoutGlobalScope(OrganizationScope::class)->open()->where('due_date', '<', today()->toDateString())
             ->update(['status' => JobStatus::Closed]);
 
         $this->info("Closed {$count} expired jobs.");

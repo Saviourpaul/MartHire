@@ -7,8 +7,10 @@ use App\Http\Requests\MoveCandidatePipelineRequest;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Services\ApplicationFormService;
+use App\Support\OrganizationPermissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class EmployerApplicationController extends Controller
@@ -27,6 +29,9 @@ class EmployerApplicationController extends Controller
         $this->ensureEmployerOwnsApplication($request, $applicationForm);
 
         return view('employer.application-show', [
+            'allowedStages' => array_values(array_filter($applicationForm->status->allowedNextStages(),
+                fn (CandidatePipelineStage $stage): bool => Gate::allows('managePipeline', $applicationForm)
+                    && ($stage !== CandidatePipelineStage::Selected || Gate::allows('select', $applicationForm)))),
             'application' => $applicationForm->load([
                 'applicant',
                 'job',
@@ -64,7 +69,7 @@ class EmployerApplicationController extends Controller
             ->withQueryString();
 
         $jobs = Job::query()
-            ->where('employer_id', $request->user()->id)
+            ->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $request->user()))
             ->whereHas('applications')
             ->orderBy('title')
             ->get(['id', 'title']);
@@ -80,8 +85,6 @@ class EmployerApplicationController extends Controller
 
     private function ensureEmployerOwnsApplication(Request $request, ApplicationForm $application): void
     {
-        $application->loadMissing('job');
-
-        abort_unless($application->job->employer_id === $request->user()->id, 403);
+        Gate::authorize('viewForEmployer', $application);
     }
 }

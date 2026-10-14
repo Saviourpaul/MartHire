@@ -6,7 +6,9 @@ use App\Enums\ApplicationDocumentType;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\NigeriaState;
+use App\Support\ExpirationResponse;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\Validator;
@@ -43,6 +45,18 @@ class StoreApplicationFormRequest extends FormRequest
         return $job instanceof Job
             && $user?->isApplicant()
             && $job->isAcceptingApplications();
+    }
+
+    protected function failedAuthorization(): void
+    {
+        $job = $this->route('job');
+
+        if ($this->user()?->isApplicant() && $job instanceof Job
+            && ! $job->isSuspended() && ! $job->isAcceptingApplications()) {
+            throw new HttpResponseException(app(ExpirationResponse::class)->gone($this, 'application_closed'));
+        }
+
+        parent::failedAuthorization();
     }
 
     /**

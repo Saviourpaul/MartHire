@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\ApplicationDocument;
+use App\Models\Scopes\OrganizationScope;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -12,6 +13,7 @@ class MoveApplicationDocumentsPrivate extends Command
     protected $signature = 'app:move-application-documents-private
         {--commit : Move files instead of running a dry run}
         {--delete-public : Delete the public copy after a verified private copy exists}
+        {--include-unreferenced : Also scan public application-documents and user-identification-documents folders}
         {--force : Skip confirmation prompts}
         {--limit= : Limit the number of documents to scan}';
 
@@ -47,6 +49,7 @@ class MoveApplicationDocumentsPrivate extends Command
 
         $stats = [
             'scanned' => 0,
+            'public_copies' => 0,
             'would_move' => 0,
             'moved' => 0,
             'already_private' => 0,
@@ -56,7 +59,7 @@ class MoveApplicationDocumentsPrivate extends Command
             'failed' => 0,
         ];
 
-        $query = ApplicationDocument::query()
+        $query = ApplicationDocument::withoutGlobalScope(OrganizationScope::class)
             ->select(['id', 'file_path'])
             ->orderBy('id');
 
@@ -64,10 +67,39 @@ class MoveApplicationDocumentsPrivate extends Command
             $query->limit($limit);
         }
 
+        $processedPaths = [];
+
         foreach ($query->cursor() as $document) {
+            $path = str_replace('\\', '/', trim((string) $document->file_path));
+
+            if ($path !== '' && isset($processedPaths[$path])) {
+                continue;
+            }
+
+            $processedPaths[$path] = true;
             $stats['scanned']++;
 
-            $this->moveDocument($document, $commit, $deletePublic, $stats);
+            $this->moveFile($path, "document {$document->id}", $commit, $deletePublic, $stats);
+        }
+
+        if ($this->option('include-unreferenced')) {
+            foreach (['application-documents', 'user-identification-documents'] as $directory) {
+                foreach (Storage::disk('public')->allFiles($directory) as $path) {
+                    $path = str_replace('\\', '/', trim($path));
+
+                    if (isset($processedPaths[$path])) {
+                        continue;
+                    }
+
+                    if ($limit !== null && $stats['scanned'] >= $limit) {
+                        break 2;
+                    }
+
+                    $processedPaths[$path] = true;
+                    $stats['scanned']++;
+                    $this->moveFile($path, 'unreferenced file', $commit, $deletePublic, $stats);
+                }
+            }
         }
 
         $this->table(
@@ -88,15 +120,27 @@ class MoveApplicationDocumentsPrivate extends Command
     /**
      * @param  array<string, int>  $stats
      */
-    private function moveDocument(ApplicationDocument $document, bool $commit, bool $deletePublic, array &$stats): void
+    private function moveFile(string $path, string $label, bool $commit, bool $deletePublic, array &$stats): void
     {
-        $path = trim((string) $document->file_path);
-
         if ($path === '') {
             $stats['blank_path']++;
 
             return;
         }
+
+        $normalizedPath = str_replace('\\', '/', $path);
+
+        if (str_starts_with($normalizedPath, '/') || str_contains($normalizedPath, ':')
+            || preg_match('#(^|/)\.\.(/|$)#', $normalizedPath)
+            || preg_match('#[ .]+(/|$)#', $normalizedPath)
+            || preg_match('/[\x00-\x1F\x7F]/', $normalizedPath)) {
+            $stats['failed']++;
+            $this->error("Unsafe file path for {$label}.");
+
+            return;
+        }
+
+        $path = $normalizedPath;
 
         $localDisk = Storage::disk('local');
         $publicDisk = Storage::disk('public');
@@ -104,18 +148,28 @@ class MoveApplicationDocumentsPrivate extends Command
         $isPrivate = $localDisk->exists($path);
         $isPublic = $publicDisk->exists($path);
 
+        if ($isPublic) {
+            $stats['public_copies']++;
+        }
+
         if ($isPrivate) {
             $stats['already_private']++;
 
             if ($commit && $deletePublic && $isPublic) {
                 if (! $this->privateCopyMatchesPublic($path)) {
                     $stats['failed']++;
-                    $this->error("Existing private copy verification failed for document {$document->id}: {$path}");
+                    $this->error("Existing private copy verification failed for {$label}: {$path}");
 
                     return;
                 }
 
-                $publicDisk->delete($path);
+                if (! $publicDisk->delete($path)) {
+                    $stats['failed']++;
+                    $this->error("Failed to delete public copy for {$label}: {$path}");
+
+                    return;
+                }
+
                 $stats['public_deleted']++;
             }
 
@@ -124,7 +178,7 @@ class MoveApplicationDocumentsPrivate extends Command
 
         if (! $isPublic) {
             $stats['missing_public']++;
-            $this->warn("Missing public file for document {$document->id}: {$path}");
+            $this->warn("Missing public file for {$label}: {$path}");
 
             return;
         }
@@ -142,7 +196,7 @@ class MoveApplicationDocumentsPrivate extends Command
 
             if (! $this->privateCopyMatchesPublic($path)) {
                 $stats['failed']++;
-                $this->error("Private copy verification failed for document {$document->id}: {$path}");
+                $this->error("Private copy verification failed for {$label}: {$path}");
 
                 return;
             }
@@ -150,12 +204,18 @@ class MoveApplicationDocumentsPrivate extends Command
             $stats['moved']++;
 
             if ($deletePublic) {
-                $publicDisk->delete($path);
+                if (! $publicDisk->delete($path)) {
+                    $stats['failed']++;
+                    $this->error("Failed to delete public copy for {$label}: {$path}");
+
+                    return;
+                }
+
                 $stats['public_deleted']++;
             }
         } catch (Throwable $throwable) {
             $stats['failed']++;
-            $this->error("Failed to move document {$document->id}: {$throwable->getMessage()}");
+            $this->error("Failed to move {$label}: {$throwable->getMessage()}");
         }
     }
 
@@ -163,9 +223,41 @@ class MoveApplicationDocumentsPrivate extends Command
     {
         $localDisk = Storage::disk('local');
         $publicDisk = Storage::disk('public');
+        $privateStream = null;
+        $publicStream = null;
 
-        return $localDisk->exists($path)
-            && $localDisk->size($path) === $publicDisk->size($path);
+        try {
+            if (! $localDisk->exists($path) || ! $publicDisk->exists($path)
+                || $localDisk->size($path) !== $publicDisk->size($path)) {
+                return false;
+            }
+
+            $privateStream = $localDisk->readStream($path);
+            $publicStream = $publicDisk->readStream($path);
+
+            if (! is_resource($privateStream) || ! is_resource($publicStream)) {
+                return false;
+            }
+
+            $privateHash = hash_init('sha256');
+            $publicHash = hash_init('sha256');
+            $privateBytes = hash_update_stream($privateHash, $privateStream);
+            $publicBytes = hash_update_stream($publicHash, $publicStream);
+
+            return $privateBytes === $localDisk->size($path)
+                && $publicBytes === $publicDisk->size($path)
+                && hash_equals(hash_final($privateHash), hash_final($publicHash));
+        } catch (Throwable) {
+            return false;
+        } finally {
+            if (is_resource($privateStream)) {
+                fclose($privateStream);
+            }
+
+            if (is_resource($publicStream)) {
+                fclose($publicStream);
+            }
+        }
     }
 
     private function limit(): ?int
