@@ -56,7 +56,7 @@ function tinyPngUpload(string $name = 'tiny-profile.png'): UploadedFile
 
 it('renders the application wizard with dependent location and document controls', function () {
     $employer = User::factory()->employer()->create();
-    $job = Job::factory()->approved()->for($employer, 'employer')->create();
+    $job = Job::factory()->open()->for($employer, 'employer')->create();
     $applicant = User::factory()->applicant()->create();
 
     $this->actingAs($applicant)
@@ -104,7 +104,7 @@ it('renders the application wizard with dependent location and document controls
 
 it('redirects guest applicants to sign in before an application can be started', function () {
     $employer = User::factory()->employer()->create();
-    $job = Job::factory()->approved()->for($employer, 'employer')->create();
+    $job = Job::factory()->open()->for($employer, 'employer')->create();
 
     $this->get(route('job-details', $job))
         ->assertOk()
@@ -120,7 +120,7 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
     Storage::fake('local');
 
     $employer = User::factory()->employer()->create();
-    $job = Job::factory()->approved()->for($employer, 'employer')->create();
+    $job = Job::factory()->open()->for($employer, 'employer')->create();
     $applicant = User::factory()->applicant()->create([
         'first_name' => 'Old',
         'last_name' => 'Name',
@@ -193,7 +193,7 @@ it('stores applications, synchronizes applicant profile, and prevents duplicate 
 
 it('requires a supported identification method and its document', function () {
     $employer = User::factory()->employer()->create();
-    $job = Job::factory()->approved()->for($employer, 'employer')->create();
+    $job = Job::factory()->open()->for($employer, 'employer')->create();
     $applicant = User::factory()->applicant()->create();
 
     $this->actingAs($applicant)
@@ -210,7 +210,7 @@ it('requires a supported identification method and its document', function () {
 
 it('returns applicants to the identity step after identity validation fails', function () {
     $employer = User::factory()->employer()->create();
-    $job = Job::factory()->approved()->for($employer, 'employer')->create();
+    $job = Job::factory()->open()->for($employer, 'employer')->create();
     $applicant = User::factory()->applicant()->create([
         'profile_image_path' => 'profile-images/existing.jpg',
     ]);
@@ -236,7 +236,7 @@ it('validates profile photo and document uploads before storing an application',
     Storage::fake('local');
 
     $employer = User::factory()->employer()->create();
-    $job = Job::factory()->approved()->for($employer, 'employer')->create();
+    $job = Job::factory()->open()->for($employer, 'employer')->create();
     $applicant = User::factory()->applicant()->create();
 
     $this->actingAs($applicant)
@@ -276,7 +276,7 @@ it('lets only the owning employer move a candidate through the pipeline', functi
             'stage' => 'shortlisted',
             'remarks' => 'Looks good.',
         ])
-        ->assertForbidden();
+        ->assertNotFound();
 
     $this->actingAs($owner)
         ->patch(route('employer.applications.pipeline.move', $application), [

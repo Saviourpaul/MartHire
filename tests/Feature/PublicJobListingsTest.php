@@ -5,7 +5,7 @@ use App\Models\Job;
 function createApprovedPublicJobs(int $count): void
 {
     foreach (range(1, $count) as $index) {
-        Job::factory()->approved()->create([
+        Job::factory()->open()->create([
             'title' => "Public Listing {$index}",
             'company' => "Listing Company {$index}",
             'category' => 'Technology',

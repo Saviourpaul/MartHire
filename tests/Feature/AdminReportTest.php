@@ -20,7 +20,7 @@ it('renders administrative reports with live recruitment and platform metrics', 
         'last_login_at' => now()->startOfMonth()->addDays(2),
     ]);
 
-    $approvedJob = Job::factory()->approved()->create([
+    $selectedJob = Job::factory()->open()->create([
         'employer_id' => $employer->id,
         'title' => 'Platform Analyst',
         'company' => 'Nexa Works',
@@ -31,13 +31,13 @@ it('renders administrative reports with live recruitment and platform metrics', 
 
     Job::factory()->create([
         'employer_id' => $employer->id,
-        'status' => JobStatus::Pending,
+        'status' => JobStatus::Open,
         'category' => 'Healthcare',
         'created_at' => now()->startOfMonth()->addDays(4),
     ]);
 
-    ApplicationForm::factory()->approved($employer)->create([
-        'job_id' => $approvedJob->id,
+    ApplicationForm::factory()->selected($employer)->create([
+        'job_id' => $selectedJob->id,
         'user_id' => $applicant->id,
         'submitted_at' => now()->startOfMonth()->addDays(5),
         'reviewed_at' => now()->startOfMonth()->addDays(7),
@@ -46,17 +46,22 @@ it('renders administrative reports with live recruitment and platform metrics', 
     $this->actingAs($admin)
         ->get(route('Reports', ['period' => 'this_month']))
         ->assertOk()
-        ->assertSee('Administrative Reports')
-        ->assertSee('Platform Statistics')
-        ->assertSee('Recruitment Analytics')
+        ->assertViewHas('report', fn (array $report): bool => $report['metrics']['total_applications'] === 1
+            && $report['metrics']['hiring_success_rate'] === 100.0
+            && $report['metrics']['average_time_to_hire_days'] === 2.0
+            && array_combine($report['charts']['pipeline']['labels'], $report['charts']['pipeline']['series'])['Selected'] === 1)
+        ->assertSee('Reports')
+        ->assertSee('Registered Users')
+        ->assertSee('Hiring Success Rate')
+        ->assertSee('Candidate Pipeline')
         ->assertSee('Job Moderation')
-        ->assertSee('Security And Rate Limits')
-        ->assertSee('Platform Configuration')
+        ->assertSee('Growth Trends')
+        ->assertSee('Top Employers')
         ->assertSee('Export CSV')
         ->assertSee('Platform Analyst')
         ->assertSee('Technology')
         ->assertSee('Nexa Works')
-        ->assertSee('2.0 days');
+        ->assertSee('2 days');
 });
 
 it('exports administrative reports as csv for admins', function () {
@@ -65,7 +70,7 @@ it('exports administrative reports as csv for admins', function () {
         'first_name' => 'Export',
         'last_name' => 'Employer',
     ]);
-    $job = Job::factory()->approved()->create([
+    $job = Job::factory()->open()->create([
         'employer_id' => $employer->id,
         'title' => 'Export Ready Role',
         'company' => 'CSV Limited',
@@ -102,13 +107,16 @@ it('prevents non-admin users from viewing or exporting administrative reports', 
         ->assertForbidden();
 });
 
-it('reports canonical states by country while retaining historical geography', function () {
-    User::factory()->applicant()->create(['country_code' => 'IN', 'country' => 'India', 'state' => 'Punjab', 'city' => 'Amritsar']);
-    User::factory()->applicant()->create(['country_code' => 'PK', 'country' => 'Pakistan', 'state' => 'Punjab', 'city' => 'Lahore']);
+it('reports applicant counts by state of origin including missing geography', function () {
+    User::factory()->applicant()->create(['nationality' => 'India', 'state_of_origin' => 'Punjab', 'local_government_area' => 'Amritsar']);
+    User::factory()->applicant()->create(['nationality' => 'Pakistan', 'state_of_origin' => 'Punjab', 'local_government_area' => 'Lahore']);
     User::factory()->applicant()->create(['nationality' => 'Nigerian', 'state_of_origin' => 'Bayelsa']);
+    User::factory()->applicant()->create(['state_of_origin' => null]);
+    User::factory()->applicant()->create(['state_of_origin' => '']);
+    User::factory()->employer()->create(['state_of_origin' => 'Lagos']);
 
     $report = app(AdminReportService::class)->getReport(Request::create('/Reports'));
     $geography = collect($report['geography']['applicantsByState'])->pluck('total', 'state')->all();
 
-    expect($geography)->toMatchArray(['Punjab, India' => 1, 'Punjab, Pakistan' => 1, 'Bayelsa, Nigerian' => 1]);
+    expect($geography)->toHaveCount(3)->toMatchArray(['Punjab' => 2, 'Not Provided' => 2, 'Bayelsa' => 1]);
 });

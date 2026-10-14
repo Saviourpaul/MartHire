@@ -42,7 +42,7 @@ it('blocks invalid, terminal, and unauthorized pipeline changes', function () {
 
     $this->actingAs($otherEmployer)
         ->patch(route('employer.applications.pipeline.move', $application), ['stage' => CandidatePipelineStage::Shortlisted->value])
-        ->assertForbidden();
+        ->assertNotFound();
 
     $this->actingAs($owner)
         ->from(route('employer.applications.show', $application))
@@ -68,7 +68,7 @@ it('lets applicants view only their own submitted application', function () {
     $this->actingAs($applicant)
         ->get(route('client.applications.show', $application))
         ->assertOk()
-        ->assertSee('Applicant information')
+        ->assertSee('Applicant Details')
         ->assertSee('Submitted');
 
     $this->actingAs($otherApplicant)
