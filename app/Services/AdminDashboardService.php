@@ -32,6 +32,7 @@ class AdminDashboardService
             'dateRange' => $dateRange,
             'filterValues' => ['period' => $request->input('period', '12_months')],
             'metrics' => $this->metrics(),
+            'jobStatusCounts' => Job::query()->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'),
             'charts' => [
                 'jobsOverTime' => [
                     'label' => $analytics['series'][0]['name'],

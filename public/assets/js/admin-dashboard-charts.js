@@ -430,6 +430,7 @@
                 });
 
                 if (!response.ok) {
+                    await window.MarthireRecovery?.handle(response);
                     throw new Error(`Analytics request failed with status ${response.status}`);
                 }
 
@@ -451,6 +452,7 @@
                 });
 
                 if (!response.ok) {
+                    await window.MarthireRecovery?.handle(response);
                     throw new Error(`Active users request failed with status ${response.status}`);
                 }
 

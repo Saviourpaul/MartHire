@@ -17,6 +17,7 @@ class ApplicationDocumentDownloadController extends Controller
         $documents->authorize($request->user(), $applicationDocument);
 
         $disk = $documents->diskFor($applicationDocument);
+        $documents->logView($request->user(), $applicationDocument, 'download');
 
         return $disk->download(
             $applicationDocument->file_path,

@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Enums\CandidatePipelineStage;
+use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Scopes\OrganizationScope;
+use App\Support\OrganizationPermissions;
 use Database\Factories\ApplicationFormFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,9 +16,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ApplicationForm extends Model
 {
     /** @use HasFactory<ApplicationFormFactory> */
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected $fillable = [
+        'organization_id',
         'job_id',
         'user_id',
         'reference',
@@ -63,7 +67,7 @@ class ApplicationForm extends Model
 
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewed_by');
+        return $this->belongsTo(User::class, 'reviewed_by')->withTrashed();
     }
 
     public function documents(): HasMany
@@ -76,9 +80,20 @@ class ApplicationForm extends Model
         return $this->hasMany(ApplicationStatusHistory::class);
     }
 
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    protected function parentOrganizationId(): ?int
+    {
+        return Job::withoutGlobalScope(OrganizationScope::class)
+            ->whereKey($this->job_id)->value('organization_id');
+    }
+
     public function scopeForEmployer(Builder $query, User $employer): Builder
     {
-        return $query->whereHas('job', fn (Builder $jobQuery) => $jobQuery->where('employer_id', $employer->id));
+        return app(OrganizationPermissions::class)->scopeApplications($query, $employer);
     }
 
     public function scopeStatus(Builder $query, CandidatePipelineStage|string $status): Builder

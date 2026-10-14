@@ -1,6 +1,6 @@
 <x-layout>
     <main>
-        <div class="mx-auto max-w-(--breakpoint-2xl) p-4 pb-20 md:p-6 md:pb-6">
+        <div class="mx-auto max-w-screen-2xl p-4 pb-20 md:p-6 md:pb-6">
             <!-- Breadcrumb Start -->
             <div x-data="{ pageName: `Application Details` }">
                 <div class="flex flex-wrap items-center justify-between gap-3 pb-6">
@@ -22,13 +22,14 @@
             <!-- Content Start -->
             <div class="space-y-6">
                 <div
-                    class="flex flex-col justify-between gap-6 rounded-2xl border border-gray-200 bg-white px-6 py-5 sm:flex-row sm:items-center dark:border-gray-800 dark:bg-white/3">
+                    class="flex flex-col justify-between gap-6 rounded-2xl border border-gray-200 bg-white px-6 py-5 sm:flex-row sm:items-center dark:border-gray-800 dark:bg-white/[0.03]">
                     <div class="flex flex-col gap-2.5 divide-gray-300 sm:flex-row sm:divide-x dark:divide-gray-700">
                         <div class="flex items-center gap-2 sm:pr-3">
                             <span class="text-base font-medium text-gray-700 dark:text-gray-400">
                                 Application ID
                                 <span
                                     class="bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500 inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium">{{ $application->reference }}</span>
+                            </span>
                         </div>
                         <p class="text-sm text-gray-500 sm:pl-3 dark:text-gray-400">
                             Submitted : {{ $application->submitted_at->format('M d, Y g:i A') }}
@@ -37,22 +38,19 @@
 
                 </div>
 
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                    <div class="lg:col-span-8 2xl:col-span-9">
-                        @if (session('success'))
-                            <div class="rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-theme-sm text-success-700"
-                                role="status">{{ session('success') }}</div>
-                        @endif
-                        @if ($errors->any())
-                            <div class="rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-theme-sm text-error-700"
-                                role="alert">{{ $errors->first() }}</div>
-                        @endif
+                @if (session('success'))
+                    <div class="rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-theme-sm text-success-700 dark:border-green-800 dark:bg-green-500/10 dark:text-green-300"
+                        role="status">{{ session('success') }}</div>
+                @endif
+                @if ($errors->any())
+                    <div class="rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-theme-sm text-error-700 dark:border-red-800 dark:bg-red-500/10 dark:text-red-300"
+                        role="alert">{{ $errors->first() }}</div>
+                @endif
 
-                    </div>
-
-                    <div class="space-y-6 lg:col-span-4 2xl:col-span-3">
+                <div data-application-layout class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                    <div data-application-main class="min-w-0 space-y-6 lg:col-span-8">
                         <div
-                            class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/3">
+                            class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
                             <h2 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
                                 Candidate Details
                             </h2>
@@ -60,22 +58,22 @@
                                 <div class="mb-6 flex flex-col gap-5 sm:flex-row xl:items-center xl:justify-between">
                                     <div class="flex w-full flex-col items-start gap-6 sm:flex-row sm:items-center">
                                         <div
-                                            class="border-gray-20 overflow-hidden rounded-full border dark:border-gray-800">
-                                            <img {{ $application->profile_image_path }} class="size-20"
-                                                alt="user" />
+                                            class="shrink-0 overflow-hidden rounded-full border border-gray-200 dark:border-gray-800">
+                                            <img src="{{ $application->profile_image_path ? asset('storage/'.$application->profile_image_path) : asset('admin/assets/images/Avatar.png') }}" class="h-20 w-20 object-cover"
+                                                alt="{{ $application->first_name }} {{ $application->last_name }}" />
                                         </div>
                                         <div class="text-left">
                                             <h4 class="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
                                                 {{ $application->first_name }}
                                                 {{ $application->last_name }}
                                             </h4>
-                                            <div class="flex items-center gap-1 sm:gap-3">
+                                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                                                 <p class="text-sm text-gray-500 dark:text-gray-400">
                                                     email Address |
                                                 </p>
                                                 <div class="hidden h-3.5 w-px bg-gray-300 sm:block dark:bg-gray-700">
                                                 </div>
-                                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                                <p class="break-all text-sm text-gray-500 dark:text-gray-400">
                                                     {{ $application->email }}
                                                 </p>
                                             </div>
@@ -83,7 +81,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    class="relative grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-x-11 xl:gap-y-7">
+                                    class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
                                     <div class="w-full">
                                         <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                                             First Name
@@ -166,19 +164,18 @@
                                         </p>
                                     </div>
 
-                                    <div class="hidden xl:block"></div>
-
                                 </div>
                             </div>
                         </div>
 
                         <div
-                            class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/3">
+                            class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
                             <h2 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
                                 All Documents
                             </h2>
 
                             <!-- Timeline item -->
+                            @can('viewDocuments', $application)
                             @forelse($application->documents as $document)
                                 <div class="relative pb-7 pl-11">
 
@@ -218,13 +215,15 @@
                             @empty
                                 <div class="px-5 py-8 text-theme-sm text-gray-500">No documents submitted.</div>
                             @endforelse
-
+                            @else
+                                <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">Document access is restricted for your role.</p>
+                            @endcan
 
                            
                             
                         </div>
                     </div>
-                    <aside class="space-y-6 xl:col-span-4">
+                    <aside data-application-sidebar class="min-w-0 space-y-6 lg:col-span-4">
                         <section
                             class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                             <h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Candidate pipeline</h2>
@@ -233,27 +232,30 @@
                             </div>
                             @if ($application->status->isTerminal())
                                 <p class="mt-4 text-theme-sm text-gray-500">This candidate is in a terminal stage.</p>
-                            @else<form action="{{ route('employer.applications.pipeline.move', $application) }}"
+                            @elseif (auth()->user()->can('managePipeline', $application) && count($allowedStages ?? []) > 0)
+                                <form action="{{ route('employer.applications.pipeline.move', $application) }}"
                                     method="POST" class="mt-5 space-y-4">@csrf @method('PATCH')<div><label
                                             for="stage"
                                             class="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300">Move
                                             to</label><select id="stage" name="stage" required
                                             class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-theme-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                                             <option value="">Select stage</option>
-                                            @foreach ($application->status->allowedNextStages() as $stage)
+                                            @foreach ($allowedStages as $stage)
                                                 <option value="{{ $stage->value }}">{{ $stage->label() }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div><label for="remarks"
                                             class="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300">Note
-                                            <span class="font-normal text-gray-500">Optional</span></label>
+                                            <span class="font-normal text-gray-500">Optional · visible to candidate</span></label>
                                         <textarea id="remarks" name="remarks" rows="4" maxlength="2000"
                                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-theme-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('remarks') }}</textarea>
                                     </div><button
                                          class=" btn-primary btn-sm">Update
                                         candidate stage</button>
                                 </form>
+                            @else
+                                <p class="mt-4 text-sm leading-6 text-gray-500 dark:text-gray-400">You have read-only access to this candidate's pipeline.</p>
                             @endif
                         </section>
                         <section
@@ -274,12 +276,13 @@
                                 </div>
                                 <div class="ml-4 flex justify-between">
                                     <div>
-                                        <h4 class="font-medium text-gray-800 dark:text-white/90"{{ $application->status->badgeClass() }}>
+                                        <h4 class="font-medium text-gray-800 dark:text-white/90">
                                             {{ $history->to_status->label() }}
                                         </h4>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">
                                            {{ $history->remarks }}
                                         </p>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Changed by {{ trim(($history->changedBy?->first_name ?? '').' '.($history->changedBy?->last_name ?? '')) ?: 'Former member' }}</p>
                                     </div>
 
                                     <div>

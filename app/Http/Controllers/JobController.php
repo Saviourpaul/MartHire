@@ -73,7 +73,7 @@ class JobController extends Controller
                 });
             })
             ->orderBy($sortColumn, $sortDirection)
-            ->withCount('applications')
+            ->withCount(['applications' => fn ($query) => app(OrganizationPermissions::class)->scopeApplications($query, $request->user())])
             ->paginate(10)
             ->withQueryString();
 
@@ -86,6 +86,7 @@ class JobController extends Controller
 
     public function store(Request $request): RedirectResponse|JsonResponse
     {
+        Gate::authorize('create', Job::class);
         $data = $request->validate($this->rules($request));
 
         if ($request->hasFile('logo')) {
@@ -94,7 +95,13 @@ class JobController extends Controller
 
         $data['status'] = JobStatus::Open;
 
-        $request->user()->jobs()->create($data);
+        $data['organization_id'] = app(OrganizationContext::class)->organizationId();
+        DB::transaction(function () use ($request, $data): void {
+            Organization::whereKey($data['organization_id'])->lockForUpdate()->firstOrFail();
+            Gate::authorize('create', Job::class);
+            $job = $request->user()->jobs()->create($data);
+            JobPostMember::create(['organization_id' => $job->organization_id, 'job_id' => $job->id, 'user_id' => $request->user()->id]);
+        });
 
         if ($request->expectsJson()) {
             $request->session()->flash('success', 'Job published and open for applications.');
@@ -194,9 +201,14 @@ class JobController extends Controller
     public function destroy(Request $request, Job $job): RedirectResponse|JsonResponse
     {
         $this->ensureEmployerOwnsJob($request, $job);
+        Gate::authorize('delete', $job);
 
+        DB::transaction(function () use ($job): void {
+            Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
+            Gate::authorize('delete', $job);
+            $job->delete();
+        });
         $this->deleteStoredLogo($job);
-        $job->delete();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -214,10 +226,13 @@ class JobController extends Controller
     {
         $this->ensureEmployerOwnsJob($request, $job);
 
-        $job->loadCount('applications');
+        $job->loadCount(['applications' => fn ($query) => app(OrganizationPermissions::class)->scopeApplications($query, $request->user())]);
 
         return view('employer.jobs.show', [
             'job' => $job,
+            'availableTeamMembers' => OrganizationMember::with('user')->where('status', 'active')
+                ->whereHas('user', fn ($query) => $query->where('status', 'active')->where('role', 'employer')->whereNull('users.deleted_at')->whereNotNull('email_verified_at'))->get(),
+            'assignedUserIds' => JobPostMember::where('job_id', $job->id)->pluck('user_id')->all(),
         ]);
     }
 
@@ -230,7 +245,7 @@ class JobController extends Controller
             $user = $request->user();
 
             abort_unless(
-                $user?->isAdmin() || ($user?->isEmployer() && $job->employer_id === $user->id),
+                ($user?->isAdmin() && $user->isActive() && $user->hasVerifiedEmail()) || ($user && Gate::forUser($user)->allows('view', $job)),
                 404
             );
         }
@@ -289,7 +304,7 @@ class JobController extends Controller
 
     private function ensureEmployerOwnsJob(Request $request, Job $job): void
     {
-        abort_unless($job->employer_id === $request->user()->id, 403);
+        Gate::authorize('view', $job);
     }
 
     /** @return array{jobs: LengthAwarePaginator, appliedJobIds: Collection, search: string, category: string, employmentType: string} */

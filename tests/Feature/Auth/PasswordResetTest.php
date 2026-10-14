@@ -183,21 +183,27 @@ test('reset validation failures display clear form errors without retaining pass
     ], $overrides);
 
     $response = $this->from($resetUrl)->post(route('password.store'), $payload);
-    $response->assertRedirect()
-        ->assertSessionHasErrors([$field => $message])
+    $response
         ->assertSessionMissing('password_reset_success')
         ->assertSessionMissing('_old_input.password')
         ->assertSessionMissing('_old_input.password_confirmation')
         ->assertSessionMissing('_old_input.token');
 
-    $this->get($response->headers->get('Location'))
-        ->assertOk()
-        ->assertSee('role="alert"', false)
-        ->assertSee($message)
-        ->assertSee('href="'.route('password.request').'"', false)
-        ->assertSee('name="password"', false)
-        ->assertDontSee('value="NewPassword1!"', false)
-        ->assertDontSee('http-equiv="refresh"', false);
+    if (in_array($field, ['token', 'email'], true)) {
+        $response->assertGone()->assertSee($message)
+            ->assertSee('href="'.route('password.request').'"', false)
+            ->assertDontSee('name="password"', false);
+    } else {
+        $response->assertRedirect()->assertSessionHasErrors([$field => $message]);
+        $this->get($response->headers->get('Location'))
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee($message)
+            ->assertSee('href="'.route('password.request').'"', false)
+            ->assertSee('name="password"', false)
+            ->assertDontSee('value="NewPassword1!"', false)
+            ->assertDontSee('http-equiv="refresh"', false);
+    }
 
     expect(Hash::check('password', $user->fresh()->password))->toBeTrue();
     $this->assertDatabaseHas('password_reset_tokens', ['email' => $user->email]);
@@ -275,10 +281,11 @@ test('an invalid reset token cannot change the password', function () {
             'password' => 'NewPassword1!',
             'password_confirmation' => 'NewPassword1!',
         ])
-        ->assertSessionHasErrors(['reset' => 'This password reset link is invalid or has expired. Please request a new link.']);
+        ->assertGone()
+        ->assertSee('This password reset link is invalid or has expired. Please request a new link.');
 
     $this->get(route('password.reset', ['token' => 'invalid-token', 'email' => $user->email]))
-        ->assertOk()
+        ->assertGone()
         ->assertSee('role="alert"', false)
         ->assertSee('This password reset link is invalid or has expired. Please request a new link.');
 
@@ -305,10 +312,11 @@ test('an expired reset token cannot change the password or fire the reset event'
             'password' => 'NewPassword1!',
             'password_confirmation' => 'NewPassword1!',
         ])
-        ->assertSessionHasErrors(['reset' => 'This password reset link is invalid or has expired. Please request a new link.']);
+        ->assertGone()
+        ->assertSee('This password reset link is invalid or has expired. Please request a new link.');
 
     $this->get(route('password.reset', ['token' => $token, 'email' => $user->email]))
-        ->assertOk()
+        ->assertGone()
         ->assertSee('This password reset link is invalid or has expired. Please request a new link.')
         ->assertSee('href="'.route('password.request').'"', false);
 
@@ -332,12 +340,12 @@ test('a reset token cannot reset a different or unknown account', function (bool
         'password' => 'NewPassword1!',
         'password_confirmation' => 'NewPassword1!',
     ])
-        ->assertRedirect($resetUrl)
-        ->assertSessionHasErrors(['reset' => 'This password reset link is invalid or has expired. Please request a new link.'])
+        ->assertGone()
+        ->assertSee('This password reset link is invalid or has expired. Please request a new link.')
         ->assertSessionMissing('password_reset_success');
 
     $this->get($resetUrl)
-        ->assertOk()
+        ->assertGone()
         ->assertSee('This password reset link is invalid or has expired. Please request a new link.')
         ->assertSee('role="alert"', false);
 
@@ -371,12 +379,12 @@ test('a used reset token cannot reset the password again', function () {
         'password' => 'AnotherPassword1!',
         'password_confirmation' => 'AnotherPassword1!',
     ])
-        ->assertRedirect($resetUrl)
-        ->assertSessionHasErrors(['reset' => 'This password reset link is invalid or has expired. Please request a new link.'])
+        ->assertGone()
+        ->assertSee('This password reset link is invalid or has expired. Please request a new link.')
         ->assertSessionMissing('password_reset_success');
 
     $this->get($resetUrl)
-        ->assertOk()
+        ->assertGone()
         ->assertSee('This password reset link is invalid or has expired. Please request a new link.')
         ->assertDontSee('Your password has been reset successfully.');
 

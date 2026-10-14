@@ -21,12 +21,15 @@
         
         <div class="container">
             <div class="row justify-center">
-                <div class="col-11 lg:col-10 content">
-                    <h3 class="mt-0">About The Role:</h3>
-                    <p>{{ strip_tags($job->description) }}.</p>
+                <div class="col-11 lg:col-10">
+                    <section aria-labelledby="job-description-heading" class="mb-10">
+                        <h2 id="job-description-heading" class="mb-4 text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">About The Role</h2>
+                        <div class="job-description-content format format-sm format-gray max-w-none break-words sm:format-base dark:format-invert" data-job-description>
+                            {!! app(\App\Support\JobDescription::class)->toHtml($job->description) !!}
+                        </div>
+                    </section>
 
-
-
+                    <div class="content">
                     <h3>Organization and Job Info </h3>
                     <h4>{{ $job->company }}</h4>
                     <ul class="mb-14">
@@ -37,7 +40,8 @@
                             <span>{{ $job->created_at?->format('M j, Y') }}</span>
                         </div> 
                     </ul>
-                    @if(!$job->AcceptingApplications())
+                    <p class="mb-4"><span class="inline-flex rounded-full px-3 py-1 text-sm font-medium {{ $job->status->badgeClass() }}">{{ $job->status->label() }}</span></p>
+                    @if(!$job->isAcceptingApplications())
                     <p>Applications are closed for this job.</p>
                     @elseif($existingApplication)
                     <a href="{{ route('client.applications.show', $existingApplication) }}"
@@ -46,7 +50,7 @@
                     @else 
                        @auth
                        @if (auth()->user()->isApplicant())
-                       <button  href="{{ route('applications.create', $job) }}" class="btn btn-primary job-apply-btn">Apply for this job</button>
+                       <a href="{{ route('applications.create', $job) }}" class="btn btn-primary job-apply-btn">Apply for this job</a>
                        @else
                                 <p
                                     class="rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
@@ -59,6 +63,7 @@
                           
                        @endauth
                     @endif
+                    </div>
 
                      
                     

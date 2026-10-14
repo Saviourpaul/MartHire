@@ -48,7 +48,7 @@ test('new users register as pending applicants and queue verification delivery',
 
 test('registration keeps an intended job application until verification completes', function () {
     Queue::fake();
-    $job = Job::factory()->approved()->create();
+    $job = Job::factory()->open()->create();
 
     $response = $this
         ->withSession(['url.intended' => route('applications.create', $job)])

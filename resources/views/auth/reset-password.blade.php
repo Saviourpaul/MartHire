@@ -67,7 +67,7 @@ $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(valu
                             </div>
                             <a href="{{ route('login') }}"
                                 class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
-                                {{ __('login in now') }}
+                                {{ __('Sign in now') }}
                             </a>
                         @else
                         @if ($errors->any())

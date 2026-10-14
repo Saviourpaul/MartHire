@@ -8,6 +8,7 @@ use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
 use App\Support\AdminDashboardDateRange;
+use App\Support\OrganizationPermissions;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,6 +31,8 @@ class EmployerDashboardService
             'dateRange' => $dateRange,
             'filterValues' => ['period' => $request->input('period', '12_months')],
             'metrics' => $this->metrics($employer),
+            'jobStatusCounts' => Job::query()->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $employer))
+                ->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'),
             'charts' => [
                 'applicationsOverTime' => [
                     'label' => $analytics['series'][1]['name'],
@@ -93,7 +96,7 @@ class EmployerDashboardService
             ->pluck('total', 'status');
 
         return [
-            'total_jobs' => Job::query()->where('employer_id', $employer->id)->count(),
+            'total_jobs' => Job::query()->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $employer))->count(),
             'total_applicants' => ApplicationForm::query()->forEmployer($employer)->distinct('user_id')->count('user_id'),
             'total_applications' => (int) $applicationCounts->sum(),
             'selected_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Selected->value] ?? 0),
@@ -127,7 +130,7 @@ class EmployerDashboardService
         $interval = $this->chartInterval($dateRange);
         $counts = $this->groupedCounts(
             Job::query()
-                ->where('employer_id', $employer->id)
+                ->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $employer))
                 ->whereBetween('created_at', [$dateRange->start, $dateRange->end]),
             'created_at',
             $interval,

@@ -36,6 +36,7 @@
             </div>
 
             <div class="mt-6 grid grid-cols-12 gap-4 md:gap-6">
+               
                 <div class="col-span-12">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
                         @foreach ([

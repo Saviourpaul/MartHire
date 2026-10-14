@@ -2,12 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\OrganizationMember;
+use App\Models\Scopes\OrganizationScope;
+use App\Support\OrganizationContext;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -17,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped(OrganizationContext::class);
     }
 
     /**
@@ -25,6 +29,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('components.layout', function (\Illuminate\View\View $view): void {
+            $context = app(OrganizationContext::class);
+            $user = request()->user();
+            $memberships = $user?->isEmployer()
+                ? OrganizationMember::withoutGlobalScope(OrganizationScope::class)->with('organization')
+                    ->where('user_id', $user->id)->where('status', 'active')->orderBy('id')->get()
+                : collect();
+            $view->with([
+                'currentOrganization' => $context->organization(),
+                'organizationMemberships' => $memberships,
+                'currentOrganizationRole' => $memberships->firstWhere('organization_id', $context->organizationId())?->role,
+            ]);
+        });
+
+        RateLimiter::for('team-invitations', fn (Request $request) => Limit::perMinute(5)->by($request->user()?->id ?: $request->ip()));
+
         RateLimiter::for('downloads', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });

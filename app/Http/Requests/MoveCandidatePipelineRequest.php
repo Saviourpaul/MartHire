@@ -14,7 +14,8 @@ class MoveCandidatePipelineRequest extends FormRequest
         $application = $this->route('applicationForm');
 
         return $application instanceof ApplicationForm
-            && $this->user()?->can('managePipeline', $application);
+            && $this->user()?->can('managePipeline', $application)
+            && ($this->input('stage') !== CandidatePipelineStage::Selected->value || $this->user()?->can('select', $application));
     }
 
     /**

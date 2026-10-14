@@ -146,6 +146,7 @@
             });
 
             if (!response.ok) {
+                await window.MarthireRecovery?.handle(response);
                 throw new Error(`Table request failed with status ${response.status}`);
             }
 
@@ -222,6 +223,7 @@
             const payload = await response.json().catch(() => ({}));
 
             if (!response.ok || payload.ok === false) {
+                await window.MarthireRecovery?.handle(response, payload);
                 throw payload;
             }
 

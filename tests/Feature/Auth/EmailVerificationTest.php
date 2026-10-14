@@ -41,7 +41,7 @@ test('the verification delivery job skips accounts that are already verified', f
 
 test('an unverified user remains authenticated only for the verification flow', function () {
     $user = User::factory()->unverified()->create();
-    $job = Job::factory()->approved()->create();
+    $job = Job::factory()->open()->create();
 
     $this->actingAs($user)
         ->get(route('dashboard'))
@@ -141,16 +141,20 @@ test('guest, expired, invalid, and cross-account verification links never activa
 
     $this->actingAs($otherUser)
         ->get($validUrl)
-        ->assertRedirect(route('verification.notice'));
+        ->assertForbidden()
+        ->assertSee('Verification link invalid');
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 
     $this->actingAs($user)
         ->get(verificationUrl($user, 'wrong@example.com'))
-        ->assertRedirect(route('verification.notice'));
+        ->assertForbidden()
+        ->assertSee('Verification link invalid');
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 
     $this->actingAs($user)
         ->get(verificationUrl($user, expiration: now()->subMinute()))
-        ->assertRedirect(route('verification.notice'));
+        ->assertGone()
+        ->assertSee('Verification link expired')
+        ->assertSee('href="'.route('verification.notice').'"', false);
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 });

@@ -9,11 +9,7 @@
             'sort' => $column,
             'direction' => $sortColumn === $column && $sortDirection === 'asc' ? 'desc' : 'asc',
         ]);
-        $statusClass = fn($status) => match ($status->value) {
-            'approved' => 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400',
-            'rejected' => 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400',
-            default => 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400',
-        };
+        $statusClass = fn($status) => $status->badgeClass();
     @endphp
 
     <div x-data="{ isCreateJobModal: false, isEditJobModal: null, isDeleteJobModal: null }">
@@ -25,10 +21,12 @@
                         <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">Manage your job posts and review
                             status.</p>
                     </div>
+                    @can('create', \App\Models\Job::class)
                     <button type="button" @click="isCreateJobModal = true"
                         class="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-theme-sm font-medium btn-primary">
                         Create Job
                     </button>
+                    @endcan
                 </div>
 
                 @if (session('success'))
@@ -70,7 +68,16 @@
                             </div>
                             <button type="submit"
                                 class="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Search</button>
-                            @if (request()->filled('search'))
+                            <label class="w-full sm:w-auto">
+                                <span class="sr-only">Filter job status</span>
+                                <select name="status" class="min-h-[44px] w-full rounded-lg border-gray-300 bg-white text-base focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                                    <option value="">All statuses</option>
+                                    @foreach (\App\Enums\JobStatus::cases() as $status)
+                                        <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            @if (request()->filled('search') || request()->filled('status'))
                                 <a href="{{ route('jobs') }}" data-table-reset-link
                                     class="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">Clear</a>
                             @endif
@@ -132,6 +139,10 @@
                                             {{ number_format($job->applications_count) }}</td>
                                         <td class="px-6 py-4"><span
                                                 class="rounded-full px-2.5 py-1 text-theme-xs font-medium {{ $statusClass($job->status) }}">{{ $job->status->label() }}</span>
+                                            @if ($job->isSuspended())
+                                                <p class="mt-2 text-theme-xs font-semibold text-amber-700 dark:text-amber-300">Suspended by moderation</p>
+                                                <a href="{{ route('jobs.show', $job) }}" class="mt-1 inline-block text-theme-xs text-brand-600 underline dark:text-brand-400">View suspension reason</a>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center justify-end gap-3">
@@ -144,6 +155,7 @@
                                                             d="M10.5 4.25C6.55 4.25 3.3 6.65 2 10.5c1.3 3.85 4.55 6.25 8.5 6.25s7.2-2.4 8.5-6.25c-1.3-3.85-4.55-6.25-8.5-6.25Zm0 10.5a4.25 4.25 0 1 1 0-8.5 4.25 4.25 0 0 1 0 8.5Zm0-1.5a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5Z" />
                                                     </svg>
                                                 </a>
+                                                @can('update', $job)
                                                 <button type="button" @click="isEditJobModal = {{ $job->id }}"
                                                     class="text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400"
                                                     aria-label="Edit job">
@@ -153,6 +165,8 @@
                                                             d="M17.0911 3.53206C16.2124 2.65338 14.7878 2.65338 13.9091 3.53206L5.6074 11.8337C5.29899 12.1421 5.08687 12.5335 4.99684 12.9603L4.26177 16.445C4.20943 16.6931 4.286 16.9508 4.46529 17.1301C4.64458 17.3094 4.90232 17.3859 5.15042 17.3336L8.63507 16.5985C9.06184 16.5085 9.45324 16.2964 9.76165 15.988L18.0633 7.68631C18.942 6.80763 18.942 5.38301 18.0633 4.50433L17.0911 3.53206Z" />
                                                     </svg>
                                                 </button>
+                                                @endcan
+                                                @can('delete', $job)
                                                 <button type="button" @click="isDeleteJobModal = {{ $job->id }}"
                                                     class="text-gray-500 hover:text-error-500 dark:text-gray-400 dark:hover:text-error-500"
                                                     aria-label="Delete job">
@@ -162,6 +176,7 @@
                                                             d="M7.04142 4.29199C7.04142 3.04935 8.04878 2.04199 9.29142 2.04199H11.7081C12.9507 2.04199 13.9581 3.04935 13.9581 4.29199V4.54199H17.166C17.5802 4.54199 17.916 4.87778 17.916 5.29199C17.916 5.70621 17.5802 6.04199 17.166 6.04199H16.8752V16.7087C16.8752 17.9513 15.8678 18.9587 14.6252 18.9587H6.37516C5.13252 18.9587 4.12516 17.9513 4.12516 16.7087V6.04199H3.8335C3.41928 6.04199 3.0835 5.70621 3.0835 5.29199C3.0835 4.87778 3.41928 4.54199 3.8335 4.54199H7.04142ZM8.54142 4.54199H12.4581V4.29199C12.4581 3.87778 12.1223 3.54199 11.7081 3.54199H9.29142C8.87721 3.54199 8.54142 3.87778 8.54142 4.29199V4.54199Z" />
                                                     </svg>
                                                 </button>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -185,12 +200,14 @@
             </div>
         </main>
 
-        <div x-show="isCreateJobModal"
-            class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto p-5 ">
+        @can('create', \App\Models\Job::class)
+        <div x-show="isCreateJobModal" x-cloak @keydown.escape.window="isCreateJobModal = false"
+            role="dialog" aria-modal="true" aria-labelledby="create-job-heading"
+            class="fixed inset-0 z-[99999] flex items-center justify-center overflow-hidden p-2 sm:p-4">
             <div class="modal-close-btn fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"></div>
             <div @click.outside="isCreateJobModal = false"
-                class="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 lg:p-11 dark:bg-gray-900">
-                <button type="button" @click="isCreateJobModal = false"
+                class="job-form-dialog relative w-full min-w-0 max-w-[900px] overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 sm:p-6 lg:p-8 dark:bg-gray-900">
+                <button type="button" @click="isCreateJobModal = false" aria-label="Close Create Job"
                     class="transition-color absolute top-5 right-5 z-999 flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-700 dark:bg-white/[0.05] dark:text-gray-400 dark:hover:bg-white/[0.07] dark:hover:text-gray-300">
                     <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" clip-rule="evenodd"
@@ -201,31 +218,33 @@
                     data-ajax-job-form>
                     @csrf
                     <div class="mb-5 pr-12">
-                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Create Job</h2>
-                        <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">New jobs are submitted for admin
-                            review.</p>
+                        <h2 id="create-job-heading" class="text-lg font-semibold text-gray-800 dark:text-white/90">Create Job</h2>
+                        <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">New jobs publish as Open and can accept applications immediately.</p>
                     </div>
                     <div class="mb-4 hidden rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-theme-sm text-error-700"
                         data-form-error></div>
                     @include('employer.jobs._form', ['job' => null, 'prefix' => 'create_job'])
-                    <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+                    <div class="sticky bottom-0 mt-6 flex flex-col-reverse gap-3 border-t border-gray-200 bg-white py-4 sm:flex-row sm:justify-end dark:border-gray-700 dark:bg-gray-900">
                         <button type="button" @click="isCreateJobModal = false"
                             class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">Cancel</button>
                         <button type="submit"
-                            class="bg-brand-500 hover:bg-brand-600 flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium btn-primary">Create
+                            class="bg-brand-500 hover:bg-brand-600 flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium btn-primary sm:w-auto">Create
                             Job</button>
                     </div>
                 </form>
             </div>
         </div>
 
+        @endcan
         @foreach ($jobs as $job)
-            <div x-show="isEditJobModal === {{ $job->id }}"
-                class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto p-5">
+            @can('update', $job)
+            <div x-show="isEditJobModal === {{ $job->id }}" x-cloak @keydown.escape.window="isEditJobModal = null"
+                role="dialog" aria-modal="true" aria-labelledby="edit-job-heading-{{ $job->id }}"
+                class="fixed inset-0 z-[99999] flex items-center justify-center overflow-hidden p-2 sm:p-4">
                 <div class="modal-close-btn fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"></div>
                 <div @click.outside="isEditJobModal = null"
-                    class="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 lg:p-11 dark:bg-gray-900">
-                    <button type="button" @click="isEditJobModal = null"
+                    class="job-form-dialog relative w-full min-w-0 max-w-[900px] overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 sm:p-6 lg:p-8 dark:bg-gray-900">
+                    <button type="button" @click="isEditJobModal = null" aria-label="Close Edit Job"
                         class="transition-color absolute top-5 right-5 z-999 flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-700 dark:bg-white/[0.05] dark:text-gray-400 dark:hover:bg-white/[0.07] dark:hover:text-gray-300">
                         <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" clip-rule="evenodd"
@@ -237,7 +256,7 @@
                         @csrf
                         @method('PUT')
                         <div class="mb-5 pr-12">
-                            <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Edit Job</h2>
+                            <h2 id="edit-job-heading-{{ $job->id }}" class="text-lg font-semibold text-gray-800 dark:text-white/90">Edit Job</h2>
                         </div>
                         <div class="mb-4 hidden rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-theme-sm text-error-700"
                             data-form-error></div>
@@ -245,17 +264,18 @@
                             'job' => $job,
                             'prefix' => 'edit_job_' . $job->id,
                         ])
-                        <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+                        <div class="sticky bottom-0 mt-6 flex flex-col-reverse gap-3 border-t border-gray-200 bg-white py-4 sm:flex-row sm:justify-end dark:border-gray-700 dark:bg-gray-900">
                             <button type="button" @click="isEditJobModal = null"
                                 class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">Cancel</button>
                             <button type="submit"
-                                class="btn btn-primary flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">Save
-                                Changes</button>
+                                class="btn btn-primary flex w-full justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white sm:w-auto">{{ $job->isSuspended() ? 'Save corrections and reopen' : 'Save Changes' }}</button>
                         </div>
                     </form>
                 </div>
             </div>
 
+            @endcan
+            @can('delete', $job)
             <div x-show="isDeleteJobModal === {{ $job->id }}"
                 class="fixed inset-0 z-99999 flex items-center justify-center overflow-y-auto p-5">
                 <div class="modal-close-btn fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"></div>
@@ -285,6 +305,7 @@
                     </form>
                 </div>
             </div>
+            @endcan
         @endforeach
 
         <script>
@@ -295,6 +316,9 @@
                     const submitButton = form.querySelector('[type="submit"]');
                     const formError = form.querySelector('[data-form-error]');
                     const token = form.querySelector('input[name="_token"]')?.value;
+                    const description = form.querySelector('textarea[name="description"]');
+
+                    description?.setAttribute('aria-invalid', 'false');
 
                     form.querySelectorAll('[data-field-error]').forEach((element) => {
                         element.textContent = '';
@@ -325,11 +349,15 @@
                         const payload = await response.json();
 
                         if (!response.ok) {
+                            await window.MarthireRecovery?.handle(response, payload);
                             Object.entries(payload.errors || {}).forEach(([field, messages]) => {
                                 const target = form.querySelector(`[data-field-error="${field}"]`);
                                 if (target) {
                                     target.textContent = messages[0] || 'Invalid value.';
                                     target.classList.remove('hidden');
+                                }
+                                if (field === 'description') {
+                                    description?.setAttribute('aria-invalid', 'true');
                                 }
                             });
 

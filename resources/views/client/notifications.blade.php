@@ -1,4 +1,4 @@
-<x-admin-layout title="Notifications">
+<x-layout>
     <div class="page-header">
         <div class="row align-items-center">
             <div class="col">
@@ -15,7 +15,7 @@
 
                     <div class="list-group">
                         @forelse ($notifications as $notification)
-                            <a class="list-group-item list-group-item-action" href="{{ $notification->data['action_url'] ?? route('client.jobs') }}">
+                            <a class="list-group-item list-group-item-action" href="{{ $notification->data['action_url'] ?? route('Client.Application') }}">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ $notification->data['title'] ?? 'Application update' }}</h6>
                                     <small>{{ $notification->created_at->diffForHumans() }}</small>
@@ -34,4 +34,4 @@
             </div>
         </div>
     </div>
-</x-admin-layout>
+</x-layout>

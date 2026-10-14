@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\ApplicationForm;
 use App\Models\NigeriaState;
 use App\Models\User;
+use App\Services\OrganizationOwnerGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,12 +29,16 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function showApplicant(Request $request, User $user): View
+    public function showApplicant(Request $request, User $user): View|RedirectResponse
     {
         abort_unless($user->isApplicant(), 404);
 
         if ($request->user()->isEmployer()) {
             abort_unless($user->isActive(), 403);
+            $application = ApplicationForm::query()->forEmployer($request->user())->where('user_id', $user->id)->latest('submitted_at')->first();
+            abort_unless($application, 403);
+
+            return redirect()->route('employer.applications.show', $application);
         }
 
         return view('profile.show', [
@@ -75,9 +81,8 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        app(OrganizationOwnerGuard::class)->protect($user, fn () => $user->delete());
         Auth::logout();
-
-        $user->delete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

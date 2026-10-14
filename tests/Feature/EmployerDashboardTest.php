@@ -53,7 +53,7 @@ it('renders an employer dashboard scoped to the authenticated employer', functio
         ->assertSee('Submitted Candidates')
         ->assertSee('Analytics')
         ->assertSee('Application Status')
-        ->assertSee('Most Applied-To Jobs')
+        ->assertSee('Most Applied Jobs')
         ->assertSee('Recent Applications')
         ->assertSee($ownJob->title)
         ->assertDontSee($otherJob->title);

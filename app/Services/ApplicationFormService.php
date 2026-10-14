@@ -7,11 +7,13 @@ use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\Job;
+use App\Models\Organization;
 use App\Models\User;
 use App\Models\UserIdentificationDocument;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -38,6 +40,12 @@ class ApplicationFormService
 
         try {
             $application = DB::transaction(function () use ($job, $applicant, $data, &$storedFiles, &$newProfileImagePath): ApplicationForm {
+                $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+
+                if (! $currentJob->isAcceptingApplications()) {
+                    throw ValidationException::withMessages(['job' => 'This job is not accepting applications.']);
+                }
+
                 $profileImagePath = $applicant->profile_image_path;
 
                 if (($data['profile_image'] ?? null) instanceof UploadedFile) {
@@ -63,6 +71,7 @@ class ApplicationFormService
                         'zipcode',
                     ]),
                     'job_id' => $job->id,
+                    'organization_id' => $job->organization_id,
                     'user_id' => $applicant->id,
                     'reference' => $this->generateReference(),
                     'status' => CandidatePipelineStage::Submitted,
@@ -120,6 +129,13 @@ class ApplicationFormService
     public function moveCandidate(ApplicationForm $application, User $employer, CandidatePipelineStage $stage, ?string $remarks = null): ApplicationForm
     {
         return DB::transaction(function () use ($application, $employer, $stage, $remarks): ApplicationForm {
+            Organization::whereKey($application->organization_id)->lockForUpdate()->firstOrFail();
+            Gate::forUser($employer)->authorize('managePipeline', $application);
+
+            if ($stage === CandidatePipelineStage::Selected) {
+                Gate::forUser($employer)->authorize('select', $application);
+            }
+
             $application = ApplicationForm::query()->lockForUpdate()->findOrFail($application->id);
             $currentStage = $application->status;
 
@@ -132,6 +148,9 @@ class ApplicationFormService
             $movedAt = now();
             $application->update(['status' => $stage, 'reviewed_by' => $employer->id, 'reviewed_at' => $movedAt, 'employer_remarks' => $remarks]);
             $application->statusHistories()->create(['from_status' => $currentStage, 'to_status' => $stage, 'changed_by' => $employer->id, 'remarks' => $remarks, 'created_at' => $movedAt]);
+            app(ActivityLogger::class)->record($application->organization_id, $application, $employer, 'pipeline', [
+                'from_stage' => $currentStage->value, 'to_stage' => $stage->value,
+            ]);
 
             return $application->fresh(['job', 'applicant', 'documents', 'statusHistories.changedBy']);
         });
@@ -176,8 +195,9 @@ class ApplicationFormService
             ]);
         }
 
-        $path = $file->store('user-identification-documents/'.$applicant->id, 'local');
-        $storedFiles[] = ['disk' => 'local', 'path' => $path];
+        $disk = config('filesystems.application_documents_disk', 'local');
+        $path = $file->store('user-identification-documents/'.$applicant->id, $disk);
+        $storedFiles[] = ['disk' => $disk, 'path' => $path];
 
         // Application snapshots may still reference a previously selected profile document.
         return $applicant->identificationDocument()->updateOrCreate([], [
@@ -214,8 +234,9 @@ class ApplicationFormService
         string $name,
         array &$storedFiles
     ): ApplicationDocument {
-        $path = $file->store('application-documents/'.$application->id, 'local');
-        $storedFiles[] = ['disk' => 'local', 'path' => $path];
+        $disk = config('filesystems.application_documents_disk', 'local');
+        $path = $file->store('application-documents/'.$application->id, $disk);
+        $storedFiles[] = ['disk' => $disk, 'path' => $path];
 
         return $application->documents()->create([
             'document_type' => $type,

@@ -1,3 +1,72 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .job-form-dialog {
+        max-height: calc(100vh - 1rem);
+        max-height: calc(100dvh - 1rem);
+    }
+    .job-editor-button {
+        @apply inline-flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center rounded-md px-2 text-sm font-medium text-gray-600 hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white;
+    }
+    .job-editor-button[aria-pressed="true"] {
+        @apply bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200;
+    }
+    .job-editor-button[data-editor-command="bold"] { @apply font-bold; }
+    .job-editor-button[data-editor-command="italic"] { @apply italic; }
+    .job-editor-button[data-editor-command="underline"] { @apply underline; }
+    .job-editor-button[data-editor-command="strike"] { @apply line-through; }
+    .job-editor-select {
+        @apply min-h-[2.75rem] max-w-full rounded-md border-gray-300 bg-white py-2 pl-2 pr-8 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200;
+    }
+    .job-editor-color {
+        @apply inline-flex min-h-[2.75rem] items-center gap-2 px-2 text-xs font-medium text-gray-600 dark:text-gray-300;
+    }
+    .job-editor-color input {
+        @apply h-8 w-8 cursor-pointer rounded border border-gray-300 bg-transparent p-0.5 focus:ring-2 focus:ring-blue-500;
+    }
+    .job-editor-asset-input {
+        @apply mt-1 block min-h-[2.75rem] w-full min-w-0 rounded-lg border-gray-300 bg-white text-base text-gray-900 focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white;
+    }
+    .job-editor-shell[data-invalid="true"] {
+        @apply border-red-500 ring-1 ring-red-500;
+    }
+    .job-description-content {
+        overflow-wrap: anywhere;
+    }
+    .job-description-content .tiptap {
+        @apply min-h-[15rem] outline-none;
+    }
+    .job-description-content img {
+        @apply h-auto max-w-full rounded-lg;
+    }
+    .job-description-content img[data-align="center"] {
+        @apply mx-auto;
+    }
+    .job-description-content img[data-align="right"] {
+        @apply ml-auto mr-0;
+    }
+    .job-description-content .ProseMirror-selectednode {
+        @apply outline outline-2 outline-offset-2 outline-blue-500;
+    }
+    .job-description-content pre {
+        @apply max-w-full overflow-x-auto;
+    }
+    .job-description-content table {
+        @apply block max-w-full overflow-x-auto border-collapse;
+    }
+    .job-description-content th, .job-description-content td {
+        @apply relative min-w-[6rem] border border-gray-300 p-2 align-top dark:border-gray-600;
+    }
+    .job-description-content .selectedCell::after {
+        @apply pointer-events-none absolute inset-0 bg-blue-200/40;
+        content: '';
+    }
+    .job-description-content p:empty::before {
+        content: '\00a0';
+    }
+    .job-editor-shell [hidden], [data-editor-source][hidden] {
+        display: none !important;
+    }
+}

@@ -1,11 +1,17 @@
 <?php
 
+use App\Models\ApplicationForm;
+use App\Models\Job;
 use App\Models\User;
+use App\Support\OrganizationContext;
 
-test('admins and employers can view active applicant profiles read only', function () {
+test('admins view read only profiles and employers use accessible candidate applications', function () {
+    app(OrganizationContext::class)->set(null, true);
     $admin = User::factory()->admin()->create();
     $employer = User::factory()->employer()->create();
     $applicant = User::factory()->completeApplicantProfile()->create();
+    $job = Job::factory()->for($employer, 'employer')->create();
+    $application = ApplicationForm::factory()->for($job, 'job')->for($applicant, 'applicant')->create();
 
     $this->actingAs($admin)
         ->get(route('applicants.profile.show', $applicant))
@@ -15,8 +21,14 @@ test('admins and employers can view active applicant profiles read only', functi
 
     $this->actingAs($employer)
         ->get(route('applicants.profile.show', $applicant))
-        ->assertOk()
-        ->assertSee($applicant->email);
+        ->assertRedirect(route('employer.applications.show', $application));
+});
+
+test('employers cannot browse profiles without an accessible application', function () {
+    $employer = User::factory()->employer()->create();
+    $applicant = User::factory()->completeApplicantProfile()->create();
+
+    $this->actingAs($employer)->get(route('applicants.profile.show', $applicant))->assertForbidden();
 });
 
 test('applicants can not view other applicant profiles through the read only route', function () {
