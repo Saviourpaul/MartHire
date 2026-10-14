@@ -10,11 +10,16 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployerApplicationController;
+use App\Http\Controllers\EmployerNotificationController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobTeamController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\OrganizationContextController;
+use App\Http\Controllers\OrganizationTeamController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -29,6 +34,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
 });
+
+Route::get('team-invitations/{token}', [TeamInvitationController::class, 'show'])->middleware('throttle:60,1')->name('team-invitations.show');
+Route::post('team-invitations/{token}/accept', [TeamInvitationController::class, 'accept'])
+    ->middleware('throttle:6,1')->name('team-invitations.accept');
+Route::post('team-invitations/{token}/decline', [TeamInvitationController::class, 'decline'])
+    ->middleware('throttle:6,1')->name('team-invitations.decline');
 
 Route::get('Dashboard', DashboardController::class)
     ->middleware(['auth', 'verified', 'active.account'])
@@ -67,7 +78,7 @@ Route::middleware(['auth', 'verified', 'active.account', 'role:applicant'])->gro
     Route::get('applications/{applicationForm}', [JobApplicationController::class, 'show'])->name('client.applications.show');
     Route::get('documents', [JobApplicationController::class, 'documents'])->name('client.documents');
     Route::get('jobs', [JobApplicationController::class, 'index'])->name('client.jobs');
-    Route::get('notifications', [JobApplicationController::class, 'notifications'])->name('client.notifications');
+    Route::get('client/notifications', [JobApplicationController::class, 'notifications'])->name('client.notifications');
     Route::get('settings', fn () => view('client.settings'))->name('client.settings');
 });
 /**Google Login */
@@ -91,6 +102,13 @@ Route::middleware(['auth', 'verified', 'active.account'])->group(function () {
         ->name('applicants.profile.show');
 
     Route::middleware('role:employer')->group(function () {
+        Route::get('employer/team', [OrganizationTeamController::class, 'index'])->name('employer.team.index');
+        Route::post('employer/team/invitations', [OrganizationTeamController::class, 'storeInvitation'])
+            ->middleware('throttle:team-invitations')->name('employer.team.invitations.store');
+        Route::patch('employer/team/members/{organizationMember}', [OrganizationTeamController::class, 'updateMember'])->name('employer.team.members.update');
+        Route::delete('employer/team/members/{organizationMember}', [OrganizationTeamController::class, 'destroyMember'])->name('employer.team.members.destroy');
+        Route::post('employer/organizations/switch', OrganizationContextController::class)->name('employer.organizations.switch');
+        Route::put('jobs/{job}/team', [JobTeamController::class, 'update'])->name('jobs.team.update');
         Route::get('jobs', [JobController::class, 'index'])->name('jobs');
         Route::post('jobs', [JobController::class, 'store'])
             ->middleware('throttle:uploads')
@@ -100,6 +118,7 @@ Route::middleware(['auth', 'verified', 'active.account'])->group(function () {
             ->middleware('throttle:uploads')
             ->name('jobs.update');
         Route::delete('jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy');
+        Route::patch('jobs/{job}/close', [JobController::class, 'close'])->can('close', 'job')->name('jobs.close');
         Route::get('profile', fn () => view('employer.profile'))->name('employer.profile');
         Route::get('Applied-Candidates', [EmployerApplicationController::class, 'applied'])->name('employer.Applied-Candidates');
         Route::get('employer/applications/{applicationForm}', [EmployerApplicationController::class, 'show'])->name('employer.applications.show');
@@ -107,7 +126,9 @@ Route::middleware(['auth', 'verified', 'active.account'])->group(function () {
         Route::get('dashboard/analytics', [DashboardController::class, 'employerAnalytics'])
             ->middleware('throttle:60,1')
             ->name('employer.dashboard.analytics');
-        Route::get('notifications', fn () => view('employer.notifications'))->name('employer.notifications');
+        Route::get('employer/notifications', [EmployerNotificationController::class, 'index'])->name('employer.notifications');
+        Route::post('employer/notifications/read-all', [EmployerNotificationController::class, 'readAll'])->name('employer.notifications.read-all');
+        Route::patch('employer/notifications/{notification}/read', [EmployerNotificationController::class, 'read'])->name('employer.notifications.read');
         Route::get('settings', fn () => view('employer.settings'))->name('employer.settings');
 
     });
@@ -126,13 +147,12 @@ Route::middleware(['auth', 'verified', 'active.account'])->group(function () {
         Route::post('admin/users/{user}/password-reset', [UserManagementController::class, 'sendPasswordReset'])->name('admin.users.password-reset');
 
         Route::get('admin/jobs', [JobManagementController::class, 'index'])->name('admin.jobs.index');
-        Route::get('admin/jobs/{job}', [JobManagementController::class, 'show'])->name('admin.jobs.show');
-        Route::put('admin/jobs/{job}', [JobManagementController::class, 'update'])->name('admin.jobs.update');
-        Route::patch('admin/jobs/{job}/status', [JobManagementController::class, 'review'])->name('admin.jobs.review');
-        Route::delete('admin/jobs/{job}', [JobManagementController::class, 'destroy'])->name('admin.jobs.destroy');
-        Route::get('approved-jobs', [JobManagementController::class, 'approved'])->name('approved-jobs');
-        Route::get('rejected-jobs', [JobManagementController::class, 'rejected'])->name('rejected-jobs');
-        Route::get('pending-jobs', [JobManagementController::class, 'pending'])->name('pending-jobs');
+        Route::get('admin/jobs/{job}', [JobManagementController::class, 'show'])->can('viewModeration', 'job')->name('admin.jobs.show');
+        Route::patch('admin/jobs/{job}/suspend', [JobManagementController::class, 'suspend'])->can('suspend', 'job')->name('admin.jobs.suspend');
+        Route::delete('admin/jobs/{job}', [JobManagementController::class, 'destroy'])->can('deleteAsModerator', 'job')->name('admin.jobs.destroy');
+        Route::get('suspended-jobs', [JobManagementController::class, 'suspended'])->name('suspended-jobs');
+        Route::get('open-jobs', [JobManagementController::class, 'open'])->name('open-jobs');
+        Route::get('closed-jobs', [JobManagementController::class, 'closed'])->name('closed-jobs');
         Route::get('Reports', [ReportController::class, 'index'])->name('Reports');
         Route::get('Reports/export', [ReportController::class, 'export'])->name('Reports.export');
         Route::get('admin/dashboard/analytics', [DashboardController::class, 'adminAnalytics'])
