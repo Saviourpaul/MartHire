@@ -1,3 +1,3 @@
-<x-admin-layout>
+<x-layout>
     <h1>Notifications</h1>
-</x-admin-layout>
+</x-layout>

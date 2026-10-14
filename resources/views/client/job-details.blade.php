@@ -72,17 +72,11 @@
                     <div class="space-y-6 p-5 sm:p-6">
                         <div>
                             <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Job Description</h3>
-                            <div class="mt-3 text-theme-sm leading-7 text-gray-600 dark:text-gray-300">
-                                {!! nl2br(e(strip_tags($job->description))) !!}
+                            <div class="job-description-content format format-sm format-gray mt-3 max-w-none break-words sm:format-base dark:format-invert" data-job-description>
+                                {!! app(\App\Support\JobDescription::class)->toHtml($job->description) !!}
                             </div>
                         </div>
 
-                        <div>
-                            <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Requirements</h3>
-                            <div class="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-theme-sm leading-7 text-gray-600 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-300">
-                                {!! nl2br(e(strip_tags($job->description))) !!}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -90,7 +84,7 @@
             <aside class="xl:col-span-4">
                 <div class="sticky top-24 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Application</h2>
-                    <p class="mt-2 text-theme-sm text-gray-500 dark:text-gray-400">Submit your application before the deadline.</p>
+                    <p class="mt-2"><span class="inline-flex rounded-full px-3 py-1 text-sm font-medium {{ $job->status->badgeClass() }}">{{ $job->status->label() }}</span></p>
 
                     <dl class="mt-5 space-y-3">
                       
@@ -107,8 +101,11 @@
                     <div class="mt-6">
                         @if (! $job->isAcceptingApplications())
                             <div class="rounded-lg border border-error-500/30 bg-error-50 px-4 py-3 text-theme-sm font-medium text-error-700 dark:bg-error-500/10 dark:text-error-400">
-                                This job is not currently not open.
+                                This job is not accepting applications.
                             </div>
+                            @if ($existingApplication)
+                                <a href="{{ route('client.applications.show', $existingApplication) }}" class="mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-medium text-white">View Application</a>
+                            @endif
                         @elseif ($existingApplication)
                             <div class="rounded-lg border border-success-500/30 bg-success-50 px-4 py-3 text-theme-sm font-medium text-success-700 dark:bg-success-500/10 dark:text-success-400">
                                 <p>You applied on {{ $existingApplication->submitted_at?->format('M j, Y') }}.</p>
