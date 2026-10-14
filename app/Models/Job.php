@@ -72,7 +72,7 @@ class Job extends Model
         $slug = $base = Str::slug($title);
         $i = 1;
 
-        while (static::withoutGlobalScope(OrganizationScope::class)->where('slug', $slug)->exists()) {
+        while (static::where('slug', $slug)->exists()) {
             $slug = "{$base}-".$i++;
         }
 
