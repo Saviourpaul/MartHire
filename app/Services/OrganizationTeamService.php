@@ -134,7 +134,7 @@ class OrganizationTeamService
                 ]);
             }
 
-            $recipient = $this->emailVerification->verify($recipient);
+            $recipient = $this->emailVerification->verifyTrustedEmail($recipient, $invitation->email);
             abort_unless($recipient, 403);
 
             return $this->context->runInOrganization($organization, function () use ($organization, $recipient, $invitation): OrganizationMember {

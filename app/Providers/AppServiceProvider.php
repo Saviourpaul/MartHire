@@ -2,17 +2,22 @@
 
 namespace App\Providers;
 
+use App\Models\ApplicationForm;
+use App\Models\Organization;
 use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
+use App\Models\User;
 use App\Support\OrganizationContext;
+use App\Support\OrganizationPermissions;
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\ValidationException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +34,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::define('send_candidate_email', fn (User $user, ApplicationForm $application): bool => app(OrganizationPermissions::class)->can($user, 'send_candidate_email', application: $application));
+        Gate::define('manage_email_templates', fn (User $user, Organization $organization): bool => $organization->id === app(OrganizationContext::class)->organizationId()
+            && app(OrganizationPermissions::class)->can($user, 'manage_email_templates'));
+
+        RateLimiter::for('candidate-email', fn (Request $request): array => [
+            Limit::perHour((int) config('interviews.user_send_limit', 20))->by('interview-user:'.$request->user()?->id),
+            Limit::perHour((int) config('interviews.org_send_limit', 100))->by('interview-organization:'.app(OrganizationContext::class)->organizationId()),
+        ]);
+
         View::composer('components.layout', function (\Illuminate\View\View $view): void {
             $context = app(OrganizationContext::class);
             $user = request()->user();
@@ -57,16 +71,34 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(12)->by($request->user()?->id ?: $request->ip());
         });
 
-        VerifyEmail::toMailUsing(function ($notifiable, $url) {
-            return (new MailMessage)
-                ->subject('Verify Your Email Address')
-                ->markdown('emails.auth.verify', [
-                    'user' => $notifiable,
-                    'url' => $url,
-                    'expires' => config('auth.verification.expire', 60),
-
+        RateLimiter::for('verification-code', function (Request $request): array {
+            $response = function (Request $request, array $headers): never {
+                throw ValidationException::withMessages([
+                    'code' => 'Too many verification attempts. Please wait before trying again.',
                 ]);
+            };
 
+            return [
+                Limit::perMinute((int) config('auth.verification.max_attempts', 5))
+                    ->by('verification-user:'.$request->user()?->id)->response($response),
+                Limit::perMinute((int) config('auth.verification.attempt_ip_limit', 20))
+                    ->by('verification-ip:'.$request->ip())->response($response),
+            ];
+        });
+
+        RateLimiter::for('verification-send', function (Request $request): array {
+            $response = function (Request $request, array $headers): never {
+                throw ValidationException::withMessages([
+                    'verification' => 'Too many code requests. Please wait before requesting another code.',
+                ]);
+            };
+
+            return [
+                Limit::perHour((int) config('auth.verification.resend_limit', 6))
+                    ->by('verification-send-user:'.$request->user()?->id)->response($response),
+                Limit::perHour((int) config('auth.verification.resend_ip_limit', 20))
+                    ->by('verification-send-ip:'.$request->ip())->response($response),
+            ];
         });
 
         ResetPassword::toMailUsing(function ($notifiable, string $token) {

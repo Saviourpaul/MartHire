@@ -2,15 +2,16 @@
 
 namespace App\Http\Requests;
 
-use App\Models\NigeriaState;
+use App\Http\Requests\Concerns\ValidatesLocationSelection;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
-use Illuminate\Validation\Validator;
 
 class ProfileUpdateRequest extends FormRequest
 {
+    use ValidatesLocationSelection;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -21,6 +22,7 @@ class ProfileUpdateRequest extends FormRequest
         $profileFieldRule = $this->user()->isApplicant() ? ['required', 'string', 'max:255'] : ['nullable', 'string', 'max:255'];
         $dateOfBirthRule = $this->user()->isApplicant() ? ['required', 'date', 'before:today'] : ['nullable', 'date', 'before:today'];
         $imageRule = $this->user()->isApplicant() && ! $this->user()->profile_image_path ? ['required'] : ['nullable'];
+        $presence = $this->user()->isApplicant() ? ['required'] : ['nullable'];
 
         return [
             'first_name' => ['required', 'string', 'max:255'],
@@ -36,12 +38,8 @@ class ProfileUpdateRequest extends FormRequest
             'date_of_birth' => $dateOfBirthRule,
             'phone' => $profileFieldRule,
             'address' => $profileFieldRule,
-            'nationality' => $profileFieldRule,
-            'state_of_origin' => [
-                ...$profileFieldRule,
-                Rule::exists('nigeria_states', 'name'),
-            ],
-            'local_government_area' => $profileFieldRule,
+
+            ...$this->locationSelectionRules($presence),
         ];
     }
 
@@ -52,28 +50,20 @@ class ProfileUpdateRequest extends FormRequest
         ];
     }
 
-    public function withValidator(Validator $validator): void
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
     {
-        $validator->after(function (Validator $validator) {
-            if (! $this->filled('state_of_origin') || ! $this->filled('local_government_area')) {
-                return;
-            }
+        return [
+            'country_code' => 'country',
+            'state' => 'state',
+            'city' => 'city',
+        ];
+    }
 
-            $state = NigeriaState::query()
-                ->where('name', (string) $this->input('state_of_origin'))
-                ->first();
-
-            if (! $state) {
-                return;
-            }
-
-            $hasLga = $state->localGovernmentAreas()
-                ->where('name', (string) $this->input('local_government_area'))
-                ->exists();
-
-            if (! $hasLga) {
-                $validator->errors()->add('local_government_area', 'Select a local government area in the selected state.');
-            }
-        });
+    protected function prepareForValidation(): void
+    {
+        $this->mirrorNigerianLocalGovernmentArea();
     }
 }

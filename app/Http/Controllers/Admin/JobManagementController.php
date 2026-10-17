@@ -7,10 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteModeratedJobRequest;
 use App\Http\Requests\SuspendJobRequest;
 use App\Models\Job;
+use App\Models\Organization;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -71,7 +74,16 @@ class JobManagementController extends Controller
     public function destroy(DeleteModeratedJobRequest $request, Job $job): RedirectResponse|JsonResponse
     {
         $logoPath = $job->storedLogoPath();
-        $job->delete();
+        DB::transaction(function () use ($job): void {
+            Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
+            Gate::authorize('deleteAsModerator', $job);
+
+            if ($job->applications()->whereHas('candidateMessages')->exists()) {
+                throw ValidationException::withMessages(['job' => 'Jobs with candidate email history must be closed instead of deleted.']);
+            }
+
+            $job->delete();
+        });
 
         if ($logoPath !== null) {
             Storage::disk('public')->delete($logoPath);
@@ -107,6 +119,7 @@ class JobManagementController extends Controller
         $query = Job::query()
             ->select('job_posts.*')
             ->with(['employer:id,first_name,last_name,email'])
+            ->withCount('applications')
             ->when($statusConstraint, fn ($query) => $query->status($statusConstraint))
             ->when(! $statusConstraint && $statusFilter, fn ($query) => $query->status($statusFilter))
             ->when($category !== '', function ($query) use ($category) {

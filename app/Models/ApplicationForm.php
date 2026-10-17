@@ -36,6 +36,10 @@ class ApplicationForm extends Model
         'marital_status',
         'state_of_origin',
         'local_government_area',
+        'country_code',
+        'country',
+        'state',
+        'city',
         'address',
         'zipcode',
         'profile_image_path',
@@ -83,6 +87,16 @@ class ApplicationForm extends Model
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function interviews(): HasMany
+    {
+        return $this->hasMany(Interview::class);
+    }
+
+    public function candidateMessages(): HasMany
+    {
+        return $this->hasMany(CandidateMessage::class);
     }
 
     protected function parentOrganizationId(): ?int

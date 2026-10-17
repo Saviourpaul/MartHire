@@ -16,9 +16,9 @@ class OrganizationPermissions
 {
     /** @var array<string, list<string>> */
     public const ROLE_PERMISSIONS = [
-        'owner' => ['view_jobs', 'create_jobs', 'edit_jobs', 'delete_jobs', 'view_candidates', 'view_documents', 'assign_candidates', 'move_candidates', 'select_candidates', 'add_notes', 'submit_evaluations', 'view_all_evaluations', 'create_tasks', 'own_tasks', 'manage_team', 'hiring_settings', 'assign_job_members'],
-        'hr_manager' => ['view_jobs', 'create_jobs', 'edit_jobs', 'delete_jobs', 'view_candidates', 'view_documents', 'assign_candidates', 'move_candidates', 'select_candidates', 'add_notes', 'submit_evaluations', 'view_all_evaluations', 'create_tasks', 'own_tasks', 'manage_team', 'assign_job_members'],
-        'recruiter' => ['view_jobs', 'create_jobs', 'edit_jobs', 'view_candidates', 'view_documents', 'assign_candidates', 'move_candidates', 'add_notes', 'submit_evaluations', 'view_all_evaluations', 'create_tasks', 'own_tasks'],
+        'owner' => ['view_jobs', 'create_jobs', 'edit_jobs', 'delete_jobs', 'view_candidates', 'view_documents', 'assign_candidates', 'move_candidates', 'select_candidates', 'add_notes', 'submit_evaluations', 'view_all_evaluations', 'create_tasks', 'own_tasks', 'manage_team', 'hiring_settings', 'assign_job_members', 'send_candidate_email', 'manage_email_templates'],
+        'hr_manager' => ['view_jobs', 'create_jobs', 'edit_jobs', 'delete_jobs', 'view_candidates', 'view_documents', 'assign_candidates', 'move_candidates', 'select_candidates', 'add_notes', 'submit_evaluations', 'view_all_evaluations', 'create_tasks', 'own_tasks', 'manage_team', 'assign_job_members', 'send_candidate_email', 'manage_email_templates'],
+        'recruiter' => ['view_jobs', 'create_jobs', 'edit_jobs', 'view_candidates', 'view_documents', 'assign_candidates', 'move_candidates', 'add_notes', 'submit_evaluations', 'view_all_evaluations', 'create_tasks', 'own_tasks', 'send_candidate_email'],
         'hiring_manager' => ['view_jobs', 'view_candidates', 'view_documents', 'move_candidates', 'select_candidates', 'add_notes', 'submit_evaluations', 'view_all_evaluations', 'create_tasks', 'own_tasks'],
         'interviewer' => ['view_jobs', 'view_candidates', 'add_notes', 'submit_evaluations', 'own_tasks'],
     ];

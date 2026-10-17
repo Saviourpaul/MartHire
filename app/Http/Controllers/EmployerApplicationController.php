@@ -7,7 +7,9 @@ use App\Http\Requests\MoveCandidatePipelineRequest;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Services\ApplicationFormService;
+use App\Services\EmailTemplateService;
 use App\Support\OrganizationPermissions;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -27,17 +29,47 @@ class EmployerApplicationController extends Controller
     public function show(Request $request, ApplicationForm $applicationForm): View
     {
         $this->ensureEmployerOwnsApplication($request, $applicationForm);
+        $canSendEmail = Gate::allows('send_candidate_email', $applicationForm);
+        $relations = ['applicant', 'job', 'statusHistories.changedBy', 'reviewer',
+            'interviews' => fn (HasMany $query): HasMany => $query->latest('start_at')];
+
+        if (Gate::allows('viewDocuments', $applicationForm)) {
+            $relations[] = 'documents';
+        }
+
+        if ($canSendEmail) {
+            $relations['interviews.messages'] = fn (HasMany $query): HasMany => $query->select([
+                'id', 'organization_id', 'application_form_id', 'interview_id', 'interview_version', 'type',
+                'sent_by', 'rendered_subject', 'status', 'queued_at', 'sent_at', 'created_at', 'error_message',
+            ])->latest('id');
+            $relations[] = 'interviews.messages.sentBy';
+        }
+
+        $applicationForm->load($relations);
+
+        if ($canSendEmail) {
+            foreach ($applicationForm->interviews as $interview) {
+                $interview->setRelation('applicationForm', $applicationForm);
+
+                foreach ($interview->messages as $message) {
+                    $message->setRelation('applicationForm', $applicationForm)->setRelation('interview', $interview);
+                }
+            }
+        }
+
+        $templateDefaults = $canSendEmail
+            ? app(EmailTemplateService::class)->forSending($applicationForm->organization_id)
+                ->mapWithKeys(fn ($template): array => [$template->type->value => ['subject' => $template->subject, 'body' => $template->body]])->all()
+            : [];
 
         return view('employer.application-show', [
             'allowedStages' => array_values(array_filter($applicationForm->status->allowedNextStages(),
                 fn (CandidatePipelineStage $stage): bool => Gate::allows('managePipeline', $applicationForm)
                     && ($stage !== CandidatePipelineStage::Selected || Gate::allows('select', $applicationForm)))),
-            'application' => $applicationForm->load([
-                'applicant',
-                'job',
-                'statusHistories.changedBy',
-                'reviewer',
-            ]),
+            'application' => $applicationForm,
+            'canSendCandidateEmail' => $canSendEmail,
+            'cancelEmailSubject' => $templateDefaults['interview_cancel']['subject'] ?? '',
+            'cancelEmailBody' => $templateDefaults['interview_cancel']['body'] ?? '',
         ]);
     }
 

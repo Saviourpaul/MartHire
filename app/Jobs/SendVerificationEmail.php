@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Enums\UserStatus;
 use App\Models\User;
-use DateTimeInterface;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\VerifyEmailCode;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -12,35 +12,37 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Psr\Log\NullLogger;
+use RuntimeException;
+use SensitiveParameter;
+use Symfony\Component\Mailer\Transport\FailoverTransport;
+use Symfony\Component\Mailer\Transport\RoundRobinTransport;
+use Symfony\Component\Mailer\Transport\TransportInterface;
 use Throwable;
 
-class SendVerificationEmail implements ShouldQueue, ShouldBeEncrypted, ShouldBeUnique
+class SendVerificationEmail implements ShouldBeEncrypted, ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
-    /**
-     * A delivery can fail temporarily when the mail provider is unavailable.
-     */
     public int $tries = 4;
 
-    /**
-     * Keep the worker timeout below the queue connection's retry_after value.
-     */
     public int $timeout = 30;
 
-    /**
-     * Avoid an orphaned unique lock if a worker dies unexpectedly.
-     */
-    public int $uniqueFor = 3600;
+    public int $uniqueFor = 900;
 
-    public function __construct(public int $userId)
-    {
-    }
+    public function __construct(
+        public int $userId,
+        public string $challengeId,
+        public string $email,
+        #[SensitiveParameter] public string $code,
+    ) {}
 
     public function uniqueId(): string
     {
-        return "verification-email:{$this->userId}";
+        return 'verification-email:'.$this->userId.':'.($this->challengeId ?? 'legacy');
     }
 
     /**
@@ -48,12 +50,7 @@ class SendVerificationEmail implements ShouldQueue, ShouldBeEncrypted, ShouldBeU
      */
     public function backoff(): array
     {
-        return [60, 300, 900];
-    }
-
-    public function retryUntil(): DateTimeInterface
-    {
-        return now()->addHour();
+        return [30, 60, 120];
     }
 
     /**
@@ -64,28 +61,146 @@ class SendVerificationEmail implements ShouldQueue, ShouldBeEncrypted, ShouldBeU
         return [
             (new WithoutOverlapping("verification-email:{$this->userId}"))
                 ->releaseAfter(30)
-                ->expireAfter(300),
+                ->expireAfter(60),
         ];
     }
 
     public function handle(): void
     {
-        $user = User::query()->find($this->userId);
-
-        if (! $user || $user->hasVerifiedEmail()) {
+        if (! isset($this->challengeId, $this->email, $this->code)) {
             return;
         }
 
-        // Do not call User::sendEmailVerificationNotification() here: that method
-        // dispatches this job and would create a recursion loop.
-        $user->notify(new VerifyEmail());
+        try {
+            DB::transaction(function (): void {
+                $user = User::query()->lockForUpdate()->find($this->userId);
+
+                if (! $this->isCurrentChallenge($user)) {
+                    return;
+                }
+
+                $this->sendCode($user);
+                $user->forceFill([
+                    'email_verification_sent_at' => now(),
+                    'email_verification_failed_at' => null,
+                ])->save();
+            });
+        } catch (Throwable) {
+            $this->recordDeliveryFailure();
+
+            throw new RuntimeException('The verification code could not be delivered.');
+        }
     }
 
-    public function failed(Throwable $exception): void
+    public function failed(?Throwable $exception): void
     {
-        Log::error('Verification email delivery failed permanently.', [
+        $this->recordDeliveryFailure();
+
+        Log::error('Verification code delivery failed permanently.', [
             'user_id' => $this->userId,
-            'exception' => $exception,
+            'challenge_id' => $this->challengeId ?? null,
         ]);
+    }
+
+    private function isCurrentChallenge(?User $user): bool
+    {
+        return $user !== null
+            && ! $user->hasVerifiedEmail()
+            && ! $user->isSuspended()
+            && $user->email === $this->email
+            && $user->email_verification_challenge_id === $this->challengeId
+            && $user->email_verification_code_hash !== null
+            && $user->email_verification_sent_at === null
+            && $user->email_verification_expires_at?->isFuture() === true;
+    }
+
+    private function sendCode(User $user): void
+    {
+        $name = (string) config('mail.default');
+        $this->ensurePrivateMailer($name);
+
+        if (! in_array(config('mail.mailers.'.$name.'.transport'), ['failover', 'roundrobin'], true)) {
+            $user->notify(new VerifyEmailCode($this->code));
+
+            return;
+        }
+
+        $mailer = Mail::mailer($name);
+        $originalTransport = $mailer->getSymfonyTransport();
+
+        try {
+            $mailer->setSymfonyTransport($this->privateTransport($name));
+            $user->notify(new VerifyEmailCode($this->code));
+        } finally {
+            $mailer->setSymfonyTransport($originalTransport);
+        }
+    }
+
+    private function privateTransport(string $name): TransportInterface
+    {
+        $mailer = config('mail.mailers.'.$name);
+
+        if (! in_array($mailer['transport'], ['failover', 'roundrobin'], true)) {
+            return Mail::mailer($name)->getSymfonyTransport();
+        }
+
+        $children = array_map(fn (string $child): TransportInterface => $this->privateTransport($child), $mailer['mailers']);
+        $retryAfter = (int) ($mailer['retry_after'] ?? 60);
+
+        return $mailer['transport'] === 'failover'
+            ? new FailoverTransport($children, $retryAfter, new NullLogger)
+            : new RoundRobinTransport($children, $retryAfter, new NullLogger);
+    }
+
+    /**
+     * @param  list<string>  $visited
+     */
+    private function ensurePrivateMailer(string $name, array $visited = []): void
+    {
+        $mailer = config('mail.mailers.'.$name);
+
+        if (in_array($name, $visited, true) || ! is_array($mailer)) {
+            throw new RuntimeException('The verification mail transport is unavailable.');
+        }
+
+        $transport = $mailer['transport'] ?? null;
+
+        if (! is_string($transport) || $transport === 'log') {
+            throw new RuntimeException('The verification mail transport is unavailable.');
+        }
+
+        if (in_array($transport, ['failover', 'roundrobin'], true)) {
+            $children = $mailer['mailers'] ?? [];
+
+            if (! is_array($children) || $children === []) {
+                throw new RuntimeException('The verification mail transport is unavailable.');
+            }
+
+            foreach ($children as $child) {
+                if (! is_string($child)) {
+                    throw new RuntimeException('The verification mail transport is unavailable.');
+                }
+
+                $this->ensurePrivateMailer($child, [...$visited, $name]);
+            }
+        }
+    }
+
+    private function recordDeliveryFailure(): void
+    {
+        if (! isset($this->challengeId, $this->email)) {
+            return;
+        }
+
+        User::query()
+            ->whereKey($this->userId)
+            ->where('email', $this->email)
+            ->where('email_verification_challenge_id', $this->challengeId)
+            ->whereNull('email_verified_at')
+            ->whereNull('email_verification_sent_at')
+            ->whereNotNull('email_verification_code_hash')
+            ->where('email_verification_expires_at', '>', now())
+            ->where('status', '!=', UserStatus::Suspended->value)
+            ->update(['email_verification_failed_at' => now()]);
     }
 }

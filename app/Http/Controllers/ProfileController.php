@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\ApplicationForm;
-use App\Models\NigeriaState;
 use App\Models\User;
+use App\Services\LocationService;
 use App\Services\OrganizationOwnerGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,9 +23,7 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => $request->user(),
-            'states' => NigeriaState::query()
-                ->ordered()
-                ->get(),
+            'countries' => app(LocationService::class)->countries(),
         ]);
     }
 

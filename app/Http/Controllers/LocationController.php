@@ -2,26 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\NigeriaState;
+use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LocationController extends Controller
 {
-    public function localGovernmentAreas(NigeriaState $nigeriaState): JsonResponse
-    {
-        $localGovernmentAreas = $nigeriaState
-            ->localGovernmentAreas()
-            ->ordered()
-            ->get(['id', 'name', 'slug'])
-            ->map(fn ($localGovernmentArea): array => [
-                'id' => $localGovernmentArea->id,
-                'name' => $localGovernmentArea->name,
-                'slug' => $localGovernmentArea->slug,
-            ])
-            ->values();
+    public function __construct(private readonly LocationService $locations) {}
 
+    public function states(Request $request): JsonResponse
+    {
         return response()->json([
-            'data' => $localGovernmentAreas,
+            'data' => $this->locations->states((string) $request->query('country', '')),
+        ]);
+    }
+
+    public function cities(Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->locations->cities(
+                (string) $request->query('country', ''),
+                (string) $request->query('state', ''),
+            ),
+        ]);
+    }
+
+    public function countries(): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->locations->countries(),
         ]);
     }
 }

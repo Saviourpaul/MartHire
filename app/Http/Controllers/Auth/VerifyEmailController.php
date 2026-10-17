@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\VerifyEmailCodeRequest;
 use App\Services\EmailVerificationService;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,13 +12,14 @@ use Illuminate\Support\Facades\Auth;
 class VerifyEmailController extends Controller
 {
     public function __invoke(
-        EmailVerificationRequest $request,
+        VerifyEmailCodeRequest $request,
         EmailVerificationService $emailVerification,
-    ): RedirectResponse
-    {
-        if (! $emailVerification->verify($request->user())) {
+    ): RedirectResponse {
+        if (! $emailVerification->verifyCode($request->user(), $request->validated('code'))) {
             return $this->logoutSuspendedUser($request);
         }
+
+        $request->session()->regenerate();
 
         return redirect()
             ->intended(route('dashboard', absolute: false))

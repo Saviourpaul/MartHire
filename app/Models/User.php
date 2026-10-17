@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
-use App\Jobs\SendVerificationEmail;
+use App\Services\EmailVerificationService;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -45,6 +45,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'nationality',
         'state_of_origin',
         'local_government_area',
+        'country_code',
+        'country',
+        'state',
+        'city',
+        'location_confirmed_at',
     ];
 
     /**
@@ -65,6 +70,13 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verification_code_hash',
+        'email_verification_challenge_id',
+        'email_verification_expires_at',
+        'email_verification_requested_at',
+        'email_verification_sent_at',
+        'email_verification_failed_at',
+        'email_verification_attempts',
     ];
 
     /**
@@ -76,6 +88,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_verification_expires_at' => 'datetime',
+            'email_verification_requested_at' => 'datetime',
+            'email_verification_sent_at' => 'datetime',
+            'email_verification_failed_at' => 'datetime',
+            'email_verification_attempts' => 'integer',
             'welcome_email_queued_at' => 'datetime',
             'welcome_email_sent_at' => 'datetime',
             'date_of_birth' => 'date',
@@ -85,6 +102,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'approved_at' => 'datetime',
             'suspended_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'location_confirmed_at' => 'datetime',
         ];
     }
 
@@ -261,12 +279,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Queue Laravel's standard signed verification notification instead of
-     * performing SMTP work during registration or a resend HTTP request.
+     * Issue a time-limited code and queue its encrypted email delivery.
      */
     public function sendEmailVerificationNotification(): void
     {
-        SendVerificationEmail::dispatch((int) $this->getKey())->afterCommit();
+        app(EmailVerificationService::class)->sendCode($this);
     }
 
     public function suspend(): bool

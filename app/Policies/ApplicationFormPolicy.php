@@ -30,6 +30,11 @@ class ApplicationFormPolicy
         return $this->permissions->can($user, 'view_candidates', application: $application);
     }
 
+    public function sendCandidateEmail(User $user, ApplicationForm $application): bool
+    {
+        return $this->permissions->can($user, 'send_candidate_email', application: $application);
+    }
+
     public function viewDocuments(User $user, ApplicationForm $application): bool
     {
         return $user->isAdmin() || ($user->isApplicant() && $application->user_id === $user->id)

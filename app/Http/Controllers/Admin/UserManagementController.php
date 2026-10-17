@@ -176,7 +176,14 @@ class UserManagementController extends Controller
                 'role',
                 'status',
                 'phone',
+                'date_of_birth',
+                'address',
                 'profile_image_path',
+                'country_code',
+                'country',
+                'state',
+                'city',
+                'zipcode',
                 'created_at',
                 'approved_at',
                 'suspended_at',
@@ -194,6 +201,9 @@ class UserManagementController extends Controller
                                 ->orWhere('last_name', 'like', $term)
                                 ->orWhere('email', 'like', $term)
                                 ->orWhere('phone', 'like', $term)
+                                ->orWhere('country', 'like', $term)
+                                ->orWhere('state', 'like', $term)
+                                ->orWhere('city', 'like', $term)
                                 ->orWhere('local_government_area', 'like', $term)
                                 ->orWhere('state_of_origin', 'like', $term)
                                 ->orWhere('nationality', 'like', $term);

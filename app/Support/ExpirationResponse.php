@@ -13,20 +13,22 @@ class ExpirationResponse
 {
     public function gone(Request $request, ?string $type = null): Response|JsonResponse
     {
-        $type ??= $request->routeIs('team-invitations.*') ? 'invitation' : 'link';
+        $type ??= match (true) {
+            $request->routeIs('team-invitations.*') => 'invitation',
+            $request->routeIs('interviews.*') => 'interview',
+            default => 'link',
+        };
 
         return $this->render($request, $type, 410);
     }
 
     public function invalidSignature(Request $request): Response|JsonResponse
     {
-        $verification = $request->routeIs('verification.verify');
-
         if ($this->hasExpiredSignature($request)) {
-            return $this->gone($request, $verification ? 'verification_expired' : 'link');
+            return $this->gone($request);
         }
 
-        return $this->render($request, $verification ? 'verification_invalid' : 'signed_invalid', 403);
+        return $this->render($request, 'signed_invalid', 403);
     }
 
     public function hasExpiredSignature(Request $request): bool
@@ -59,11 +61,6 @@ class ExpirationResponse
             && ! URL::signatureHasNotExpired($request);
     }
 
-    public function invalidVerification(Request $request): Response|JsonResponse
-    {
-        return $this->render($request, 'verification_invalid', 403);
-    }
-
     public function session(Request $request, bool $oauth = false): Response|JsonResponse
     {
         return $this->render($request, $oauth ? 'oauth_session' : 'session', 419);
@@ -91,9 +88,6 @@ class ExpirationResponse
         [$actionRoute, $actionLabel] = match ($type) {
             'password_reset' => ['password.request', __('expiration.reset_action')],
             'application_closed' => ['client.jobs-listings', __('expiration.browse_jobs_action')],
-            'verification_expired', 'verification_invalid' => $request->user()
-                ? ['verification.notice', __('expiration.verification_action')]
-                : ['login', __('expiration.verification_sign_in_action')],
             'session' => $request->user()
                 ? ['dashboard', __('expiration.dashboard_action')]
                 : ['login', __('expiration.sign_in_action')],

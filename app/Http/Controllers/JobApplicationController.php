@@ -6,8 +6,8 @@ use App\Http\Requests\StoreApplicationFormRequest;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\Job;
-use App\Models\NigeriaState;
 use App\Services\ApplicationFormService;
+use App\Services\LocationService;
 use App\Support\ExpirationResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -69,9 +69,7 @@ class JobApplicationController extends Controller
         return view('client.Application', [
             'job' => $job,
             'user' => $user,
-            'states' => NigeriaState::query()
-                ->ordered()
-                ->get(),
+            'countries' => app(LocationService::class)->countries(),
         ]);
     }
 
@@ -92,7 +90,7 @@ class JobApplicationController extends Controller
         $this->authorize('view', $applicationForm);
 
         return view('client.application-show', [
-            'application' => $applicationForm->load(['job', 'applicant', 'documents', 'statusHistories.changedBy']),
+            'application' => $applicationForm->load(['job', 'applicant', 'documents', 'statusHistories.changedBy', 'interviews']),
         ]);
     }
 

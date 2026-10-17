@@ -218,6 +218,11 @@ class JobController extends Controller
         DB::transaction(function () use ($job): void {
             Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
             Gate::authorize('delete', $job);
+
+            if ($job->applications()->whereHas('candidateMessages')->exists()) {
+                throw ValidationException::withMessages(['job' => 'Jobs with candidate email history must be closed instead of deleted.']);
+            }
+
             $job->delete();
         });
         $this->deleteStoredLogo($job);

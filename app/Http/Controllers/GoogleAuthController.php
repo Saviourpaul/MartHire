@@ -47,6 +47,12 @@ class GoogleAuthController extends Controller
 
             $user = User::where('google_id', $googleId)->first();
 
+            if ($user && strcasecmp($user->email, $email) !== 0) {
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your Google email does not match this account. Sign in with your registered email address.',
+                ]);
+            }
+
             if (! $user) {
                 $user = User::where('email', $email)->first();
 
@@ -80,9 +86,9 @@ class GoogleAuthController extends Controller
             }
 
             // Google supplied an email_verified=true claim. Use the same atomic
-            // transition as an email-link verification so activation and the
+            // transition as verification by code so activation and the
             // one-time delayed welcome mail remain consistent across providers.
-            $user = $emailVerification->verify($user);
+            $user = $emailVerification->verifyTrustedEmail($user, $email);
 
             if (! $user) {
                 return redirect()->route('login')->withErrors([
