@@ -5,12 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\JobStatus;
 use App\Http\Requests\CloseJobRequest;
 use App\Models\Job;
-use App\Models\JobPostMember;
-use App\Models\Organization;
-use App\Models\OrganizationMember;
 use App\Support\JobDescription;
-use App\Support\OrganizationContext;
-use App\Support\OrganizationPermissions;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -63,7 +58,7 @@ class JobController extends Controller
         $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
 
         $jobs = Job::query()
-            ->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $request->user()))
+            ->where('employer_id', $request->user()->id)
             ->when(is_string($request->query('status')) && JobStatus::tryFrom($request->query('status')), fn ($query) => $query->status($request->query('status')))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%'.$request->string('search')->trim().'%';
@@ -136,8 +131,6 @@ class JobController extends Controller
         $newLogoPath = null;
         try {
             $reopened = DB::transaction(function () use ($request, $job, $data, &$oldLogoPath, &$newLogoPath): bool {
-                Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
-                Gate::authorize('update', $job);
                 $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
                 $reopen = $currentJob->isSuspended();
                 $previousLogoPath = $currentJob->storedLogoPath();
@@ -189,13 +182,8 @@ class JobController extends Controller
 
     public function close(CloseJobRequest $request, Job $job): RedirectResponse|JsonResponse
     {
-        $updated = DB::transaction(function () use ($job): int {
-            Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
-            Gate::authorize('close', $job);
-
-            return Job::query()->whereKey($job->id)->where('status', '<>', JobStatus::Closed->value)
-                ->update(['status' => JobStatus::Closed]);
-        });
+        $updated = Job::query()->whereKey($job->id)->where('status', '<>', JobStatus::Closed->value)
+            ->update(['status' => JobStatus::Closed]);
 
         if ($updated === 0) {
             throw ValidationException::withMessages(['confirm_closure' => 'This job is already closed.']);
