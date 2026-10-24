@@ -1,0 +1,50 @@
+{
+  "jobs": [
+    {
+      "id": "a1b2c3d4",
+      "title": "Senior Backend Engineer",
+      "full_title": "Senior Backend Engineer (Remote)",
+      "shortcode": "SENIO001",
+      "code": "ENG-101",
+      "state": "published",
+      "confidential": false,
+      "department": "Engineering",
+      "department_hierarchy": [ { "id": 101, "name": "Engineering" } ],
+      "url": "https://pilotco.workable.com/jobs/1111",
+      "application_url": "https://apply.workable.com/pilotco/j/SENIO001/",
+      "shortlink": "https://pilotco.workable.com/j/SENIO001",
+      "workplace_type": "remote",
+      "location": { "location_str": "Remote, US", "country": "United States", "country_code": "US", "region": "", "region_code": "", "city": "", "zip_code": "", "telecommuting": true, "workplace_type": "remote" },
+      "locations": [ { "country_code": "US", "country_name": "United States", "city": "Remote", "hidden": false } ],
+      "created_at": "2026-09-01T10:00:00Z",
+      "updated_at": "2026-09-30T14:02:11Z",
+      "keywords": ["php","laravel"],
+      "salary": { "salary_from": 120000, "salary_to": 160000, "salary_currency": "USD" },
+      "full_description": "<p>We are hiring a <strong>backend engineer</strong>.</p>",
+      "requirements": "<ul><li>PHP &amp; Laravel</li></ul>",
+      "benefits": "<p>Health, remote budget</p>"
+    },
+    {
+      "id": "e5f6g7h8",
+      "title": "Product Designer",
+      "full_title": "Product Designer",
+      "shortcode": "PRODU002",
+      "code": null,
+      "state": "published",
+      "confidential": false,
+      "department": null,
+      "department_hierarchy": [],
+      "url": "https://pilotco.workable.com/jobs/2222",
+      "application_url": "https://apply.workable.com/pilotco/j/PRODU002/",
+      "shortlink": "https://pilotco.workable.com/j/PRODU002",
+      "workplace_type": "on_site",
+      "location": { "location_str": "Lagos, NG", "country": "Nigeria", "country_code": "NG", "city": "Lagos" },
+      "locations": [],
+      "created_at": "2026-10-01T09:15:00Z",
+      "updated_at": "2026-10-01T09:15:00Z",
+      "keywords": [],
+      "salary": null
+    }
+  ],
+  "paging": { "next": null }
+}
