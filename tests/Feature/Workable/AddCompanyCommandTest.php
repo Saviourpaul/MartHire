@@ -2,7 +2,6 @@
 
 use App\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -59,9 +58,20 @@ it('never writes the token to output', function () {
     $this->artisan('workable:add-company', ['subdomain' => 'pilotco', '--name' => 'Pilot Co'])
         ->expectsQuestion(ACC_PROMPT, 'tok_123')
         ->expectsOutputToContain('pilotco')
+        ->doesntExpectOutputToContain('tok_123')
+        ->assertSuccessful();
+});
+
+it('leaves credentials unverified and warns on a transient verification failure', function () {
+    Http::fake(['pilotco.workable.com/spi/v3/jobs*' => Http::response([], 500)]);
+
+    $this->artisan('workable:add-company', ['subdomain' => 'pilotco'])
+        ->expectsQuestion(ACC_PROMPT, 'tok_123')
+        ->expectsOutputToContain('Could not verify the token')
+        ->doesntExpectOutputToContain('tok_123')
         ->assertSuccessful();
 
-    expect(Artisan::output())->not->toContain('tok_123');
+    expect(Company::where('subdomain', 'pilotco')->value('credentials_status'))->toBe('unverified');
 });
 
 it('sets credentials invalid on a rejected token', function () {
