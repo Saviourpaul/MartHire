@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JobPosting;
 use App\Support\HtmlSanitizer;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -17,6 +18,16 @@ use Illuminate\View\View;
  */
 class JobController extends Controller
 {
+    public function home(): View
+    {
+        return view('Home', ['jobs' => $this->openJobs()]);
+    }
+
+    public function dashboard(): View
+    {
+        return view('dashboard', ['jobs' => $this->openJobs(), 'activity' => []]);
+    }
+
     public function index(): View
     {
         $jobs = $this->openJobs();
@@ -42,6 +53,25 @@ class JobController extends Controller
         return view('JobDetail', [
             'job' => $this->present($posting),
             'jobs' => $this->openJobs(),   // for the "similar roles" section
+            'id' => $id,
+        ]);
+    }
+
+    public function apply(string $id): View|RedirectResponse
+    {
+        $posting = JobPosting::with('company')->where('shortcode', $id)->first();
+
+        abort_if($posting === null || $posting->status !== 'open', 404);
+
+        $job = $this->present($posting);
+
+        if (! empty($job['apply_url'])) {
+            return redirect()->away($job['apply_url']);
+        }
+
+        return view('Apply', [
+            'job' => $job,
+            'jobs' => $this->openJobs(),
             'id' => $id,
         ]);
     }

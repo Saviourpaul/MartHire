@@ -32,6 +32,13 @@ return [
 
         'payload_retention_days' => (int) env('APPLICATION_PAYLOAD_RETENTION_DAYS', 30),
 
+        // Private disk uploaded resumes are stored on (never public, never served directly).
+        'disk' => env('APPLICATION_DISK', 'local'),
+
+        // PLACEHOLDER consent version — the real privacy notice + version must be
+        // set by legal before go-live (data-protection regime is still TBD).
+        'consent_version' => env('APPLICATION_CONSENT_VERSION', 'placeholder-v0'),
+
     ],
 
 ];

@@ -1,8 +1,13 @@
 import './bootstrap';
+import './hero-map';
 
 import Alpine from 'alpinejs';
+import { registerDashboardCharts } from './dashboard-charts';
+import { registerApplicationForm } from './application-form';
 
 window.Alpine = Alpine;
+registerDashboardCharts(Alpine);
+registerApplicationForm(Alpine);
 
 const scrollToElement = (element) => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -133,6 +138,13 @@ document.querySelectorAll('[data-theme-control]').forEach(control => {
     control.addEventListener('change', () => {
         setTheme(control.value);
         try { localStorage.setItem('nearbyworks-theme', control.value); } catch (_) {}
+    });
+});
+document.querySelectorAll('[data-theme-toggle]').forEach(button => {
+    button.addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+        try { localStorage.setItem('nearbyworks-theme', next); } catch (_) {}
     });
 });
 themeQuery.addEventListener('change', () => {

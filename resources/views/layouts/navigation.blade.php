@@ -1,17 +1,28 @@
-<nav class="nw-account-nav" aria-label="{{ __('Your account') }}">
-    <div class="nw-container nw-account-nav__inner">
-        <div class="nw-account-nav__links">
-            <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Overview') }}
-            </x-nav-link>
-            <x-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.*')">
-                {{ __('Profile & settings') }}
-            </x-nav-link>
-        </div>
+@php
+    $groups = [
+        __('Overview') => [
+            ['label' => __('Dashboard'), 'href' => route('dashboard'), 'icon' => 'grid', 'active' => request()->routeIs('dashboard')],
+            ['label' => __('My applications'), 'href' => route('dashboard').'#applications', 'icon' => 'file'],
+            ['label' => __('New roles'), 'href' => route('dashboard').'#recommended', 'icon' => 'spark'],
+        ],
+        __('Find work') => [
+            ['label' => __('Browse jobs'), 'href' => route('jobs.index'), 'icon' => 'briefcase'],
+            ['label' => __('Job categories'), 'href' => url('/').'#categories', 'icon' => 'globe'],
+        ],
+        __('Account') => [
+            ['label' => __('Profile & settings'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+            ['label' => __('Help & support'), 'href' => url('/ContactUs'), 'icon' => 'help'],
+        ],
+    ];
+@endphp
 
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="nw-link">{{ __('Log out') }}</button>
-        </form>
-    </div>
+<nav class="nw-sidebar__nav" aria-label="{{ __('Your account') }}">
+    @foreach ($groups as $heading => $links)
+        <p class="nw-sidebar__label">{{ $heading }}</p>
+        @foreach ($links as $link)
+            <a class="nw-side-link{{ ! empty($link['active']) ? ' is-active' : '' }}" href="{{ $link['href'] }}" @if (! empty($link['active'])) aria-current="page" @endif x-on:click="sidebar = false">
+                <x-icon :name="$link['icon']" /> {{ $link['label'] }}
+            </a>
+        @endforeach
+    @endforeach
 </nav>

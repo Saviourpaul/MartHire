@@ -4,9 +4,7 @@ use App\Http\Controllers\JobController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('Home');
-});
+Route::get('/', [JobController::class, 'home']);
 
 
 Route::get('About', function () {
@@ -21,9 +19,12 @@ Route::get('ContactUs', function () {
 Route::get('jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('jobs/{id}', [JobController::class, 'show'])->name('jobs.show');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Hosted applications keep their destination; roles without one show the form preview.
+Route::get('jobs/{id}/apply', [JobController::class, 'apply'])
+    ->middleware('auth')->name('jobs.apply');
+
+Route::get('/dashboard', [JobController::class, 'dashboard'])
+    ->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

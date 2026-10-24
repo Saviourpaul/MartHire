@@ -10,7 +10,11 @@
  *   type (Full-time|Part-time|Contract), salary (string|null), posted_at (any date string),
  *   field (must match a name in job-categories.php), tags (string[]), summary,
  *   description (string), responsibilities, requirements, benefits (string[], all optional),
- *   company_about (string, optional), apply_url (optional - defaults to the register page)
+ *   company_about (string, optional), apply_url (optional - the employer's own application page, e.g. Workable's
+ *   application_url; offered as an alternative on the application form. Applying itself happens on this site:
+ *   guests go to the register page first, signed-in people to the application form)
+ *
+ * Only id and title are required. Every other key can be left out and the pages simply skip it.
  */
 
 $about = [
@@ -204,6 +208,46 @@ $jobs = [
         'responsibilities' => ['Maintain and improve our cloud infrastructure', 'Build CI/CD pipelines for product teams', 'Set up monitoring and on-call practices'],
         'requirements' => ['3+ years in DevOps or SRE', 'Strong AWS and Terraform experience', 'Experience running Kubernetes in production'],
         'benefits' => ['Fully remote within Europe', 'Learning and conference budget', 'Fair on-call compensation'],
+    ],
+    [
+        'id' => 'sample-19', 'title' => 'Software Developer', 'company' => 'Savannah Labs',
+        'location' => 'Lagos, Nigeria', 'workplace' => 'Hybrid', 'type' => 'Full-time', 'salary' => '$30k – $48k',
+        'posted_at' => now()->subHours(11), 'field' => 'Engineering', 'tags' => ['Node.js', 'React', 'APIs'],
+        'summary' => 'Build payment tools used by small businesses across West Africa.',
+        'description' => 'You will join a product team building simple payment and invoicing tools for small businesses. Expect to ship often, talk to customers and own features from idea to launch.',
+        'responsibilities' => ['Build and maintain features across web and API', 'Work with designers and support to fix real customer problems', 'Write tests and review teammates’ code'],
+        'requirements' => ['2+ years of professional development', 'Comfortable with JavaScript on both front and back end', 'Clear communicator'],
+        'benefits' => ['Hybrid working from our Lagos office', 'Health insurance', 'Learning budget'],
+    ],
+    [
+        'id' => 'sample-20', 'title' => 'Field Operations Coordinator', 'company' => 'Riftline Logistics',
+        'location' => 'Nairobi, Kenya', 'workplace' => 'On-site', 'type' => 'Full-time', 'salary' => null,
+        'posted_at' => now()->subDays(1)->subHours(6), 'field' => 'Operations',
+        'summary' => 'Keep deliveries moving across East Africa with a busy, friendly team.',
+    ],
+    [
+        'id' => 'sample-21', 'title' => 'Product Marketing Lead', 'company' => 'Tablemount Studio',
+        'location' => 'Cape Town, South Africa', 'workplace' => 'Hybrid', 'type' => 'Full-time', 'salary' => 'R70k – R90k / month',
+        'posted_at' => now()->subDays(3)->subHours(2), 'field' => 'Marketing', 'tags' => ['Positioning', 'Launches'],
+        'summary' => 'Shape how our design tools are explained and launched.',
+    ],
+    [
+        'id' => 'sample-22', 'title' => 'Financial Analyst', 'company' => 'Palmcrest Capital',
+        'location' => 'Dubai, UAE', 'workplace' => 'On-site', 'type' => 'Full-time', 'salary' => 'AED 18k – 24k / month',
+        'posted_at' => now()->subDays(6)->subHours(4), 'field' => 'Finance', 'tags' => ['Modelling', 'Reporting'],
+        'summary' => 'Support investment decisions with clear, careful analysis.',
+    ],
+    [
+        'id' => 'sample-23', 'title' => 'Customer Care Agent', 'company' => 'Brightline Care',
+        'location' => 'Manila, Philippines', 'workplace' => 'On-site', 'type' => 'Full-time', 'salary' => null,
+        'posted_at' => now()->subDays(8)->subHours(3), 'field' => 'Customer support',
+        'summary' => 'Be the friendly voice for customers in a growing care team.',
+    ],
+    [
+        'id' => 'sample-24', 'title' => 'Data Engineer', 'company' => 'Bluegum Analytics',
+        'location' => 'Sydney, Australia', 'workplace' => 'Hybrid', 'type' => 'Contract', 'salary' => 'A$700 – A$850 / day',
+        'posted_at' => now()->subDays(9)->subHours(7), 'field' => 'Engineering', 'tags' => ['dbt', 'Snowflake', 'Python'],
+        'summary' => 'Build reliable data pipelines for a team of analysts and researchers.',
     ],
 ];
 
