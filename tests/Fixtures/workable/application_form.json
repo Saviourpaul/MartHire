@@ -1,0 +1,19 @@
+{
+  "form_fields": [
+    { "key": "name", "label": "Name", "type": "string", "required": true },
+    { "key": "email", "label": "Email", "type": "string", "required": true },
+    { "key": "phone", "label": "Phone", "type": "string", "required": false },
+    { "key": "resume", "label": "Resume", "type": "file", "required": true, "supported_file_types": ["pdf","doc","docx"], "max_file_size": 10485760 },
+    { "key": "cover_letter", "label": "Cover letter", "type": "free_text", "required": false },
+    { "key": "summary", "label": "Summary", "type": "free_text", "required": false }
+  ],
+  "questions": [
+    { "id": "q_free", "body": "Why this role?", "type": "free_text", "required": true },
+    { "id": "q_bool", "body": "Authorized to work in the US?", "type": "boolean", "required": true },
+    { "id": "q_num",  "body": "Years of experience", "type": "numeric", "required": false },
+    { "id": "q_date", "body": "Earliest start date", "type": "date", "required": false },
+    { "id": "q_drop", "body": "Preferred location", "type": "dropdown", "required": false, "choices": [ { "id": "c1", "body": "Remote" }, { "id": "c2", "body": "Onsite" } ] },
+    { "id": "q_mc",   "body": "Which stacks?", "type": "multiple_choice", "required": false, "single_answer": false, "choices": [ { "id": "s1", "body": "PHP" }, { "id": "s2", "body": "Go" } ] },
+    { "id": "q_file", "body": "Portfolio", "type": "file", "required": false, "supported_file_types": ["pdf"], "max_file_size": 10485760 }
+  ]
+}
