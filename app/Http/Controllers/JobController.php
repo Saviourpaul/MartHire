@@ -166,7 +166,9 @@ class JobController extends Controller
 
         SubmitJobApplicationJob::dispatch($application);
 
-        return redirect()->route('jobs.show', $id)->with('status', 'application-received');
+        // Back to the apply page: the view shows its "application is on its way"
+        // panel when session('applied') is true (set here via the flash).
+        return redirect()->route('jobs.apply', $id)->with('applied', true);
     }
 
     /** Fall back to the employer's hosted Workable form (or the posting page if none). */

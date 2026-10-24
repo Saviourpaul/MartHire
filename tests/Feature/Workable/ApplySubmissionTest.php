@@ -70,7 +70,8 @@ it('queues a native application from the blade field names, stores the resume pr
     $response = $this->actingAs(User::factory()->create())
         ->post('/jobs/SENIO001/apply', bladePayload());
 
-    $response->assertRedirect(route('jobs.show', 'SENIO001'));
+    $response->assertRedirect(route('jobs.apply', 'SENIO001'));
+    $response->assertSessionHas('applied', true);
 
     $application = JobApplication::first();
     expect($application)->not->toBeNull();
