@@ -74,6 +74,17 @@ it('leaves credentials unverified and warns on a transient verification failure'
     expect(Company::where('subdomain', 'pilotco')->value('credentials_status'))->toBe('unverified');
 });
 
+it('rejects an invalid --apply-mode before creating anything', function () {
+    Http::fake();
+
+    $this->artisan('workable:add-company', ['subdomain' => 'foo', '--apply-mode' => 'bogus'])
+        ->expectsOutputToContain('Invalid --apply-mode')
+        ->assertFailed();
+
+    expect(Company::count())->toBe(0);
+    Http::assertNothingSent();
+});
+
 it('sets credentials invalid on a rejected token', function () {
     Http::fake(['pilotco.workable.com/spi/v3/jobs*' => Http::response([], 401)]);
 

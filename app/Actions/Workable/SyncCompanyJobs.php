@@ -33,6 +33,19 @@ class SyncCompanyJobs
         $run = SyncRun::start($company);
 
         try {
+            return $this->reconcile($company, $run, $startedAt);
+        } catch (\Throwable $e) {
+            // Unexpected crash (WorkableException is handled inside and returns):
+            // never leave the seeded 'ok' row looking like a successful run.
+            $run->finish(['status' => 'failed', 'error' => $e::class]);
+
+            throw $e;
+        }
+    }
+
+    private function reconcile(Company $company, SyncRun $run, \Illuminate\Support\Carbon $startedAt): SyncRun
+    {
+        try {
             $jobs = $this->client->listPublishedJobs($company);
         } catch (WorkableException $e) {
             $run->finish(['status' => 'failed', 'error' => $e::class]);

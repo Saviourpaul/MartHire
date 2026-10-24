@@ -25,7 +25,7 @@ class SyncCommand extends Command
             })
             ->get();
 
-        if ($companies->isEmpty() && $option) {
+        if ($companies->isEmpty() && $option !== null && $option !== '') {
             $this->components->error("No company matches '{$option}'.");
 
             return self::FAILURE;

@@ -18,6 +18,14 @@ class AddCompanyCommand extends Command
     public function handle(WorkableClient $client): int
     {
         $subdomain = (string) $this->argument('subdomain');
+        $applyMode = (string) $this->option('apply-mode');
+
+        if (! in_array($applyMode, ['native', 'redirect'], true)) {
+            $this->components->error("Invalid --apply-mode '{$applyMode}'; expected 'native' or 'redirect'.");
+
+            return self::FAILURE;
+        }
+
         $name = $this->option('name') ?: Str::title(str_replace(['-', '_'], ' ', $subdomain));
 
         if (Company::where('subdomain', $subdomain)->exists()) {
@@ -33,7 +41,7 @@ class AddCompanyCommand extends Command
             'subdomain' => $subdomain,
             'name' => $name,
             'slug' => $this->uniqueSlug($name ?: $subdomain),
-            'apply_mode' => $token === null ? 'redirect' : (string) $this->option('apply-mode'),
+            'apply_mode' => $token === null ? 'redirect' : $applyMode,
             'credentials_status' => 'unverified',
             'api_token' => $token,
         ]);

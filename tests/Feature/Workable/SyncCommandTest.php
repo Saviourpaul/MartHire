@@ -53,6 +53,17 @@ it('fails when the targeted company does not exist', function () {
     Queue::assertNothingPushed();
 });
 
+it('fails for --company=0 when no such company exists', function () {
+    Queue::fake();
+    syncMakeCompany('alpha');
+
+    $this->artisan('workable:sync', ['--company' => '0'])
+        ->expectsOutputToContain("No company matches '0'")
+        ->assertFailed();
+
+    Queue::assertNothingPushed();
+});
+
 it('runs the sync action for its company', function () {
     $company = syncMakeCompany('alpha');
     $action = Mockery::mock(SyncCompanyJobs::class);

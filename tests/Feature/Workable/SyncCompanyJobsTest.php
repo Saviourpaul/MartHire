@@ -113,3 +113,16 @@ it('does not sweep when the fetch fails', function () {
     expect($run->error)->toContain('TransientFailure');
     expect($posting->fresh()->status)->toBe('open');
 });
+
+it('marks the run failed and rethrows on an unexpected crash', function () {
+    $client = Mockery::mock(App\Integrations\Workable\WorkableClient::class);
+    $client->shouldReceive('listPublishedJobs')->once()->andThrow(new RuntimeException('boom'));
+
+    expect(fn () => (new SyncCompanyJobs($client))($this->company))
+        ->toThrow(RuntimeException::class, 'boom');
+
+    $run = App\Models\SyncRun::where('company_id', $this->company->id)->latest('id')->first();
+    expect($run->status)->toBe('failed')
+        ->and($run->finished_at)->not->toBeNull()
+        ->and($run->error)->toBe(RuntimeException::class);
+});
