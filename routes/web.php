@@ -23,6 +23,10 @@ Route::get('jobs/{id}', [JobController::class, 'show'])->name('jobs.show');
 Route::get('jobs/{id}/apply', [JobController::class, 'apply'])
     ->middleware('auth')->name('jobs.apply');
 
+// Native apply submission: validates, queues the application, dispatches the outbox job.
+Route::post('jobs/{id}/apply', [JobController::class, 'store'])
+    ->middleware('auth')->name('jobs.apply.store');
+
 Route::get('/dashboard', [JobController::class, 'dashboard'])
     ->middleware(['auth', 'verified'])->name('dashboard');
 

@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Workable\BuildApplicationValidator;
+use App\Actions\Workable\ResolveApplicationSchema;
+use App\Jobs\Workable\SubmitJobApplicationJob;
+use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -74,6 +79,79 @@ class JobController extends Controller
             'jobs' => $this->openJobs(),
             'id' => $id,
         ]);
+    }
+
+    /**
+     * Native apply submission (design §7.2/§7.5). Validates against the posting's
+     * own schema, moves uploads to the private disk, writes the application row
+     * (status queued) and hands off to the outbox job — which owns the at-most-once
+     * Workable POST. Employers in redirect mode, or postings we can't natively
+     * support, fall back to the hosted form and never create a row here.
+     */
+    public function store(
+        Request $request,
+        string $id,
+        ResolveApplicationSchema $resolve,
+        BuildApplicationValidator $validator,
+    ): RedirectResponse {
+        $posting = JobPosting::with('company')->where('shortcode', $id)->firstOrFail();
+        abort_if($posting->status !== 'open', 404);
+
+        $company = $posting->company;
+        if ($company === null || $company->apply_mode !== 'native') {
+            return $this->redirectToHosted($posting, $id);
+        }
+
+        // Resolving refreshes apply_supported: if the live schema has a required
+        // field we can't render/submit, don't accept a submission we'd mangle.
+        $schema = $resolve($company, $posting);
+        if (! $posting->apply_supported) {
+            return $this->redirectToHosted($posting, $id);
+        }
+
+        $rules = $validator->rules($schema);
+        $data = $request->validate($rules);
+
+        // File inputs are any rule that declares 'file' (resume + file questions).
+        // They go to the private disk; only path+name ride in the payload.
+        $fileFields = array_keys(array_filter(
+            $rules,
+            fn ($rule) => is_array($rule) && in_array('file', $rule, true),
+        ));
+
+        $files = [];
+        foreach ($fileFields as $field) {
+            if ($request->hasFile($field)) {
+                $upload = $request->file($field);
+                $path = $upload->store('applications/'.$posting->id, config('workable.application.disk'));
+                $files[$field] = ['path' => $path, 'name' => $upload->getClientOriginalName()];
+            }
+            unset($data[$field]); // never store the uploaded file inside the data payload
+        }
+
+        $application = JobApplication::create([
+            'job_posting_id' => $posting->id,
+            'idempotency_key' => (string) Str::uuid(),
+            'email' => $data['email'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'status' => 'queued',
+            'payload' => ['data' => $data, 'files' => $files],
+            'consent_version' => config('workable.application.consent_version'),
+            'consented_at' => now(),
+        ]);
+
+        SubmitJobApplicationJob::dispatch($application);
+
+        return redirect()->route('jobs.show', $id)->with('status', 'application-received');
+    }
+
+    /** Fall back to the employer's hosted Workable form (or the posting page if none). */
+    private function redirectToHosted(JobPosting $posting, string $id): RedirectResponse
+    {
+        $hosted = $posting->application_url ?: ($posting->shortlink ?: $posting->url);
+
+        return $hosted ? redirect()->away($hosted) : redirect()->route('jobs.show', $id);
     }
 
     /** @return Collection<int, array<string, mixed>> */
