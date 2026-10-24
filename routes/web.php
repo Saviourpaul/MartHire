@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,14 +17,9 @@ Route::get('ContactUs', function () {
     return view('ContactUs');
 });
 
-// Jobs pages read sample listings until the backend passes real jobs to these views.
-Route::get('jobs', function () {
-    return view('Jobs');
-})->name('jobs.index');
-
-Route::get('jobs/{id}', function (string $id) {
-    return view('JobDetail', ['id' => $id]);
-})->name('jobs.show');
+// Public job board — reads synced Workable postings from our database.
+Route::get('jobs', [JobController::class, 'index'])->name('jobs.index');
+Route::get('jobs/{id}', [JobController::class, 'show'])->name('jobs.show');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

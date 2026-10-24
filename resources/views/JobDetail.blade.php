@@ -3,7 +3,7 @@
     $jobs = collect($jobs ?? require resource_path('data/sample-jobs.php'))
         ->sortByDesc(fn ($job) => strtotime($job['posted_at']))
         ->values();
-    $job = $jobs->firstWhere('id', $id) ?? abort(404);
+    $job = ($job ?? $jobs->firstWhere('id', $id)) ?? abort(404);
     $categorySlug = \Illuminate\Support\Str::slug($job['field']);
     $posted = \Illuminate\Support\Carbon::parse($job['posted_at'])->diffForHumans();
     $similar = $jobs->where('field', $job['field'])->where('id', '!=', $job['id'])->take(3);
@@ -17,9 +17,20 @@
         'requirements' => 'What we’re looking for',
         'benefits' => 'What’s on offer',
     ];
+    $jsonLd = array_filter([
+        '@context' => 'https://schema.org/',
+        '@type' => 'JobPosting',
+        'title' => $job['title'],
+        'description' => $job['content_html'] ?: e($job['summary']),
+        'datePosted' => $job['posted_at'],
+        'employmentType' => $job['type'],
+        'hiringOrganization' => ['@type' => 'Organization', 'name' => $job['company']],
+        'jobLocation' => ['@type' => 'Place', 'address' => ['@type' => 'PostalAddress', 'addressLocality' => $job['location']]],
+    ]);
 @endphp
 
 <x-layout :title="$job['title'].' at '.$job['company']" :description="$job['summary']">
+    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_UNESCAPED_UNICODE) !!}</script>
     <article class="nw-job-detail" aria-labelledby="job-title">
         <div class="nw-container">
             <nav class="nw-breadcrumb" aria-label="Breadcrumb">
@@ -52,6 +63,10 @@
                         <p class="nw-copy">{{ $job['summary'] }}</p>
                         @if (! empty($job['description']))
                             <p class="nw-copy">{{ $job['description'] }}</p>
+                        @endif
+                        {{-- Employer HTML, sanitised server-side (App\Support\HtmlSanitizer) --}}
+                        @if (! empty($job['content_html']))
+                            <div class="nw-copy nw-job-detail__content">{!! $job['content_html'] !!}</div>
                         @endif
                     </section>
 
@@ -97,11 +112,16 @@
                         <p class="nw-apply-card__salary">{{ $job['salary'] }}</p>
                     @endif
                     <p class="nw-apply-card__type">{{ $job['type'] }}, {{ $job['workplace'] }}</p>
-                    <x-apply-button :job="$job" class="nw-apply-card__button" />
-                    @guest
-                        <p class="nw-form-hint">Applying needs a free NearbyWorks account. Sign up takes a minute.</p>
-                        <p class="nw-form-hint">Already have one? <a class="nw-link" href="{{ route('login') }}">Log in</a></p>
-                    @endguest
+                    @if (! empty($job['closed']))
+                        <p class="nw-form-hint">This role is no longer accepting applications.</p>
+                        <a class="nw-link" href="{{ route('jobs.index') }}">Browse open roles <x-icon name="arrow-right" /></a>
+                    @else
+                        <x-apply-button :job="$job" class="nw-apply-card__button" />
+                        @guest
+                            <p class="nw-form-hint">Applying needs a free NearbyWorks account. Sign up takes a minute.</p>
+                            <p class="nw-form-hint">Already have one? <a class="nw-link" href="{{ route('login') }}">Log in</a></p>
+                        @endguest
+                    @endif
                     <button type="button" class="nw-apply-card__share" x-on:click="copy()">
                         <x-icon name="share" />
                         <span x-text="copied ? 'Link copied' : 'Copy link to this role'">Copy link to this role</span>
