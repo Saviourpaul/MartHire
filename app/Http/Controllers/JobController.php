@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Actions\Workable\BuildApplicationValidator;
 use App\Actions\Workable\ResolveApplicationSchema;
+use App\Integrations\Workable\DTO\ApplicationSchema;
+use App\Integrations\Workable\DTO\QuestionData;
 use App\Jobs\Workable\SubmitJobApplicationJob;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
@@ -11,6 +13,7 @@ use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -62,13 +65,29 @@ class JobController extends Controller
         ]);
     }
 
-    public function apply(string $id): View|RedirectResponse
+    public function apply(string $id, ResolveApplicationSchema $resolve): View|RedirectResponse
     {
         $posting = JobPosting::with('company')->where('shortcode', $id)->first();
 
         abort_if($posting === null || $posting->status !== 'open', 404);
 
+        $company = $posting->company;
         $job = $this->present($posting);
+
+        // Native apply only when the employer opts in AND we can render the live
+        // schema; the form is fed the posting's real fields/questions. Everyone
+        // else continues to the employer's hosted form.
+        if ($company !== null && $company->apply_mode === 'native') {
+            $schema = $resolve($company, $posting);
+            if ($posting->apply_supported) {
+                return view('Apply', [
+                    'job' => $job,
+                    'jobs' => $this->openJobs(),
+                    'id' => $id,
+                    'form' => $this->presentApplicationForm($schema),
+                ]);
+            }
+        }
 
         if (! empty($job['apply_url'])) {
             return redirect()->away($job['apply_url']);
@@ -110,33 +129,37 @@ class JobController extends Controller
         }
 
         $rules = $validator->rules($schema);
-        $data = $request->validate($rules);
+        $rules['confirm'] = ['accepted']; // the blade's consent box must be ticked
 
-        // File inputs are any rule that declares 'file' (resume + file questions).
-        // They go to the private disk; only path+name ride in the payload.
-        $fileFields = array_keys(array_filter(
+        // The native form posts the blade's own field names; normalise them to the
+        // canonical schema keys (first_name, question_{id}, resume) before validating.
+        [$input, $fileInputs] = $this->normalizeApplyInput($request, $schema);
+        $validated = Validator::make($input + $fileInputs, $rules)->validate();
+
+        // File answers go to the PRIVATE disk; only path+name ride in the payload.
+        $fileKeys = array_keys(array_filter(
             $rules,
             fn ($rule) => is_array($rule) && in_array('file', $rule, true),
         ));
-
         $files = [];
-        foreach ($fileFields as $field) {
-            if ($request->hasFile($field)) {
-                $upload = $request->file($field);
+        foreach ($fileKeys as $key) {
+            if (isset($fileInputs[$key])) {
+                $upload = $fileInputs[$key];
                 $path = $upload->store('applications/'.$posting->id, config('workable.application.disk'));
-                $files[$field] = ['path' => $path, 'name' => $upload->getClientOriginalName()];
+                $files[$key] = ['path' => $path, 'name' => $upload->getClientOriginalName()];
             }
-            unset($data[$field]); // never store the uploaded file inside the data payload
+            unset($validated[$key]); // the uploaded file never lives in the data payload
         }
+        unset($validated['confirm']); // consent is recorded below, never sent to Workable
 
         $application = JobApplication::create([
             'job_posting_id' => $posting->id,
             'idempotency_key' => (string) Str::uuid(),
-            'email' => $data['email'],
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
+            'email' => $validated['email'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
             'status' => 'queued',
-            'payload' => ['data' => $data, 'files' => $files],
+            'payload' => ['data' => $validated, 'files' => $files],
             'consent_version' => config('workable.application.consent_version'),
             'consented_at' => now(),
         ]);
@@ -152,6 +175,86 @@ class JobController extends Controller
         $hosted = $posting->application_url ?: ($posting->shortlink ?: $posting->url);
 
         return $hosted ? redirect()->away($hosted) : redirect()->route('jobs.show', $id);
+    }
+
+    /**
+     * Map the native form's posted names to the canonical schema keys the
+     * validator/payload-builder expect (firstname→first_name, answers[id]→
+     * question_{id}, answer_files[id]→question_{id}). The schema drives which
+     * questions exist, so this never trusts arbitrary posted keys.
+     *
+     * @return array{0: array<string, mixed>, 1: array<string, \Illuminate\Http\UploadedFile>}
+     */
+    private function normalizeApplyInput(Request $request, ApplicationSchema $schema): array
+    {
+        $scalars = [
+            'first_name' => $request->input('firstname'),
+            'last_name' => $request->input('lastname'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+            'cover_letter' => $request->input('cover_letter'),
+            'summary' => $request->input('summary'),
+            'confirm' => $request->input('confirm'),
+        ];
+
+        $files = [];
+        if ($request->hasFile('resume')) {
+            $files['resume'] = $request->file('resume');
+        }
+
+        foreach ($schema->questions as $question) {
+            /** @var QuestionData $question */
+            $key = 'question_'.$question->id;
+            if ($question->type === 'file') {
+                if ($request->hasFile('answer_files.'.$question->id)) {
+                    $files[$key] = $request->file('answer_files.'.$question->id);
+                }
+
+                continue;
+            }
+            $scalars[$key] = $request->input('answers.'.$question->id);
+        }
+
+        return [$scalars, $files];
+    }
+
+    /**
+     * Shape a live Workable schema into the data the Apply view expects — the
+     * same keys as resources/data/sample-application-form.php, so the blade is
+     * fed real fields/questions without any change to the view.
+     *
+     * @return array{fields: array<int, array<string, mixed>>, questions: array<int, array<string, mixed>>}
+     */
+    private function presentApplicationForm(ApplicationSchema $schema): array
+    {
+        $resume = collect($schema->formFields)->firstWhere('key', 'resume') ?? [];
+        $hasSummary = collect($schema->formFields)->contains(fn ($f) => ($f['key'] ?? null) === 'summary');
+
+        $fields = [
+            ['key' => 'firstname', 'label' => __('First name'), 'type' => 'text', 'required' => true, 'section' => 'details', 'autocomplete' => 'given-name'],
+            ['key' => 'lastname', 'label' => __('Last name'), 'type' => 'text', 'required' => true, 'section' => 'details', 'autocomplete' => 'family-name'],
+            ['key' => 'email', 'label' => __('Email address'), 'type' => 'email', 'required' => true, 'section' => 'details', 'autocomplete' => 'email'],
+            ['key' => 'phone', 'label' => __('Phone number'), 'type' => 'tel', 'required' => false, 'section' => 'details', 'autocomplete' => 'tel'],
+            ['key' => 'resume', 'label' => __('CV or résumé'), 'type' => 'file', 'required' => (bool) ($resume['required'] ?? true), 'section' => 'documents', 'accept' => $resume['supported_file_types'] ?? ['pdf', 'doc', 'docx', 'rtf'], 'max_file_size' => $resume['max_file_size'] ?? (5 * 1024 * 1024)],
+            ['key' => 'cover_letter', 'label' => __('Cover letter'), 'type' => 'textarea', 'required' => false, 'section' => 'documents'],
+        ];
+
+        if ($hasSummary) {
+            $fields[] = ['key' => 'summary', 'label' => __('Summary'), 'type' => 'textarea', 'required' => false, 'section' => 'documents'];
+        }
+
+        $questions = array_map(fn (QuestionData $q) => [
+            'id' => $q->id,
+            'body' => $q->label,
+            'type' => $q->type,
+            'required' => $q->required,
+            'single_answer' => $q->singleAnswer ?? true,
+            'choices' => $q->choices,
+            'supported_file_types' => $q->supportedFileTypes,
+            'max_file_size' => $q->maxFileSize,
+        ], $schema->questions);
+
+        return ['fields' => $fields, 'questions' => $questions];
     }
 
     /** @return Collection<int, array<string, mixed>> */
