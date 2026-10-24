@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Integrations\Greenhouse\Exceptions;
+namespace App\Integrations\Workable\Exceptions;
 
 use Throwable;
 
-class RateLimited extends GreenhouseException
+class RateLimited extends WorkableException
 {
     public readonly ?int $retryAfter;
 
