@@ -26,6 +26,8 @@ use Illuminate\Support\Collection;
  */
 class WorkableClient
 {
+    private const MAX_PAGES = 100;
+
     public function __construct(private Factory $http) {}
 
     /** @return Collection<int, JobPostData> */
@@ -42,11 +44,23 @@ class WorkableClient
             'include_fields' => 'description,full_description,requirements,benefits',
         ]);
 
-        while ($url) {
+        $host = parse_url($this->baseUrl($company), PHP_URL_HOST);
+        $visited = [];
+
+        while ($url && count($visited) < self::MAX_PAGES) {
+            $visited[$url] = true;
             $json = $this->get($company, $url)->json() ?? [];
             $jobs = $jobs->merge($this->mapJobs($json));
             $next = data_get($json, 'paging.next');
-            $url = is_string($next) && $next !== '' ? $next : null;
+            $url = null;
+
+            // Only follow a next URL on the account's own host (never leak the token
+            // elsewhere) and never revisit a URL.
+            if (is_string($next) && $next !== ''
+                && parse_url($next, PHP_URL_HOST) === $host
+                && ! isset($visited[$next])) {
+                $url = $next;
+            }
         }
 
         return $jobs->values();
@@ -82,11 +96,12 @@ class WorkableClient
             // No retry: a POST must never be repeated by the client.
             $res = $this->http($company)->post($this->baseUrl($company)."/jobs/{$shortcode}/candidates", $payload);
         } catch (ConnectionException $e) {
-            // A timeout after the request was sent means the outcome is unknown.
-            if (str_contains($e->getMessage(), 'cURL error 28')) {
-                throw new AmbiguousOutcome('Workable submission timed out; outcome unknown.', 0, $e);
+            // Only clearly pre-send failures (6: can't resolve host, 7: can't connect)
+            // are safe to retry. Anything else may have happened after sending.
+            if (preg_match('/cURL error (6|7)\b/', $e->getMessage())) {
+                throw new TransientFailure('Could not connect to Workable.', 0, $e);
             }
-            throw new TransientFailure('Could not connect to Workable.', 0, $e);
+            throw new AmbiguousOutcome('Workable submission failed after send; outcome unknown.', 0, $e);
         }
 
         $this->assertSuccessful($res, true);
@@ -151,6 +166,9 @@ class WorkableClient
             $status === 404 => new JobNotFound('Workable resource not found.'),
             $status === 429 => new RateLimited((int) $res->header('Retry-After') ?: null, 'Workable rate limit hit.'),
             $isSubmission && $status === 422 => new PayloadRejected((array) data_get($res->json(), 'validation_errors', []), 'Workable rejected the payload.'),
+            $status >= 400 && $status < 500 => $isSubmission
+                ? new PayloadRejected([], "Workable rejected the submission ({$status}).")
+                : new WorkableException("Workable request failed permanently ({$status})."),
             $isSubmission && $status >= 500 => new AmbiguousOutcome("Workable returned {$status} on submission; outcome unknown."),
             default => new TransientFailure("Workable request failed ({$status})."),
         };
