@@ -27,12 +27,12 @@
             <x-input-error id="update_password_password_confirmation-error" :messages="$errors->updatePassword->get('password_confirmation')" />
         </div>
 
-        <div class="nw-form-row nw-form-row--actions">
+        <x-form.actions>
             <x-primary-button>{{ __('Update password') }}</x-primary-button>
 
             @if (session('status') === 'password-updated')
                 <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)" class="nw-form-hint" role="status">{{ __('Your password has been updated.') }}</p>
             @endif
-        </div>
+        </x-form.actions>
     </form>
 </section>

@@ -27,10 +27,12 @@
                     <x-input-error id="delete_account_password-error" :messages="$errors->userDeletion->get('password')" />
                 </div>
 
-                <div class="nw-form-row nw-form-row--actions">
-                    <x-secondary-button x-on:click="$dispatch('close')">{{ __('Cancel') }}</x-secondary-button>
+                <x-form.actions>
+                    <x-slot:cancel>
+                        <x-secondary-button x-on:click="$dispatch('close')">{{ __('Cancel') }}</x-secondary-button>
+                    </x-slot:cancel>
                     <x-danger-button>{{ __('Delete account') }}</x-danger-button>
-                </div>
+                </x-form.actions>
             </div>
         </form>
     </x-modal>
