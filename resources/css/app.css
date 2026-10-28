@@ -4177,7 +4177,7 @@ a.nw-chip {
 }
 
 .nw-table td {
-    padding: 14px 12px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--nw-line);
     vertical-align: middle;
 }
