@@ -99,7 +99,7 @@
                                 <td><x-status-badge :status="$managedUser->role->label()" /></td>
                                 <td><x-status-badge :status="$managedUser->status" /></td>
                                 <td>{{ $managedUser->created_at->format('j M Y') }}</td>
-                                <td class="nw-table__go">
+                                <td class="nw-table__go nw-table__go--persist">
                                     <button type="button" class="nw-link nw-link--small" x-on:click="$dispatch('open-modal', 'manage-user-{{ $managedUser->id }}')">
                                         {{ __('Manage') }}
                                     </button>

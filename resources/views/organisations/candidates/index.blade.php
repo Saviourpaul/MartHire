@@ -90,7 +90,7 @@
                                 <td><x-status-badge :status="$application->status" /></td>
                                 <td>{{ $application->documents_count }}</td>
                                 <td>{{ $application->submitted_at?->format('j M Y') }}</td>
-                                <td class="nw-table__go">
+                                <td class="nw-table__go nw-table__go--persist">
                                     <a class="nw-link nw-link--small" href="{{ route('organisations.candidates.show', $application) }}">{{ __('Review') }}</a>
                                 </td>
                             </tr>
