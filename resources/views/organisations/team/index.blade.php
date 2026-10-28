@@ -21,14 +21,14 @@
                 </div>
             </header>
 
-            <form method="POST" action="{{ route('organisations.team.invitations.store') }}" class="nw-form-row nw-form-row--fields">
+            <form method="POST" action="{{ route('organisations.team.invitations.store') }}" class="nw-form-bar">
                 @csrf
-                <div>
+                <div class="nw-form-bar__grow">
                     <x-input-label for="invite-email" :value="__('Email')" />
                     <x-text-input id="invite-email" type="email" name="email" :value="old('email')" required />
                     <x-input-error id="invite-email-error" :messages="$errors->get('email')" />
                 </div>
-                <div>
+                <div class="nw-form-bar__fixed">
                     <x-input-label for="invite-role" :value="__('Role')" />
                     <select id="invite-role" class="nw-select" name="role" required>
                         @foreach ($roleOptions as $roleOption)
@@ -170,10 +170,12 @@
                             </select>
                         </div>
                     </div>
-                    <div class="nw-form-row nw-modal-actions">
-                        <button type="button" class="nw-link" x-on:click="$dispatch('close-modal', 'manage-member-{{ $member->id }}')">{{ __('Cancel') }}</button>
+                    <x-form.actions>
+                        <x-slot:cancel>
+                            <button type="button" class="nw-link" x-on:click="$dispatch('close-modal', 'manage-member-{{ $member->id }}')">{{ __('Cancel') }}</button>
+                        </x-slot:cancel>
                         <x-primary-button><x-icon name="check" /> {{ __('Save changes') }}</x-primary-button>
-                    </div>
+                    </x-form.actions>
                 </form>
 
                 @unless ($member->user->is(auth()->user()))
