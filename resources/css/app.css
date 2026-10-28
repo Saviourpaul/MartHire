@@ -4775,6 +4775,23 @@ a.nw-chip {
     color: inherit;
 }
 
+/* Canonical form action footer (x-form.actions): right-aligned, auto-width
+   buttons on desktop; full-width stacked on mobile. The cancel slot renders
+   before the primary action. */
+.nw-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.nw-actions .nw-button,
+.nw-actions .nw-link {
+    flex-shrink: 0;
+}
+
 .nw-form-actions {
     display: flex;
     flex-wrap: wrap;
@@ -5956,6 +5973,15 @@ a.nw-chip {
     }
 
     .nw-form-bar .nw-button {
+        width: 100%;
+    }
+
+    .nw-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .nw-actions .nw-button {
         width: 100%;
     }
 
