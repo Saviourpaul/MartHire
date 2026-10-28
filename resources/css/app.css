@@ -4283,6 +4283,13 @@ a.nw-chip {
     color: #8a3b2a;
 }
 
+.nw-status--draft {
+    background: transparent;
+    color: var(--nw-muted);
+    border: 1px dashed var(--nw-line);
+    padding-block: 2px;
+}
+
 [data-theme="dark"] .nw-status--in-review {
     background: rgb(222 237 170 / 16%);
     color: #dcec9d;
