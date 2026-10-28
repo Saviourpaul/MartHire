@@ -5,7 +5,13 @@ use App\Enums\OrganizationRole;
 use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\TeamInvitation;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Notification;
+
+// The team-invitations throttle (5/min by IP) uses a cache-backed counter that
+// RefreshDatabase does not reset; these tests exercise team management, not the
+// rate limiter, so the throttle is excluded to keep them order-independent.
+beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 test('a recruiter cannot view or manage the hiring team', function () {
     [$organization, $owner] = organizationWithOwner();

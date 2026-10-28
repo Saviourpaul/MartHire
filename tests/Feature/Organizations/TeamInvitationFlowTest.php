@@ -8,7 +8,14 @@ use App\Models\Scopes\OrganizationScope;
 use App\Models\TeamInvitation;
 use App\Models\User;
 use App\Services\OrganizationTeamService;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Str;
+
+// The team-invitations throttle (5/min by IP) uses a cache-backed counter that
+// RefreshDatabase does not reset, so running several invitation requests from the
+// test IP within a minute would otherwise flake with 429. These tests exercise the
+// invitation flow, not the rate limiter, so the throttle is excluded here.
+beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
 
 /**
  * OrganizationTeamService::invite() hashes the token before persisting and never
