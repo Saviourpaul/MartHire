@@ -9,13 +9,13 @@
     $form = $form ?? require resource_path('data/sample-application-form.php');
     $fill = fn (?string $text) => $text === null ? null : str_replace(':company', $company, $text);
 
-    // The backend switches this off simply by defining a POST route named jobs.apply.store.
-    $preview = ! \Illuminate\Support\Facades\Route::has('jobs.apply.store');
-    $action = $preview ? route('jobs.apply', $job['id']) : route('jobs.apply.store', $job['id']);
+    // The backend switches this off simply by defining a POST route named workable-jobs.apply.store.
+    $preview = ! \Illuminate\Support\Facades\Route::has('workable-jobs.apply.store');
+    $action = $preview ? route('workable-jobs.apply', $job['id']) : route('workable-jobs.apply.store', $job['id']);
 
     $account = auth()->user();
-    $given = $account->getAttribute('firstname') ?? $account->getAttribute('firstName') ?? '';
-    $family = $account->getAttribute('lastname') ?? $account->getAttribute('lastName') ?? '';
+    $given = $account->getAttribute('firstname') ?? $account->getAttribute('first_name') ?? '';
+    $family = $account->getAttribute('lastname') ?? $account->getAttribute('last_name') ?? '';
     if ($given === '' && $account->getAttribute('name')) {
         [$given, $family] = array_pad(explode(' ', trim($account->getAttribute('name')), 2), 2, '');
     }
@@ -54,7 +54,7 @@
     <div class="nw-apply">
         <div class="nw-container">
             <nav class="nw-breadcrumb" aria-label="{{ __('Breadcrumb') }}">
-                <a href="{{ route('jobs.show', $job['id']) }}"><x-icon name="arrow-left" /> {{ __('Back to the role') }}</a>
+                <a href="{{ route('workable-jobs.show', $job['id']) }}"><x-icon name="arrow-left" /> {{ __('Back to the role') }}</a>
             </nav>
 
             <div class="nw-apply__grid">
@@ -109,13 +109,15 @@
                                     <p class="nw-field__error" id="field-confirm-error" role="alert" x-show="error('confirm')" x-text="error('confirm')" x-cloak></p>
                                 </div>
 
-                                <div class="nw-form-actions">
+                                <x-form.actions>
+                                    <x-slot:cancel>
+                                        <a class="nw-link" href="{{ route('workable-jobs.show', $job['id']) }}">{{ __('Cancel') }}</a>
+                                    </x-slot:cancel>
                                     <button type="submit" class="nw-button nw-button--primary" x-bind:disabled="submitting">
                                         <span x-text="submitting ? @js(__('Sending…')) : @js(__('Send application'))">{{ __('Send application') }}</span>
                                         <x-icon name="send" />
                                     </button>
-                                    <a class="nw-link" href="{{ route('jobs.show', $job['id']) }}">{{ __('Cancel') }}</a>
-                                </div>
+                                </x-form.actions>
                             </div>
                         </form>
                     </div>
@@ -129,7 +131,7 @@
                         @endif
                         <div class="nw-button-row">
                             <a class="nw-button nw-button--primary" href="{{ route('dashboard') }}">{{ __('Go to your dashboard') }} <x-icon name="arrow-up-right" /></a>
-                            <a class="nw-button nw-button--outline" href="{{ route('jobs.index') }}">{{ __('Keep browsing jobs') }}</a>
+                            <a class="nw-button nw-button--outline" href="{{ route('workable-jobs.index') }}">{{ __('Keep browsing jobs') }}</a>
                         </div>
                     </section>
                 </div>
@@ -148,7 +150,7 @@
                             @if (! empty($job['type']))<li><x-icon name="briefcase" /> {{ $job['type'] }}@if (! empty($job['workplace'])), {{ $job['workplace'] }}@endif</li>@endif
                             @if (! empty($job['salary']))<li><x-icon name="wallet" /> {{ $job['salary'] }}</li>@endif
                         </ul>
-                        <a class="nw-link nw-link--small" href="{{ route('jobs.show', $job['id']) }}">{{ __('Read the full description') }} <x-icon name="arrow-up-right" /></a>
+                        <a class="nw-link nw-link--small" href="{{ route('workable-jobs.show', $job['id']) }}">{{ __('Read the full description') }} <x-icon name="arrow-up-right" /></a>
                     </div>
 
                     @if (! empty($job['apply_url']))
