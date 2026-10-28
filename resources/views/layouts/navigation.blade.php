@@ -22,6 +22,7 @@
                 ['label' => __('Dashboard'), 'href' => route('organisations.dashboard'), 'icon' => 'grid', 'active' => request()->routeIs('organisations.dashboard')],
             ],
             __('Recruitment') => [
+                ['label' => __('Jobs'), 'href' => route('organisations.jobs.index'), 'icon' => 'briefcase', 'active' => request()->routeIs('organisations.jobs.*')],
                 ['label' => __('Candidates'), 'href' => route('organisations.candidates.index'), 'icon' => 'file', 'active' => request()->routeIs('organisations.candidates.*')],
                 ['label' => __('Team'), 'href' => route('organisations.team.index'), 'icon' => 'users', 'active' => request()->routeIs('organisations.team.*')],
             ],

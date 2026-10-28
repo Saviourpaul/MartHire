@@ -134,3 +134,21 @@ test('delete is hidden from a recruiter but shown to the owner', function () {
     $this->actingAs($recruiter)->get(route('organisations.jobs.index'))
         ->assertOk()->assertSee('Shared Role')->assertDontSee('nw-button--danger', false);
 });
+
+test('an owner can close and then delete a job', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $job = createOrgJob($organization, $owner, []);
+
+    $this->actingAs($owner)->post(route('organisations.jobs.close', $job), ['confirm_closure' => '1'])->assertRedirect();
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->find($job->id)->status)->toBe(JobStatus::Closed);
+
+    $this->actingAs($owner)->delete(route('organisations.jobs.destroy', $job))->assertRedirect(route('organisations.jobs.index'));
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->whereKey($job->id)->exists())->toBeFalse();
+});
+
+test('organization users see a Jobs link in navigation', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)->get(route('organisations.dashboard'))
+        ->assertOk()->assertSee(route('organisations.jobs.index'), false);
+});
