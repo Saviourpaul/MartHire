@@ -29,7 +29,7 @@ Route::bind('applicationForm', fn (string $value) => ApplicationForm::withoutGlo
 Route::bind('organizationMember', fn (string $value) => OrganizationMember::withoutGlobalScope(OrganizationScope::class)
     ->findOrFail($value));
 
-Route::get('/', [WorkableJobController::class, 'home']);
+Route::get('/', [WorkableJobController::class, 'home'])->name('home');
 
 
 Route::get('About', function () {
