@@ -112,3 +112,25 @@ test('quill alignment/indent/code-block html is stripped to clean markup on save
 
     expect(latestJob()->description)->not->toContain('ql-align')->not->toContain('<div')->toContain('<ul>');
 });
+
+test('the jobs index lists org jobs by role and shows draft badges to the owner', function () {
+    [$organization, $owner] = organizationWithOwner();
+    createOrgJob($organization, $owner, ['title' => 'Open Role', 'status' => JobStatus::Open]);
+    createOrgJob($organization, $owner, ['title' => 'Draft Role', 'status' => JobStatus::Draft]);
+
+    $this->actingAs($owner)->get(route('organisations.jobs.index'))
+        ->assertOk()->assertSee('Open Role')->assertSee('Draft Role')->assertSee('Draft');
+});
+
+test('delete is hidden from a recruiter but shown to the owner', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $recruiter = addOrganizationMember($organization, OrganizationRole::Recruiter)->user;
+    $job = createOrgJob($organization, $owner, ['title' => 'Shared Role']);
+    app(\App\Support\OrganizationContext::class)->runInOrganization($organization, fn () => \App\Models\JobPostMember::create([
+        'organization_id' => $organization->id, 'job_id' => $job->id, 'user_id' => $recruiter->id,
+    ]));
+
+    $this->actingAs($owner)->get(route('organisations.jobs.index'))->assertSee('nw-button--danger', false);
+    $this->actingAs($recruiter)->get(route('organisations.jobs.index'))
+        ->assertOk()->assertSee('Shared Role')->assertDontSee('nw-button--danger', false);
+});
