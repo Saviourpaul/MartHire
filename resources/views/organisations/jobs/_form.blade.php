@@ -71,7 +71,7 @@
         </div>
     </div>
 
-    <div>
+    <div class="nw-editor-field">
         <x-input-label for="description" :value="__('Job description')" />
         <div x-ref="editor" class="nw-editor"></div>
         <textarea name="description" x-ref="input" class="nw-input nw-editor__fallback" rows="10">{{ old('description', $job?->description) }}</textarea>

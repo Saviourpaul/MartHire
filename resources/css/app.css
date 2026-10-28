@@ -4292,25 +4292,39 @@ a.nw-chip {
 
 /* Quill job-description editor */
 .nw-editor {
-    min-height: 220px;
     border-radius: 6px;
 }
 
-.nw-editor .ql-toolbar,
-.nw-editor .ql-container {
-    border-color: var(--nw-line);
-}
-
-.nw-editor .ql-toolbar {
+/* Quill mounts ON .nw-editor (that element becomes .ql-container) and inserts
+   .ql-toolbar as a SIBLING before it — neither is a descendant of .nw-editor,
+   so the editor chrome must be styled from the .nw-editor-field wrapper, which
+   contains both. */
+.nw-editor-field .ql-toolbar.ql-snow {
+    border: 1px solid var(--nw-line);
+    border-bottom: 0;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
 }
 
-.nw-editor .ql-container {
+.nw-editor-field .ql-container.ql-snow {
+    border: 1px solid var(--nw-line);
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
     font-size: 14px;
-    min-height: 180px;
+}
+
+.nw-editor-field .ql-editor {
+    min-height: 200px;
+    max-height: 440px;
+    overflow-y: auto;
+}
+
+/* The description editor is the last field before the footer; a divider keeps
+   the submit buttons from reading as part of the editor card. */
+.nw-editor-field + .nw-actions {
+    margin-top: 4px;
+    padding-top: 20px;
+    border-top: 1px solid var(--nw-line);
 }
 
 .nw-logo-preview {
