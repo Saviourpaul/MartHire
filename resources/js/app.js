@@ -4,10 +4,12 @@ import './hero-map';
 import Alpine from 'alpinejs';
 import { registerDashboardCharts } from './dashboard-charts';
 import { registerApplicationForm } from './application-form';
+import { registerJobForm } from './job-form';
 
 window.Alpine = Alpine;
 registerDashboardCharts(Alpine);
 registerApplicationForm(Alpine);
+registerJobForm(Alpine);
 
 const scrollToElement = (element) => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -105,7 +107,7 @@ Alpine.data('jobSearch', ({ jobs, categories, pageSize = 9 }) => ({
             this[filter.key] = this[filter.key].filter((value) => value !== filter.value);
         } else {
             this[filter.key] = '';
-        }
+        }a
     },
     clearAll() { this.query = ''; this.place = ''; this.category = ''; this.types = []; this.workplaces = []; },
     showResults() { scrollToElement(this.$refs.results); },

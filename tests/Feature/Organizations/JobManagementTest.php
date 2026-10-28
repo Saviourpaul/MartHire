@@ -102,3 +102,13 @@ test('the job edit form renders with the job values', function () {
     $this->actingAs($owner)->get(route('organisations.jobs.edit', $job))
         ->assertOk()->assertSee('Backend Engineer');
 });
+
+test('quill alignment/indent/code-block html is stripped to clean markup on save', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload([
+        'description' => '<p class="ql-align-center">A</p><div class="ql-code-block-container"><div class="ql-code-block">x</div></div><ul><li>b</li></ul>',
+    ]))->assertRedirect();
+
+    expect(latestJob()->description)->not->toContain('ql-align')->not->toContain('<div')->toContain('<ul>');
+});

@@ -4290,6 +4290,36 @@ a.nw-chip {
     padding-block: 2px;
 }
 
+/* Quill job-description editor */
+.nw-editor {
+    min-height: 220px;
+    border-radius: 6px;
+}
+
+.nw-editor .ql-toolbar,
+.nw-editor .ql-container {
+    border-color: var(--nw-line);
+}
+
+.nw-editor .ql-toolbar {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.nw-editor .ql-container {
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    font-size: 14px;
+    min-height: 180px;
+}
+
+.nw-logo-preview {
+    display: block;
+    margin-top: 10px;
+    max-height: 72px;
+    border-radius: 8px;
+}
+
 [data-theme="dark"] .nw-status--in-review {
     background: rgb(222 237 170 / 16%);
     color: #dcec9d;
