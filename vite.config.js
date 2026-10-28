@@ -2,16 +2,14 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
-    build: {
-        // The build dir (public/asset/nearbyworks) also holds hand-placed static
-        // assets (footer image, social icons, country flags). Do NOT empty it on
-        // build, or Vite would delete them.
-        emptyOutDir: false,
-    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
-            buildDirectory: 'asset/nearbyworks',
+            // Vite output lives in its OWN subdir so emptyOutDir can safely clear
+            // only the build output on each run. The parent dir
+            // (public/asset/nearbyworks) holds hand-placed static assets (footer
+            // image, social icons, country flags) that Vite must never touch.
+            buildDirectory: 'asset/nearbyworks/build',
             refresh: true,
         }),
     ],
