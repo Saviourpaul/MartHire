@@ -119,7 +119,7 @@
                                 <td><x-status-badge :status="$member->role->label()" /></td>
                                 <td><x-status-badge :status="$member->status" /></td>
                                 <td>{{ $member->jobs_count }}</td>
-                                <td class="nw-table__go">
+                                <td class="nw-table__go nw-table__go--persist">
                                     <button type="button" class="nw-link nw-link--small" x-on:click="$dispatch('open-modal', 'manage-member-{{ $member->id }}')">
                                         {{ __('Manage') }}
                                     </button>
