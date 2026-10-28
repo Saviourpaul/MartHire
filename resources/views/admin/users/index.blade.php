@@ -4,50 +4,53 @@
         <h1 class="nw-heading">{{ $title }}</h1>
         <p>{{ __('Manage platform accounts.') }}</p>
     </x-slot>
-    <nav class="nw-segmented" aria-label="{{ __('User categories') }}">
-        <a class="nw-segmented__item{{ request()->routeIs('admin.users.organizations') ? ' is-active' : '' }}" href="{{ route('admin.users.organizations') }}">{{ __('Organizations') }}</a>
-        <a class="nw-segmented__item{{ request()->routeIs('admin.users.applicants') ? ' is-active' : '' }}" href="{{ route('admin.users.applicants') }}">{{ __('Applicants') }}</a>
-        <a class="nw-segmented__item{{ request()->routeIs('admin.users.administrators') ? ' is-active' : '' }}" href="{{ route('admin.users.administrators') }}">{{ __('Admins') }}</a>
-        <a class="nw-segmented__item{{ request()->routeIs('admin.users.suspended') ? ' is-active' : '' }}" href="{{ route('admin.users.suspended') }}">{{ __('Suspended') }}</a>
-    </nav>
+    <form method="GET" role="search">
+        <x-table.toolbar :tabs-label="__('User categories')">
+            <x-slot:tabs>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.organizations') ? ' is-active' : '' }}" href="{{ route('admin.users.organizations') }}">{{ __('Organizations') }}</a>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.applicants') ? ' is-active' : '' }}" href="{{ route('admin.users.applicants') }}">{{ __('Applicants') }}</a>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.administrators') ? ' is-active' : '' }}" href="{{ route('admin.users.administrators') }}">{{ __('Admins') }}</a>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.suspended') ? ' is-active' : '' }}" href="{{ route('admin.users.suspended') }}">{{ __('Suspended') }}</a>
+            </x-slot:tabs>
 
-    <form method="GET" class="nw-toolbar" role="search">
-        <div class="nw-search-field">
-            <x-icon name="search" />
-            <label class="nw-sr-only" for="user-search">{{ __('Search users') }}</label>
-            <input id="user-search" class="nw-input" type="search" name="search" placeholder="{{ __('Search users…') }}" value="{{ $filterValues['search'] }}">
-        </div>
-
-        @unless ($roleConstraint)
-            <select class="nw-select" name="role" aria-label="{{ __('Filter by role') }}">
-                <option value="">{{ __('All roles') }}</option>
-                @foreach ($roles as $roleOption)
-                    <option value="{{ $roleOption->value }}" @selected($filterValues['role'] === $roleOption->value)>{{ $roleOption->label() }}</option>
-                @endforeach
-            </select>
-        @endunless
-
-        @unless ($statusConstraint)
-            <select class="nw-select" name="status" aria-label="{{ __('Filter by status') }}">
-                <option value="">{{ __('All statuses') }}</option>
-                @foreach ($statuses as $statusOption)
-                    <option value="{{ $statusOption->value }}" @selected($filterValues['status'] === $statusOption->value)>{{ $statusOption->label() }}</option>
-                @endforeach
-            </select>
-        @endunless
-
-        <button type="submit" class="nw-button nw-button--outline nw-button--small">{{ __('Filter') }}</button>
-        @if ($filterValues['search'] || $filterValues['role'] || $filterValues['status'] || $filterValues['created_from'] || $filterValues['created_to'])
-            <a href="{{ request()->url() }}" class="nw-link nw-link--small">{{ __('Clear') }}</a>
-        @endif
-
-        @if ($exportRoute)
-            <div class="nw-toolbar__actions">
-                <a href="{{ route($exportRoute, request()->query()) }}" class="nw-button nw-button--outline nw-button--small">
-                    <x-icon name="download" /> {{ __('Export') }}
-                </a>
+            <div class="nw-search-field">
+                <x-icon name="search" />
+                <label class="nw-sr-only" for="user-search">{{ __('Search users') }}</label>
+                <input id="user-search" class="nw-input" type="search" name="search" placeholder="{{ __('Search users…') }}" value="{{ $filterValues['search'] }}">
             </div>
-        @endif
+
+            <x-slot:filters>
+                @unless ($roleConstraint)
+                    <select class="nw-select" name="role" aria-label="{{ __('Filter by role') }}">
+                        <option value="">{{ __('All roles') }}</option>
+                        @foreach ($roles as $roleOption)
+                            <option value="{{ $roleOption->value }}" @selected($filterValues['role'] === $roleOption->value)>{{ $roleOption->label() }}</option>
+                        @endforeach
+                    </select>
+                @endunless
+
+                @unless ($statusConstraint)
+                    <select class="nw-select" name="status" aria-label="{{ __('Filter by status') }}">
+                        <option value="">{{ __('All statuses') }}</option>
+                        @foreach ($statuses as $statusOption)
+                            <option value="{{ $statusOption->value }}" @selected($filterValues['status'] === $statusOption->value)>{{ $statusOption->label() }}</option>
+                        @endforeach
+                    </select>
+                @endunless
+            </x-slot:filters>
+
+            <x-slot:actions>
+                <button type="submit" class="nw-button nw-button--outline nw-button--small">{{ __('Filter') }}</button>
+                @if ($filterValues['search'] || $filterValues['role'] || $filterValues['status'] || $filterValues['created_from'] || $filterValues['created_to'])
+                    <a href="{{ request()->url() }}" class="nw-link nw-link--small">{{ __('Clear') }}</a>
+                @endif
+                @if ($exportRoute)
+                    <a href="{{ route($exportRoute, request()->query()) }}" class="nw-button nw-button--outline nw-button--small">
+                        <x-icon name="download" /> {{ __('Export') }}
+                    </a>
+                @endif
+            </x-slot:actions>
+        </x-table.toolbar>
     </form>
 
     @if (session('success'))
