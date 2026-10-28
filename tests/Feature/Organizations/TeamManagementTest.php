@@ -68,6 +68,15 @@ test('an owner can remove a member', function () {
     expect($member->fresh()->trashed())->toBeTrue();
 });
 
+test('organization users see a Team link in navigation', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)
+        ->get(route('organisations.dashboard'))
+        ->assertOk()
+        ->assertSee(route('organisations.team.index'), false);
+});
+
 test('the team page lists members and pending invitations', function () {
     Notification::fake();
     [$organization, $owner] = organizationWithOwner();
