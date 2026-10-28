@@ -11,7 +11,11 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/socialite": "^5.31",
+        "laravel/tinker": "^2.10.1",
+        "nnjeim/world": "^2.0",
+        "predis/predis": "^3.7",
+        "symfony/html-sanitizer": "^7.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -42,6 +46,7 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
+            "@php -d memory_limit=1G artisan world:install --force",
             "npm install",
             "npm run build"
         ],

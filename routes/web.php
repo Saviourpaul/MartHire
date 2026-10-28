@@ -7,11 +7,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrganizationApplicationController;
 use App\Http\Controllers\OrganizationDashboardController;
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\OrganizationTeamController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\WorkableJobController;
 use App\Models\ApplicationForm;
+use App\Models\Job;
 use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +30,11 @@ Route::bind('applicationForm', fn (string $value) => ApplicationForm::withoutGlo
 // before InitializeOrganizationContext sets the active organization.
 Route::bind('organizationMember', fn (string $value) => OrganizationMember::withoutGlobalScope(OrganizationScope::class)
     ->findOrFail($value));
+
+// Native jobs bind by slug, unscoped (same ordering reason as above); JobPolicy /
+// OrganizationPermissions re-check real org ownership on every job action.
+Route::bind('job', fn (string $value) => Job::withoutGlobalScope(OrganizationScope::class)
+    ->where('slug', $value)->firstOrFail());
 
 Route::get('/', [WorkableJobController::class, 'home'])->name('home');
 
@@ -109,6 +116,17 @@ Route::middleware(['auth', 'verified', 'role:organization'])->prefix('organisati
         ->middleware('throttle:team-invitations')->name('team.invitations.store');
     Route::patch('team/members/{organizationMember}', [OrganizationTeamController::class, 'updateMember'])->name('team.members.update');
     Route::delete('team/members/{organizationMember}', [OrganizationTeamController::class, 'destroyMember'])->name('team.members.destroy');
+
+    // Native job postings (the org's own jobs, the candidate pipeline runs on these).
+    // JobPolicy gates every action; {job} binds by slug (unscoped bind above).
+    Route::get('jobs', [JobController::class, 'index'])->name('jobs.index');
+    Route::get('jobs/create', [JobController::class, 'create'])->name('jobs.create');
+    Route::post('jobs', [JobController::class, 'store'])->name('jobs.store');
+    Route::get('jobs/{job}', [JobController::class, 'employerShow'])->name('jobs.show');
+    Route::get('jobs/{job}/edit', [JobController::class, 'edit'])->name('jobs.edit');
+    Route::patch('jobs/{job}', [JobController::class, 'update'])->name('jobs.update');
+    Route::post('jobs/{job}/close', [JobController::class, 'close'])->name('jobs.close');
+    Route::delete('jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy');
 });
 
 Route::middleware(['auth', 'verified', 'role:applicant'])->prefix('client')->name('client.')->group(function () {
