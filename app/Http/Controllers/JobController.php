@@ -64,8 +64,7 @@ class JobController extends Controller
             : 'created_at';
         $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
 
-        $jobs = Job::query()
-            ->where('employer_id', $request->user()->id)
+        $jobs = app(OrganizationPermissions::class)->scopeJobs(Job::query(), $request->user())
             ->when(is_string($request->query('status')) && JobStatus::tryFrom($request->query('status')), fn ($query) => $query->status($request->query('status')))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%'.$request->string('search')->trim().'%';
@@ -84,11 +83,41 @@ class JobController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('employer.jobs.index', [
+        return view('organisations.jobs.index', [
             'jobs' => $jobs,
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
         ]);
+    }
+
+    public function create(Request $request): View
+    {
+        Gate::authorize('create', Job::class);
+
+        return view('organisations.jobs.create', [
+            'job' => null,
+            'categories' => $this->orgCategories($request),
+            'employmentTypes' => Job::employmentTypeOptions(),
+        ]);
+    }
+
+    public function edit(Request $request, Job $job): View
+    {
+        Gate::authorize('update', $job);
+
+        return view('organisations.jobs.edit', [
+            'job' => $job,
+            'categories' => $this->orgCategories($request),
+            'employmentTypes' => Job::employmentTypeOptions(),
+        ]);
+    }
+
+    /** @return list<string> */
+    private function orgCategories(Request $request): array
+    {
+        return app(OrganizationPermissions::class)->scopeJobs(Job::query(), $request->user())
+            ->whereNotNull('category')->where('category', '<>', '')
+            ->distinct()->orderBy('category')->pluck('category')->all();
     }
 
     public function store(StoreJobRequest $request): RedirectResponse|JsonResponse
@@ -235,7 +264,7 @@ class JobController extends Controller
 
         $job->loadCount(['applications' => fn ($query) => app(OrganizationPermissions::class)->scopeApplications($query, $request->user())]);
 
-        return view('employer.jobs.show', [
+        return view('organisations.jobs.show', [
             'job' => $job,
             'availableTeamMembers' => OrganizationMember::with('user')->where('status', 'active')
                 ->whereHas('user', fn ($query) => $query->where('status', 'active')->where('role', 'organization')->whereNull('users.deleted_at')->whereNotNull('email_verified_at'))->get(),

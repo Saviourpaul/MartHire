@@ -25,6 +25,21 @@ function latestJob(): Job
     return Job::withoutGlobalScope(OrganizationScope::class)->latest('id')->firstOrFail();
 }
 
+function createOrgJob(\App\Models\Organization $organization, \App\Models\User $user, array $overrides = []): Job
+{
+    return app(\App\Support\OrganizationContext::class)->runInOrganization($organization, fn () => $user->jobs()->create(array_merge([
+        'organization_id' => $organization->id,
+        'title' => 'Existing Job',
+        'description' => '<p>An existing job description.</p>',
+        'company' => 'Acme Co',
+        'location' => 'Remote',
+        'employment_type' => 'full_time',
+        'start_date' => now(),
+        'due_date' => now()->addDays(30),
+        'status' => JobStatus::Open,
+    ], $overrides)));
+}
+
 test('an owner can publish a job', function () {
     [$organization, $owner] = organizationWithOwner();
 
@@ -71,4 +86,19 @@ test('a submitted description is sanitized server-side', function () {
     ]))->assertRedirect();
 
     expect(latestJob()->description)->not->toContain('<script>')->not->toContain('onclick');
+});
+
+test('the job create form renders for an authorized user', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)->get(route('organisations.jobs.create'))
+        ->assertOk()->assertSee('Save as draft')->assertSee('Publish');
+});
+
+test('the job edit form renders with the job values', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $job = createOrgJob($organization, $owner, ['title' => 'Backend Engineer']);
+
+    $this->actingAs($owner)->get(route('organisations.jobs.edit', $job))
+        ->assertOk()->assertSee('Backend Engineer');
 });
