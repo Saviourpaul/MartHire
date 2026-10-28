@@ -134,6 +134,7 @@ class AdminReportService
                 ->acceptingApplications()
                 ->count(),
             'submitted_jobs_in_period' => Job::query()
+                ->where('status', '<>', JobStatus::Draft->value)
                 ->whereBetween('created_at', [$dateRange->start, $dateRange->end])
                 ->count(),
             'total_applications' => ApplicationForm::query()->count(),
@@ -202,7 +203,9 @@ class AdminReportService
     private function jobPostingTrend(AdminDashboardDateRange $dateRange): array
     {
         return $this->singleSeries(
-            Job::query()->whereBetween('created_at', [$dateRange->start, $dateRange->end]),
+            Job::query()
+                ->where('status', '<>', JobStatus::Draft->value)
+                ->whereBetween('created_at', [$dateRange->start, $dateRange->end]),
             'created_at',
             $dateRange,
             'Job Posts',
@@ -250,7 +253,9 @@ class AdminReportService
     private function jobsByCategory(): array
     {
         $categoryExpression = "COALESCE(NULLIF(category, ''), 'Uncategorized')";
-        $normalizedJobs = Job::query()->selectRaw("{$categoryExpression} as category");
+        $normalizedJobs = Job::query()
+            ->where('status', '<>', JobStatus::Draft->value)
+            ->selectRaw("{$categoryExpression} as category");
 
         return DB::query()
             ->fromSub($normalizedJobs, 'normalized_jobs')
@@ -298,6 +303,7 @@ class AdminReportService
     private function applicationsPerJob(AdminDashboardDateRange $dateRange): array
     {
         return Job::query()
+            ->where('job_posts.status', '<>', JobStatus::Draft->value)
             ->select(['job_posts.id', 'job_posts.title', 'job_posts.company', 'job_posts.status'])
             ->leftJoin('application_forms', function ($join) use ($dateRange): void {
                 $join->on('job_posts.id', '=', 'application_forms.job_id')

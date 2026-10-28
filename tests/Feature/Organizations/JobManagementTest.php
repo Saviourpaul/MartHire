@@ -146,6 +146,18 @@ test('an owner can close and then delete a job', function () {
     expect(Job::withoutGlobalScope(OrganizationScope::class)->whereKey($job->id)->exists())->toBeFalse();
 });
 
+test('a suspended job cannot be reopened by publishing an edit', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $job = createOrgJob($organization, $owner, ['title' => 'Held Role', 'status' => JobStatus::Suspended]);
+
+    $this->actingAs($owner)
+        ->from(route('organisations.jobs.edit', $job))
+        ->patch(route('organisations.jobs.update', $job), jobPayload(['action' => 'publish']))
+        ->assertSessionHasErrors();
+
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->find($job->id)->status)->toBe(JobStatus::Suspended);
+});
+
 test('organization users see a Jobs link in navigation', function () {
     [$organization, $owner] = organizationWithOwner();
 

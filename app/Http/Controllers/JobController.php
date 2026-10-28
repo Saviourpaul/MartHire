@@ -170,6 +170,13 @@ class JobController extends Controller
         try {
             DB::transaction(function () use ($request, $job, $data, $status, &$oldLogoPath, &$newLogoPath): void {
                 $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+
+                if ($currentJob->status === JobStatus::Suspended) {
+                    throw ValidationException::withMessages([
+                        'status' => 'This job has been suspended by an administrator and cannot be edited here.',
+                    ]);
+                }
+
                 $previousLogoPath = $currentJob->storedLogoPath();
                 $currentJob->fill($data);
 
