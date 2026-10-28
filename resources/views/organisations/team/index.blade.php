@@ -12,7 +12,7 @@
         <div class="nw-notice nw-notice--error" role="alert">{{ $errors->first() }}</div>
     @endif
 
-    @if (in_array($currentOrganizationRole, [\App\Enums\OrganizationRole::Owner, \App\Enums\OrganizationRole::HrManager], true))
+    @can('manageTeam', $organization)
         <section class="nw-panel" aria-labelledby="invite-heading">
             <header class="nw-panel__head">
                 <div>
@@ -40,7 +40,7 @@
                 <x-primary-button>{{ __('Send invitation') }}</x-primary-button>
             </form>
         </section>
-    @endif
+    @endcan
 
     <section class="nw-panel" aria-labelledby="invitations-heading">
         <header class="nw-panel__head">
