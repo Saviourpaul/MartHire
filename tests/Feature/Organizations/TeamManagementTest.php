@@ -62,6 +62,19 @@ test('an owner can remove a member', function () {
     expect($member->fresh()->trashed())->toBeTrue();
 });
 
+test('the team page lists members and pending invitations', function () {
+    Notification::fake();
+    [$organization, $owner] = organizationWithOwner();
+    $member = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    $this->actingAs($owner)->post(route('organisations.team.invitations.store'), ['email' => 'pending@example.com', 'role' => 'interviewer']);
+
+    $this->actingAs($owner)
+        ->get(route('organisations.team.index'))
+        ->assertOk()
+        ->assertSee($member->user->email)
+        ->assertSee('pending@example.com');
+});
+
 test('the sole active owner cannot be demoted or removed', function () {
     [$organization, $owner] = organizationWithOwner();
     $ownerMembership = OrganizationMember::withoutGlobalScope(OrganizationScope::class)
