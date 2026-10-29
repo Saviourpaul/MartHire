@@ -1,0 +1,107 @@
+<?php
+
+use App\Enums\OrganizationMemberStatus;
+use App\Enums\OrganizationRole;
+use App\Models\OrganizationMember;
+use App\Models\Scopes\OrganizationScope;
+use App\Models\TeamInvitation;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\Notification;
+
+// The team-invitations throttle (5/min by IP) uses a cache-backed counter that
+// RefreshDatabase does not reset; these tests exercise team management, not the
+// rate limiter, so the throttle is excluded to keep them order-independent.
+beforeEach(fn () => $this->withoutMiddleware(ThrottleRequests::class));
+
+test('a recruiter cannot view or manage the hiring team', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $recruiterMember = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    $otherMember = addOrganizationMember($organization, OrganizationRole::HiringManager);
+
+    $this->actingAs($recruiterMember->user)->get(route('organisations.team.index'))->assertForbidden();
+    $this->actingAs($recruiterMember->user)->post(route('organisations.team.invitations.store'), ['email' => 'new@example.com', 'role' => 'recruiter'])->assertForbidden();
+    $this->actingAs($recruiterMember->user)->patch(route('organisations.team.members.update', $otherMember), ['role' => 'recruiter'])->assertForbidden();
+    $this->actingAs($recruiterMember->user)->delete(route('organisations.team.members.destroy', $otherMember))->assertForbidden();
+});
+
+test('an owner can invite a new teammate', function () {
+    Notification::fake();
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)
+        ->post(route('organisations.team.invitations.store'), ['email' => 'teammate@example.com', 'role' => 'recruiter'])
+        ->assertRedirect(route('organisations.team.index'))
+        ->assertSessionHasNoErrors();
+
+    expect(TeamInvitation::where('organization_id', $organization->id)->where('email', 'teammate@example.com')->exists())->toBeTrue();
+});
+
+test('an hr manager cannot invite someone as owner', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $hr = addOrganizationMember($organization, OrganizationRole::HrManager)->user;
+
+    $this->actingAs($hr)
+        ->post(route('organisations.team.invitations.store'), ['email' => 'new@example.com', 'role' => 'owner'])
+        ->assertForbidden();
+});
+
+test('an owner can change a member role and status', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $member = addOrganizationMember($organization, OrganizationRole::Recruiter);
+
+    $this->actingAs($owner)
+        ->patch(route('organisations.team.members.update', $member), ['role' => 'hiring_manager', 'status' => 'suspended'])
+        ->assertRedirect(route('organisations.team.index'));
+
+    expect($member->fresh()->role)->toBe(OrganizationRole::HiringManager);
+    expect($member->fresh()->status)->toBe(OrganizationMemberStatus::Suspended);
+});
+
+test('an owner can remove a member', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $member = addOrganizationMember($organization, OrganizationRole::Recruiter);
+
+    $this->actingAs($owner)
+        ->delete(route('organisations.team.members.destroy', $member))
+        ->assertRedirect(route('organisations.team.index'));
+
+    expect($member->fresh()->trashed())->toBeTrue();
+});
+
+test('organization users see a Team link in navigation', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)
+        ->get(route('organisations.dashboard'))
+        ->assertOk()
+        ->assertSee(route('organisations.team.index'), false);
+});
+
+test('the team page lists members and pending invitations', function () {
+    Notification::fake();
+    [$organization, $owner] = organizationWithOwner();
+    $member = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    $this->actingAs($owner)->post(route('organisations.team.invitations.store'), ['email' => 'pending@example.com', 'role' => 'interviewer']);
+
+    $this->actingAs($owner)
+        ->get(route('organisations.team.index'))
+        ->assertOk()
+        ->assertSee($member->user->email)
+        ->assertSee('pending@example.com');
+});
+
+test('the sole active owner cannot be demoted or removed', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $ownerMembership = OrganizationMember::withoutGlobalScope(OrganizationScope::class)
+        ->where('organization_id', $organization->id)->where('user_id', $owner->id)->first();
+
+    $this->actingAs($owner)
+        ->patch(route('organisations.team.members.update', $ownerMembership), ['role' => 'recruiter', 'status' => 'active'])
+        ->assertSessionHasErrors();
+
+    $this->actingAs($owner)
+        ->delete(route('organisations.team.members.destroy', $ownerMembership))
+        ->assertSessionHasErrors();
+
+    expect($ownerMembership->fresh()->role)->toBe(OrganizationRole::Owner);
+});

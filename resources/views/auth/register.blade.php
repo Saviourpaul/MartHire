@@ -12,14 +12,14 @@
 
         <div class="nw-form-row nw-form-row--fields">
             <div>
-                <x-input-label for="firstName" :value="__('First name')" />
-                <x-text-input id="firstName" type="text" name="firstName" :value="old('firstName')" required autofocus autocomplete="given-name" />
-                <x-input-error id="firstName-error" :messages="$errors->get('firstName')" />
+                <x-input-label for="first_name" :value="__('First name')" />
+                <x-text-input id="first_name" type="text" name="first_name" :value="old('first_name')" required autofocus autocomplete="given-name" />
+                <x-input-error id="first_name-error" :messages="$errors->get('first_name')" />
             </div>
             <div>
-                <x-input-label for="lastName" :value="__('Last name')" />
-                <x-text-input id="lastName" type="text" name="lastName" :value="old('lastName')" required autocomplete="family-name" />
-                <x-input-error id="lastName-error" :messages="$errors->get('lastName')" />
+                <x-input-label for="last_name" :value="__('Last name')" />
+                <x-text-input id="last_name" type="text" name="last_name" :value="old('last_name')" required autocomplete="family-name" />
+                <x-input-error id="last_name-error" :messages="$errors->get('last_name')" />
             </div>
         </div>
 
@@ -43,6 +43,13 @@
 
         <x-primary-button>{{ __('Create account') }} <span aria-hidden="true">&rarr;</span></x-primary-button>
     </form>
+
+   <br> 
+   
+    <a href="{{ route('auth.google') }}" class="nw-button nw-button--outline nw-button--block">
+      <img src="{{ asset ('asset/images/google.svg') }}" width="20" height="30" >
+      {{ __('Continue with Google') }}
+    </a>
 
     <p class="nw-form-footer">
         {{ __('Already have an account?') }}

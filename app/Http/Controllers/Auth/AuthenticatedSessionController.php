@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\GlobalLogoutService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,21 +28,41 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        $request->session()->put('auth.version', (int) $request->user()->authentication_version);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $request->user()->forceFill([
+            'last_login_at' => now(),
+        ])->save();
+
+        if (! $request->user()->hasVerifiedEmail()) {
+            return redirect()
+                ->route('verification.notice')
+                ->with('status', 'verification-required');
+        }
+
+        return redirect()
+            ->intended(route('dashboard', absolute: false))
+            ->with('success', 'Logged in successfully.');
     }
 
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, GlobalLogoutService $globalLogout): RedirectResponse
     {
+        $user = $request->user();
+
+        if ($user) {
+            $globalLogout->revoke($user);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')
+            ->with('success', 'Logged out successfully.');
     }
 }

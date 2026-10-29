@@ -44,7 +44,31 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+use App\Enums\OrganizationMemberStatus;
+use App\Enums\OrganizationRole;
+use App\Models\Organization;
+use App\Models\OrganizationMember;
+use App\Models\User;
+use App\Services\OrganizationProvisioner;
+use App\Support\OrganizationContext;
+
+/** @return array{0: Organization, 1: User} */
+function organizationWithOwner(): array
 {
-    // ..
+    $owner = User::factory()->organization()->create();
+    $organization = app(OrganizationProvisioner::class)->ensureForEmployer($owner);
+
+    return [$organization, $owner];
+}
+
+function addOrganizationMember(Organization $organization, OrganizationRole $role, OrganizationMemberStatus $status = OrganizationMemberStatus::Active): OrganizationMember
+{
+    $user = User::factory()->organization()->create();
+
+    return app(OrganizationContext::class)->runInOrganization($organization, fn () => OrganizationMember::create([
+        'organization_id' => $organization->id,
+        'user_id' => $user->id,
+        'role' => $role,
+        'status' => $status,
+    ]));
 }

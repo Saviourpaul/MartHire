@@ -2,27 +2,23 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\SecurityActionPurpose;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateAccountPasswordRequest;
+use App\Models\User;
+use App\Services\AccountLifecycleService;
+use App\Services\SecurityChallengeService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class PasswordController extends Controller
 {
     /**
      * Update the user's password.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(UpdateAccountPasswordRequest $request, SecurityChallengeService $challenges, AccountLifecycleService $accounts): RedirectResponse
     {
-        $validated = $request->validateWithBag('updatePassword', [
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
-        ]);
-
-        $request->user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+        $challenges->confirm($request, SecurityActionPurpose::PasswordChange,
+            fn (User $user) => $accounts->changePassword($user, $request->validated('password'), $request));
 
         return back()->with('status', 'password-updated');
     }

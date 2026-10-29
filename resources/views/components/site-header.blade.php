@@ -7,6 +7,7 @@
         </a>
 
         <nav class="nw-desktop-nav" aria-label="{{ __('Main navigation') }}">
+            <a href="{{ route('workable-jobs.index') }}" @if (request()->routeIs('workable-jobs.*')) aria-current="page" @endif>{{ __('Browse jobs') }}</a>
             <a href="{{ url('/') }}#for-employers">{{ __('For employers') }}</a>
             <a href="{{ url('/') }}#for-job-seekers">{{ __('For job seekers') }}</a>
             <a href="{{ url('/About') }}" @if (request()->is('About')) aria-current="page" @endif>{{ __('About') }}</a>
@@ -30,6 +31,7 @@
 
     <nav id="site-mobile-navigation" class="nw-mobile-nav" aria-label="{{ __('Mobile navigation') }}" x-show="open" x-cloak x-on:click="if ($event.target.closest('a')) open = false">
         <div class="nw-container">
+            <a href="{{ route('workable-jobs.index') }}">{{ __('Browse jobs') }}</a>
             <a href="{{ url('/') }}#for-employers">{{ __('For employers') }}</a>
             <a href="{{ url('/') }}#for-job-seekers">{{ __('For job seekers') }}</a>
             <a href="{{ url('/About') }}">{{ __('About') }}</a>

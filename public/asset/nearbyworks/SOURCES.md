@@ -30,3 +30,12 @@ Source repository: [ln-dev7/logos-apps](https://github.com/ln-dev7/logos-apps).
 The repository's code and organization use the MIT license, but the logos themselves remain trademarks and property of their respective owners. The repository explicitly says its inclusion does not grant usage rights or imply affiliation or endorsement; brand guidelines still apply.
 
 These logos identify outbound independent career resources only. They must not be presented as NearbyWorks' identity, customers, partners, integrations, or endorsers. The NearbyWorks wordmark and any original geometric brand treatment are separate from these third-party marks.
+
+## Hero map
+
+Retrieved 24 October 2026.
+
+- **Land outlines:** [Natural Earth](https://www.naturalearthdata.com/) 110m land, public domain. Converted to a dot grid by `resources/build-world-dots.mjs` (output in `resources/js/world-land.js`). Source file: https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson
+- **Country flags:** [`flags/`](flags/) holds circular country flags from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags), MIT licence, Copyright (c) 2026 HatScripts. Each file is the unmodified `flags/{code}.svg` from that repository.
+
+The map's design was inspired by the dotted-globe hero on pxxl.app. No code or artwork from that site is used.

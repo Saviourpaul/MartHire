@@ -1,0 +1,1 @@
+{ "status": "created", "candidate": { "id": "cand_123", "name": "TEST Applicant", "firstname": "Test", "lastname": "Applicant", "job": { "shortcode": "SENIO001", "title": "Senior Backend Engineer" }, "sourced": false, "profile_url": "https://pilotco.workable.com/backend/jobs/1111/candidates/cand_123" } }

@@ -11,6 +11,8 @@
 
                 <div class="nw-footer__group">
                     <h2>{{ __('Find your next') }}</h2>
+                    <a href="{{ route('workable-jobs.index') }}">{{ __('Browse jobs') }}</a>
+                    <a href="{{ url('/') }}#categories">{{ __('Job categories') }}</a>
                     <a href="{{ url('/') }}#for-employers">{{ __('For employers') }}</a>
                     <a href="{{ url('/') }}#for-job-seekers">{{ __('For job seekers') }}</a>
                     <a href="{{ route('register') }}">{{ __('Create an account') }}</a>

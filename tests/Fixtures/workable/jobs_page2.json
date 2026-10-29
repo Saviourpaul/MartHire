@@ -1,0 +1,26 @@
+{
+  "jobs": [
+    {
+      "id": "e5f6g7h8",
+      "title": "Product Designer",
+      "full_title": "Product Designer",
+      "shortcode": "PRODU002",
+      "code": null,
+      "state": "published",
+      "confidential": false,
+      "department": null,
+      "department_hierarchy": [],
+      "url": "https://pilotco.workable.com/jobs/2222",
+      "application_url": "https://apply.workable.com/pilotco/j/PRODU002/",
+      "shortlink": "https://pilotco.workable.com/j/PRODU002",
+      "workplace_type": "on_site",
+      "location": { "location_str": "Lagos, NG", "country": "Nigeria", "country_code": "NG", "city": "Lagos" },
+      "locations": [],
+      "created_at": "2026-10-01T09:15:00Z",
+      "updated_at": "2026-10-01T09:15:00Z",
+      "keywords": [],
+      "salary": null
+    }
+  ],
+  "paging": { "next": null }
+}

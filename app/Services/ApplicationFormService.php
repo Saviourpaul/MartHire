@@ -1,0 +1,259 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\ApplicationDocumentType;
+use App\Enums\CandidatePipelineStage;
+use App\Models\ApplicationDocument;
+use App\Models\ApplicationForm;
+use App\Models\Job;
+use App\Models\User;
+use App\Models\UserIdentificationDocument;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Throwable;
+
+class ApplicationFormService
+{
+    public function __construct(private PipelineTransitionService $pipelineTransitions, private WorkflowNotificationService $notifications) {}
+
+    /**
+     * @param  array<string, mixed>  $data
+     *
+     * @throws Throwable
+     */
+    public function submit(Job $job, User $applicant, array $data): ApplicationForm
+    {
+        if ($job->applications()->where('user_id', $applicant->id)->exists()) {
+            throw ValidationException::withMessages([
+                'job' => 'You have already applied for this job.',
+            ]);
+        }
+
+        $storedFiles = [];
+        $oldProfileImagePath = $applicant->profile_image_path;
+        $newProfileImagePath = null;
+
+        try {
+            $application = DB::transaction(function () use ($job, $applicant, $data, &$storedFiles, &$newProfileImagePath): ApplicationForm {
+                $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+
+                if (! $currentJob->isAcceptingApplications()) {
+                    throw ValidationException::withMessages(['job' => 'This job is not accepting applications.']);
+                }
+
+                $profileImagePath = $applicant->profile_image_path;
+
+                if (($data['profile_image'] ?? null) instanceof UploadedFile) {
+                    $profileImagePath = $data['profile_image']->store('profile-images', 'public');
+                    $storedFiles[] = ['disk' => 'public', 'path' => $profileImagePath];
+                    $newProfileImagePath = $profileImagePath;
+                }
+
+                $application = ApplicationForm::create([
+                    ...Arr::only($data, [
+                        'first_name',
+                        'middle_name',
+                        'last_name',
+                        'email',
+                        'phone',
+                        'date_of_birth',
+                        'gender',
+                        'marital_status',
+                        'country_code',
+                        'country',
+                        'state',
+                        'city',
+                        'local_government_area',
+                        'address',
+                    ]),
+                    'job_id' => $job->id,
+                    'organization_id' => $job->organization_id,
+                    'user_id' => $applicant->id,
+                    'reference' => $this->generateReference(),
+                    'status' => CandidatePipelineStage::Submitted,
+                    'submitted_at' => now(),
+                    'profile_image_path' => $profileImagePath,
+                ]);
+
+                $identification = $this->storeIdentificationDocument(
+                    $applicant,
+                    ApplicationDocumentType::from($data['identification_type']),
+                    $data['identification_document'],
+                    $storedFiles
+                );
+
+                $this->createIdentityDocument(
+                    $application,
+                    $identification
+                );
+
+                $this->createDocument(
+                    $application,
+                    $data['resume'],
+                    ApplicationDocumentType::Resume,
+                    $data['resume']->getClientOriginalName(),
+                    $storedFiles
+                );
+
+                foreach ($data['education_documents'] as $document) {
+                    $this->createDocument(
+                        $application,
+                        $document['file'],
+                        ApplicationDocumentType::Education,
+                        $document['name'],
+                        $storedFiles
+                    );
+                }
+
+                $application->statusHistories()->create([
+                    'from_status' => null,
+                    'to_status' => CandidatePipelineStage::Submitted,
+                    'changed_by' => $applicant->id,
+                    'remarks' => 'Application submitted.',
+                    'created_at' => now(),
+                ]);
+
+                $this->syncApplicantProfile($applicant, $data, $profileImagePath);
+                $this->notifications->applicationSubmitted($application);
+
+                return $application->load(['job', 'documents']);
+            });
+        } catch (Throwable $throwable) {
+            $this->deleteStoredFiles($storedFiles);
+
+            throw $throwable;
+        }
+
+        if ($newProfileImagePath && $oldProfileImagePath && $oldProfileImagePath !== $newProfileImagePath) {
+            Storage::disk('public')->delete($oldProfileImagePath);
+        }
+
+        return $application;
+    }
+
+    public function moveCandidate(ApplicationForm $application, User $employer, CandidatePipelineStage $stage, ?string $remarks = null): ApplicationForm
+    {
+        return $this->pipelineTransitions->moveCandidate($application, $employer, $stage, $remarks);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function syncApplicantProfile(User $applicant, array $data, ?string $profileImagePath): void
+    {
+        $profileData = Arr::only($data, [
+            'first_name',
+            'last_name',
+            'date_of_birth',
+            'phone',
+            'address',
+            'country_code',
+            'country',
+            'state',
+            'city',
+            'local_government_area',
+        ]);
+
+        if ($profileImagePath) {
+            $profileData['profile_image_path'] = $profileImagePath;
+        }
+
+        if (! empty($data['country_code'])) {
+            $profileData['location_confirmed_at'] = now();
+        }
+
+        $applicant->fill($profileData)->save();
+    }
+
+    /**
+     * @param  array<int, array{disk: string, path: string}>  $storedFiles
+     */
+    private function storeIdentificationDocument(
+        User $applicant,
+        ApplicationDocumentType $type,
+        UploadedFile $file,
+        array &$storedFiles
+    ): UserIdentificationDocument {
+        if (! $type->isIdentityType()) {
+            throw ValidationException::withMessages([
+                'identification_type' => 'Select a supported identification method.',
+            ]);
+        }
+
+        $disk = config('filesystems.application_documents_disk', 'local');
+        $path = $file->store('user-identification-documents/'.$applicant->id, $disk);
+        $storedFiles[] = ['disk' => $disk, 'path' => $path];
+
+        // Application snapshots may still reference a previously selected profile document.
+        return $applicant->identificationDocument()->updateOrCreate([], [
+            'document_type' => $type,
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType() ?: null,
+            'size' => $file->getSize(),
+        ]);
+    }
+
+    private function createIdentityDocument(
+        ApplicationForm $application,
+        UserIdentificationDocument $identification
+    ): ApplicationDocument {
+        return $application->documents()->create([
+            'user_identification_document_id' => $identification->id,
+            'document_type' => $identification->document_type,
+            'document_name' => $identification->document_type->label(),
+            'file_path' => $identification->file_path,
+            'original_name' => $identification->original_name,
+            'mime_type' => $identification->mime_type,
+            'size' => $identification->size,
+        ]);
+    }
+
+    /**
+     * @param  array<int, array{disk: string, path: string}>  $storedFiles
+     */
+    private function createDocument(
+        ApplicationForm $application,
+        UploadedFile $file,
+        ApplicationDocumentType $type,
+        string $name,
+        array &$storedFiles
+    ): ApplicationDocument {
+        $disk = config('filesystems.application_documents_disk', 'local');
+        $path = $file->store('application-documents/'.$application->id, $disk);
+        $storedFiles[] = ['disk' => $disk, 'path' => $path];
+
+        return $application->documents()->create([
+            'document_type' => $type,
+            'document_name' => $name,
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType() ?: null,
+            'size' => $file->getSize(),
+        ]);
+    }
+
+    /**
+     * @param  array<int, array{disk: string, path: string}>  $storedFiles
+     */
+    private function deleteStoredFiles(array $storedFiles): void
+    {
+        foreach ($storedFiles as $file) {
+            Storage::disk($file['disk'])->delete($file['path']);
+        }
+    }
+
+    private function generateReference(): string
+    {
+        do {
+            $reference = 'APP-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
+        } while (ApplicationForm::where('reference', $reference)->exists());
+
+        return $reference;
+    }
+}
