@@ -405,7 +405,7 @@
 .nw-hero h1 {
     margin: 22px 0 24px;
     font-family: var(--nw-display);
-    font-size: clamp(66px, 6.5vw, 94px);
+    font-size: clamp(40px, 4vw, 56px);
     line-height: .99;
     letter-spacing: -.035em;
 }
@@ -5038,7 +5038,7 @@ a.nw-chip {
     }
 
     .nw-hero h1 {
-        font-size: 72px;
+        font-size: 44px;
     }
 
     .nw-hero__image {
@@ -5255,7 +5255,7 @@ a.nw-chip {
     }
 
     .nw-hero h1 {
-        font-size: clamp(62px, 11.8vw, 86px);
+        font-size: clamp(32px, 8.4vw, 42px);
         margin-top: 18px;
     }
 
@@ -5823,7 +5823,7 @@ a.nw-chip {
     }
 
     .nw-hero h1 {
-        font-size: 58px;
+        font-size: 32px;
     }
 
     .nw-jobs-hero h1 {

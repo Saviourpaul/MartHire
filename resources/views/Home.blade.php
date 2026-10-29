@@ -14,7 +14,7 @@
         <section class="nw-hero" aria-labelledby="home-heading">
             <div class="nw-container nw-hero__grid">
                 <div class="nw-hero__copy">
-                    <h1 id="home-heading">One platform to manage<br><em>Recruitment across African businesses,</em><br>and international organisations</h1>
+                    <h1 id="home-heading">One platform to manage<br><em>Recruitment across<br>African businesses,</em><br>and international organisations</h1>
                     <p class="nw-copy">MartHire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.</p>
                     <a href="#how-it-works" class="nw-link">See how it works <x-icon name="arrow-right" /></a>
                     <div class="nw-hero__footnote"><x-icon name="users" /> Designed for better recruitment</div>
