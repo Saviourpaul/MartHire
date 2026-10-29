@@ -4,23 +4,36 @@
     <header class="nw-auth-heading">
         <span class="nw-eyebrow">{{ __('You are almost there') }}</span>
         <h1 id="auth-heading">{{ __('Check your inbox.') }}</h1>
-        <p>{{ __('Thanks for joining NearbyWorks. Click the link in your verification email to confirm your address.') }}
+        <p>{{ __('We sent a 6-digit verification code to your email address. Enter it below to confirm your account.') }}
         </p>
     </header>
 
-    @if (session('status') == 'verification-link-sent')
+    @if (session('status') == 'verification-code-sent')
         <div class="nw-notice" role="status">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+            {{ __('A new verification code has been sent to the email address you provided during registration.') }}
         </div>
     @endif
 
     <div class="nw-form-stack">
-        <p class="nw-form-hint">{{ __('Cannot find the email? Check your spam folder or request another link below.') }}
+        <form method="POST" action="{{ route('verification.verify') }}" class="nw-form-stack">
+            @csrf
+
+            <div>
+                <x-input-label for="code" :value="__('Verification code')" />
+                <x-text-input id="code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code"
+                    maxlength="6" pattern="[0-9]{6}" placeholder="123456" autofocus required />
+                <x-input-error id="code-error" :messages="$errors->get('code')" />
+            </div>
+
+            <x-primary-button>{{ __('Verify email') }}</x-primary-button>
+        </form>
+
+        <p class="nw-form-hint">{{ __('Cannot find the code? Check your spam folder or request another one below.') }}
         </p>
 
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf
-            <x-primary-button>{{ __('Resend verification email') }}</x-primary-button>
+            <button type="submit" class="nw-link">{{ __('Resend code') }}</button>
         </form>
 
         <form method="POST" action="{{ route('logout') }}" class="nw-form-footer">

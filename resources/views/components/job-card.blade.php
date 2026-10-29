@@ -18,7 +18,7 @@
         @endif
     </header>
 
-    <h3 class="nw-job__title"><a href="{{ route('jobs.show', $job['id']) }}">{{ $job['title'] }}</a></h3>
+    <h3 class="nw-job__title"><a href="{{ route('workable-jobs.show', $job['id']) }}">{{ $job['title'] }}</a></h3>
     @if (! empty($job['summary']))
         <p class="nw-job__summary">{{ $job['summary'] }}</p>
     @endif

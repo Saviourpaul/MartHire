@@ -19,68 +19,91 @@ const TOOLBAR = [
 ];
 
 export function registerJobForm(Alpine) {
-    Alpine.data('jobForm', ({ maxLength = 100000, storageKey = 'job-form' } = {}) => ({
-        count: 0,
-        quill: null,
-        submitting: false,
-        dirty: false,
+    Alpine.data('jobForm', ({ maxLength = 100000, storageKey = 'job-form' } = {}) => {
+        // Quill/Parchment relies on object identity. Keep its instance outside
+        // Alpine's deeply reactive state, including calls made after init.
+        let quill = null;
+        let onTextChange = null;
+        let onBeforeUnload = null;
 
-        init() {
-            const input = this.$refs.input;
+        return {
+            count: 0,
+            submitting: false,
+            dirty: false,
 
-            this.quill = new Quill(this.$refs.editor, {
-                theme: 'snow',
-                placeholder: 'Describe the role, responsibilities, and requirements…',
-                formats: FORMATS,
-                modules: { toolbar: TOOLBAR },
-            });
+            init() {
+                const input = this.$refs.input;
+                const shell = this.$refs.editorShell;
 
-            // Prefer an autosaved draft only when the field has no server/old content.
-            let initial = input.value;
-            try {
-                const saved = window.localStorage.getItem(storageKey);
-                if (saved && saved.trim() && (!initial || !initial.trim())) {
-                    initial = saved;
+                try {
+                    quill = new Quill(shell.querySelector('[data-job-editor]'), {
+                        theme: 'snow',
+                        placeholder: 'Describe the role, responsibilities, and requirements…',
+                        formats: FORMATS,
+                        modules: { toolbar: TOOLBAR },
+                    });
+
+                    // Prefer an autosaved draft only when the field has no server/old content.
+                    let initial = input.value;
+                    try {
+                        const saved = window.localStorage.getItem(storageKey);
+                        if (saved && saved.trim() && (!initial || !initial.trim())) {
+                            initial = saved;
+                        }
+                    } catch (_) {}
+                    if (initial && initial.trim()) {
+                        quill.clipboard.dangerouslyPasteHTML(initial);
+                    }
+
+                    this.sync();
+
+                    onTextChange = () => {
+                        if (quill.getLength() > maxLength) {
+                            quill.deleteText(maxLength, quill.getLength());
+                        }
+                        this.dirty = true;
+                        this.sync();
+                    };
+                    quill.on('text-change', onTextChange);
+
+                    onBeforeUnload = (event) => {
+                        if (this.dirty && !this.submitting) {
+                            event.preventDefault();
+                            event.returnValue = '';
+                        }
+                    };
+                    window.addEventListener('beforeunload', onBeforeUnload);
+                    // Hide the fallback only once content loading and syncing succeed.
+                    input.style.display = 'none';
+                } catch (error) {
+                    this.destroy();
+                    shell.hidden = true;
+                    input.style.display = '';
+                    console.error('Unable to initialize the job description editor.', error);
                 }
-            } catch (_) {}
-            if (initial && initial.trim()) {
-                this.quill.clipboard.dangerouslyPasteHTML(initial);
-            }
+            },
 
-            input.style.display = 'none';
-            this.sync();
+            sync() {
+                const html = quill.getText().trim() === '' ? '' : quill.root.innerHTML;
+                this.$refs.input.value = html;
+                this.count = Math.max(0, quill.getLength() - 1);
+                try {
+                    window.localStorage.setItem(storageKey, html);
+                } catch (_) {}
+            },
 
-            this.quill.on('text-change', () => {
-                if (this.quill.getLength() > maxLength) {
-                    this.quill.deleteText(maxLength, this.quill.getLength());
-                }
-                this.dirty = true;
-                this.sync();
-            });
+            allowSubmit() {
+                this.submitting = true;
+                try {
+                    window.localStorage.removeItem(storageKey);
+                } catch (_) {}
+            },
 
-            this.onBeforeUnload = (event) => {
-                if (this.dirty && !this.submitting) {
-                    event.preventDefault();
-                    event.returnValue = '';
-                }
-            };
-            window.addEventListener('beforeunload', this.onBeforeUnload);
-        },
-
-        sync() {
-            const html = this.quill.getText().trim() === '' ? '' : this.quill.root.innerHTML;
-            this.$refs.input.value = html;
-            this.count = Math.max(0, this.quill.getLength() - 1);
-            try {
-                window.localStorage.setItem(storageKey, html);
-            } catch (_) {}
-        },
-
-        allowSubmit() {
-            this.submitting = true;
-            try {
-                window.localStorage.removeItem(storageKey);
-            } catch (_) {}
-        },
-    }));
+            destroy() {
+                if (quill && onTextChange) quill.off('text-change', onTextChange);
+                if (onBeforeUnload) window.removeEventListener('beforeunload', onBeforeUnload);
+                quill = null;
+            },
+        };
+    });
 }

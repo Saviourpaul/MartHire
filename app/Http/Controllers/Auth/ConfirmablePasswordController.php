@@ -14,8 +14,12 @@ class ConfirmablePasswordController extends Controller
     /**
      * Show the confirm password view.
      */
-    public function show(): View
+    public function show(Request $request): View|RedirectResponse
     {
+        if (filled($request->user()->google_id)) {
+            return to_route('settings.edit')->with('status', 'Confirm the specific action in Settings using an email code.');
+        }
+
         return view('auth.confirm-password');
     }
 
@@ -24,7 +28,11 @@ class ConfirmablePasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        if (! Auth::guard('web')->validate([
+        if (filled($request->user()->google_id)) {
+            throw ValidationException::withMessages(['password' => 'Confirm the specific action in Settings using an email code.']);
+        }
+
+        if (! is_string($request->input('password')) || ! Auth::guard('web')->validate([
             'email' => $request->user()->email,
             'password' => $request->password,
         ])) {

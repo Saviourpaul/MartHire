@@ -43,6 +43,11 @@
         'chevron-down' => '<path d="m6 9 6 6 6-6"/>',
         'message' => '<path d="M4 5h16v11H9l-5 4V5Z"/>',
         'trend-down' => '<path d="m3 7 6 6 4-4 8 8m-6 0h6v-6"/>',
+        'camera' => '<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="14" r="3.5"/>',
+        'pause' => '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+        'trash' => '<path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/>',
+        'key' => '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9m-5 1 3 3m-6 0 3 3"/>',
+        'download' => '<path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
     ];
 @endphp
 

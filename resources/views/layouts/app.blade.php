@@ -54,7 +54,7 @@
                     <x-icon name="menu" /><span class="nw-sr-only">{{ __('Open menu') }}</span>
                 </button>
 
-                <form class="nw-topbar__search" role="search" method="get" action="{{ route('jobs.index') }}">
+                <form class="nw-topbar__search" role="search" method="get" action="{{ route('workable-jobs.index') }}">
                     <x-icon name="search" />
                     <label class="nw-sr-only" for="app-search">{{ __('Search jobs') }}</label>
                     <input id="app-search" x-ref="search" type="search" name="q" placeholder="{{ __('Search jobs') }}" autocomplete="off">
@@ -62,7 +62,7 @@
                 </form>
 
                 <div class="nw-topbar__actions">
-                    <a class="nw-button nw-button--primary nw-button--small nw-topbar__cta" href="{{ route('jobs.index') }}">{{ __('Find jobs') }} <x-icon name="arrow-up-right" /></a>
+                    <a class="nw-button nw-button--primary nw-button--small nw-topbar__cta" href="{{ route('workable-jobs.index') }}">{{ __('Find jobs') }} <x-icon name="arrow-up-right" /></a>
 
                     <button type="button" class="nw-icon-button" data-theme-toggle title="{{ __('Switch light or dark') }}">
                         <x-icon name="moon" class="nw-icon--to-dark" />

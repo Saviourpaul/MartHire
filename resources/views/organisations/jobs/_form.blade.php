@@ -73,8 +73,10 @@
 
     <div class="nw-editor-field">
         <x-input-label for="description" :value="__('Job description')" />
-        <div x-ref="editor" class="nw-editor"></div>
-        <textarea name="description" x-ref="input" class="nw-input nw-editor__fallback" rows="10">{{ old('description', $job?->description) }}</textarea>
+        <div x-ref="editorShell">
+            <div data-job-editor x-ignore class="nw-editor"></div>
+        </div>
+        <textarea id="description" name="description" x-ref="input" class="nw-input nw-editor__fallback" rows="10">{{ old('description', $job?->description) }}</textarea>
         <p class="nw-form-hint"><span x-text="count">0</span> / {{ \App\Support\JobDescription::MAX_LENGTH }} {{ __('characters') }}</p>
         <x-input-error :messages="$errors->get('description')" />
     </div>

@@ -52,7 +52,7 @@ it('serves the native form fed with the live schema questions', function () {
     fakeApplicationForm();
     nativePosting();
 
-    $response = $this->actingAs(User::factory()->create())->get('/jobs/SENIO001/apply');
+    $response = $this->actingAs(User::factory()->create())->get('/workable-jobs/SENIO001/apply');
 
     $response->assertOk();
     $response->assertViewHas('form');
@@ -68,9 +68,9 @@ it('queues a native application from the blade field names, stores the resume pr
     $posting = nativePosting();
 
     $response = $this->actingAs(User::factory()->create())
-        ->post('/jobs/SENIO001/apply', bladePayload());
+        ->post('/workable-jobs/SENIO001/apply', bladePayload());
 
-    $response->assertRedirect(route('jobs.apply', 'SENIO001'));
+    $response->assertRedirect(route('workable-jobs.apply', 'SENIO001'));
     $response->assertSessionHas('applied', true);
 
     $application = JobApplication::first();
@@ -102,7 +102,7 @@ it('rejects a submission with the consent box unticked', function () {
     unset($payload['confirm']);
 
     $response = $this->actingAs(User::factory()->create())
-        ->from('/jobs/SENIO001/apply')->post('/jobs/SENIO001/apply', $payload);
+        ->from('/workable-jobs/SENIO001/apply')->post('/workable-jobs/SENIO001/apply', $payload);
 
     $response->assertSessionHasErrors('confirm');
     expect(JobApplication::count())->toBe(0);
@@ -115,8 +115,8 @@ it('rejects an invalid submission without creating an application', function () 
     nativePosting();
 
     $response = $this->actingAs(User::factory()->create())
-        ->from('/jobs/SENIO001/apply')
-        ->post('/jobs/SENIO001/apply', ['firstname' => 'Cand']); // missing almost everything
+        ->from('/workable-jobs/SENIO001/apply')
+        ->post('/workable-jobs/SENIO001/apply', ['firstname' => 'Cand']); // missing almost everything
 
     $response->assertSessionHasErrors(['last_name', 'email', 'resume']);
     expect(JobApplication::count())->toBe(0);
@@ -132,7 +132,7 @@ it('redirects a redirect-mode employer to the hosted form without creating an ap
         'application_url' => 'https://pilotco.workable.com/j/REDIR001',
     ]);
 
-    $response = $this->actingAs(User::factory()->create())->post('/jobs/REDIR001/apply', [
+    $response = $this->actingAs(User::factory()->create())->post('/workable-jobs/REDIR001/apply', [
         'firstname' => 'X', 'lastname' => 'Y', 'email' => 'x@example.com', 'confirm' => '1',
     ]);
 
@@ -144,6 +144,6 @@ it('redirects a redirect-mode employer to the hosted form without creating an ap
 it('requires authentication to submit', function () {
     nativePosting();
 
-    $this->post('/jobs/SENIO001/apply', ['email' => 'x@example.com'])->assertRedirect('/login');
+    $this->post('/workable-jobs/SENIO001/apply', ['email' => 'x@example.com'])->assertRedirect('/login');
     expect(JobApplication::count())->toBe(0);
 });

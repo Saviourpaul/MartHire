@@ -36,6 +36,13 @@
 
         <x-primary-button>{{ __('Log in') }} <span aria-hidden="true">&rarr;</span></x-primary-button>
     </form>
+  <br>
+    
+
+    <a href="{{ route('auth.google') }}" class="nw-button nw-button--outline nw-button--block">
+      <img src="{{ asset ('asset/images/google.svg') }}" width="20" height="30" >
+      {{ __('Continue with Google') }}
+    </a>
 
     <p class="nw-form-footer">
         {{ __('New to NearbyWorks?') }}

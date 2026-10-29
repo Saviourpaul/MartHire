@@ -21,7 +21,7 @@
                     <div class="nw-hero__footnote"><x-icon name="users" /> For the people hiring. And the people ready for what’s next.</div>
                 </div>
                 <div class="nw-hero__search">
-                    <form class="nw-search" role="search" aria-label="Search jobs" method="get" action="{{ route('jobs.index') }}">
+                    <form class="nw-search" role="search" aria-label="Search jobs" method="get" action="{{ route('workable-jobs.index') }}">
                         <label class="nw-search__field">
                             <x-icon name="search" />
                             <span class="nw-search__text">
@@ -42,7 +42,7 @@
                         <div class="nw-popular" role="group" aria-label="Popular categories">
                             <span>Popular categories</span>
                             @foreach ($categories->take(5) as $category)
-                                <a class="nw-chip" href="{{ route('jobs.index', ['category' => $category['slug']]) }}">{{ $category['name'] }}</a>
+                                <a class="nw-chip" href="{{ route('workable-jobs.index', ['category' => $category['slug']]) }}">{{ $category['name'] }}</a>
                             @endforeach
                         </div>
                     @endif
@@ -55,7 +55,7 @@
                     <ul class="nw-pins" aria-label="Countries with open roles">
                         @foreach ($pins as $pin)
                             <li class="nw-pin{{ $loop->first ? ' is-hub' : '' }}" data-pin data-lat="{{ $pin['lat'] }}" data-lon="{{ $pin['lon'] }}">
-                                <a class="nw-pin__link" href="{{ route('jobs.index', ['place' => $pin['country']]) }}" aria-label="{{ $pin['country'] }}: {{ $pin['count'] }} {{ \Illuminate\Support\Str::plural('role', $pin['count']) }}">
+                                <a class="nw-pin__link" href="{{ route('workable-jobs.index', ['place' => $pin['country']]) }}" aria-label="{{ $pin['country'] }}: {{ $pin['count'] }} {{ \Illuminate\Support\Str::plural('role', $pin['count']) }}">
                                     <img src="{{ asset('asset/nearbyworks/flags/'.$pin['code'].'.svg') }}" width="40" height="40" alt="" loading="lazy" onerror="this.hidden = true">
                                     <span class="nw-pin__label" aria-hidden="true">
                                         <strong>{{ $pin['country'] }}</strong>
@@ -138,7 +138,7 @@
                     </div>
 
                     <div class="nw-jobs__more">
-                        <a href="{{ route('jobs.index') }}" class="nw-button nw-button--outline">View all {{ $jobs->count() }} {{ \Illuminate\Support\Str::plural('job', $jobs->count()) }} <x-icon name="arrow-right" /></a>
+                        <a href="{{ route('workable-jobs.index') }}" class="nw-button nw-button--outline">View all {{ $jobs->count() }} {{ \Illuminate\Support\Str::plural('job', $jobs->count()) }} <x-icon name="arrow-right" /></a>
                     </div>
                 @endif
             </div>
@@ -154,7 +154,7 @@
                 </div>
                 <div class="nw-category-grid">
                     @foreach ($categories as $category)
-                        <a class="nw-category" href="{{ route('jobs.index', ['category' => $category['slug']]) }}">
+                        <a class="nw-category" href="{{ route('workable-jobs.index', ['category' => $category['slug']]) }}">
                             <span class="nw-category__icon"><x-icon :name="$category['icon']" /></span>
                             <span class="nw-category__text">
                                 <strong>{{ $category['name'] }}</strong>

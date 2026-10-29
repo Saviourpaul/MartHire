@@ -1,5 +1,5 @@
 // The job application form: checks the answers before they leave the browser, handles file choosing and
-// dragging, and (while the backend has no `jobs.apply.store` route) shows the confirmation without sending.
+// dragging, and (while the backend has no `workable-jobs.apply.store` route) shows the confirmation without sending.
 // The markup is written by views/Apply.blade.php and components/application-field.blade.php.
 
 const readableSize = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);

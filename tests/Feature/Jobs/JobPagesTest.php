@@ -11,30 +11,22 @@ it('shows real open postings on the homepage without sample job links', function
     $this->get('/')
         ->assertOk()
         ->assertSee($job->title)
-        ->assertSee(route('jobs.show', $job->shortcode), false)
+        ->assertSee(route('workable-jobs.show', $job->shortcode), false)
         ->assertDontSee('Closed Homepage Role')
-        ->assertDontSee('/jobs/sample-', false);
+        ->assertDontSee('/workable-jobs/sample-', false);
 });
 
-it('suggests real jobs on the dashboard without fictional activity or sample links', function () {
-    $job = JobPosting::factory()->create(['title' => 'Suggested Backend Engineer']);
-
+it('redirects an applicant from the generic dashboard to their own dashboard', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('dashboard'))
-        ->assertOk()
-        ->assertViewHas('activity', [])
-        ->assertSee($job->title)
-        ->assertSee(route('jobs.show', $job->shortcode), false)
-        ->assertSee('No applications yet.')
-        ->assertDontSee('/jobs/sample-', false)
-        ->assertDontSee('sample activity');
+        ->assertRedirect(route('client.dashboard'));
 });
 
 it('lists open postings and excludes closed ones', function () {
     $open = JobPosting::factory()->create(['title' => 'Open Role Alpha']);
     JobPosting::factory()->closed()->create(['title' => 'Closed Role Beta']);
 
-    $this->get(route('jobs.index'))
+    $this->get(route('workable-jobs.index'))
         ->assertOk()
         ->assertSee('Open Role Alpha')
         ->assertDontSee('Closed Role Beta');
@@ -47,7 +39,7 @@ it('shows a job detail page with JSON-LD and a redirect apply link', function ()
         'content_html' => '<p>Build great things.</p>',
     ]);
 
-    $response = $this->get(route('jobs.show', $job->shortcode))->assertOk();
+    $response = $this->get(route('workable-jobs.show', $job->shortcode))->assertOk();
 
     $response->assertSee('Staff Engineer');
     $response->assertSee('application/ld+json', false);
@@ -65,7 +57,7 @@ it('sanitises malicious employer HTML before rendering', function () {
             .'<img src=x onerror="alert(1)">',
     ]);
 
-    $response = $this->get(route('jobs.show', $job->shortcode))->assertOk();
+    $response = $this->get(route('workable-jobs.show', $job->shortcode))->assertOk();
 
     // Safe content survives.
     $response->assertSee('intro', false);
@@ -81,13 +73,13 @@ it('sanitises malicious employer HTML before rendering', function () {
 it('shows a closed notice instead of an apply button for a closed posting', function () {
     $job = JobPosting::factory()->closed()->create(['title' => 'Retired Role']);
 
-    $this->get(route('jobs.show', $job->shortcode))
+    $this->get(route('workable-jobs.show', $job->shortcode))
         ->assertOk()
         ->assertSee('no longer accepting applications');
 });
 
 it('returns 404 for an unknown shortcode', function () {
-    $this->get(route('jobs.show', 'NOSUCHCODE'))->assertNotFound();
+    $this->get(route('workable-jobs.show', 'NOSUCHCODE'))->assertNotFound();
 });
 
 it('redirects an authenticated application request to the hosted employer URL', function () {
@@ -96,14 +88,14 @@ it('redirects an authenticated application request to the hosted employer URL', 
     ]);
 
     $this->actingAs(User::factory()->create())
-        ->get(route('jobs.apply', $job->shortcode))
+        ->get(route('workable-jobs.apply', $job->shortcode))
         ->assertRedirect($job->application_url);
 });
 
 it('requires login before visiting the application route', function () {
     $job = JobPosting::factory()->create();
 
-    $this->get(route('jobs.apply', $job->shortcode))
+    $this->get(route('workable-jobs.apply', $job->shortcode))
         ->assertRedirect(route('login'));
 });
 
@@ -111,7 +103,7 @@ it('does not allow an application for a closed posting', function () {
     $job = JobPosting::factory()->closed()->create();
 
     $this->actingAs(User::factory()->create())
-        ->get(route('jobs.apply', $job->shortcode))
+        ->get(route('workable-jobs.apply', $job->shortcode))
         ->assertNotFound();
 });
 
@@ -125,13 +117,13 @@ it('previews the real job application without sending HTTP requests when no host
     ]);
 
     $this->actingAs(User::factory()->create())
-        ->get(route('jobs.apply', $job->shortcode))
+        ->get(route('workable-jobs.apply', $job->shortcode))
         ->assertOk()
         ->assertViewIs('Apply')
         ->assertViewHas('job', fn (array $presented) => $presented['id'] === $job->shortcode)
         ->assertSee($job->title)
         ->assertSee('This is a preview.')
-        ->assertDontSee('/jobs/sample-', false);
+        ->assertDontSee('/workable-jobs/sample-', false);
 
     Http::assertNothingSent();
 });

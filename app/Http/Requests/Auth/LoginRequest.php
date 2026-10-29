@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\RateLimiting\AbuseGuard;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -43,30 +44,51 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            $this->hitRateLimiter();
+            app(AbuseGuard::class)->recordFailure('login', $this->emailIdentifier());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
 
+        if ($this->user()?->isSuspended()) {
+            Auth::logout();
+            $this->hitRateLimiter();
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been suspended. Please contact support.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
+        app(AbuseGuard::class)->clearFailures('login', $this->emailIdentifier());
     }
 
     /**
-     * Ensure the login request is not rate limited.
+     * Ensure the login request is not rate limited, using both a tight
+     * per-email+IP limit and a looser per-IP ceiling.
      *
      * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $emailIpMax = (int) config('rate_limiting.limits.login.email_ip.max', 5);
+        $ipMax = (int) config('rate_limiting.limits.login.ip.max', 20);
+
+        $blocked = RateLimiter::tooManyAttempts($this->throttleKey(), $emailIpMax)
+            || RateLimiter::tooManyAttempts($this->ipThrottleKey(), $ipMax);
+
+        if (! $blocked) {
             return;
         }
 
         event(new Lockout($this));
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
+        $seconds = max(
+            RateLimiter::availableIn($this->throttleKey()),
+            RateLimiter::availableIn($this->ipThrottleKey()),
+        );
 
         throw ValidationException::withMessages([
             'email' => trans('auth.throttle', [
@@ -77,10 +99,37 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Record a failed attempt against both the email+IP and IP-only windows.
+     */
+    private function hitRateLimiter(): void
+    {
+        RateLimiter::hit($this->throttleKey(), (int) config('rate_limiting.limits.login.email_ip.decay', 1) * 60);
+        RateLimiter::hit($this->ipThrottleKey(), (int) config('rate_limiting.limits.login.ip.decay', 60) * 60);
+    }
+
+    /**
+     * Whether repeated failures should prompt a CAPTCHA challenge.
+     */
+    public function requiresCaptcha(): bool
+    {
+        return app(AbuseGuard::class)->requiresCaptcha('login', $this->emailIdentifier());
+    }
+
+    /**
+     * Get the rate limiting throttle key (per email + IP) for the request.
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return 'login:'.$this->emailIdentifier().'|'.$this->ip();
+    }
+
+    private function ipThrottleKey(): string
+    {
+        return 'login-ip:'.$this->ip();
+    }
+
+    private function emailIdentifier(): string
+    {
+        return Str::transliterate(Str::lower($this->string('email')));
     }
 }

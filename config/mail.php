@@ -115,4 +115,30 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Branding
+    |--------------------------------------------------------------------------
+    |
+    | Assets and footer links used by the custom mail templates under
+    | resources/views/vendor/mail. URLs are forced to HTTPS at render time,
+    | so set APP_URL to your production HTTPS origin. Leave the footer link
+    | URLs empty to omit them (avoids pointing users to non-existent pages).
+    |
+    */
+
+    'logo' => env('MAIL_LOGO_URL', null),
+
+    'footer' => [
+        'support_url' => env('MAIL_FOOTER_SUPPORT_URL', '/contact'),
+        'privacy_url' => env('MAIL_FOOTER_PRIVACY_URL'),
+        'terms_url' => env('MAIL_FOOTER_TERMS_URL'),
+        'unsubscribe_url' => env('MAIL_FOOTER_UNSUBSCRIBE_URL'),
+    ],
+
+    'markdown' => [
+        'theme' => 'martHire',
+        'paths' => [resource_path('views/vendor/mail')],
+    ],
+
 ];

@@ -31,10 +31,10 @@
     <article class="nw-job-detail" aria-labelledby="job-title">
         <div class="nw-container">
             <nav class="nw-breadcrumb" aria-label="Breadcrumb">
-                <a href="{{ route('jobs.index') }}"><x-icon name="arrow-left" /> All jobs</a>
+                <a href="{{ route('workable-jobs.index') }}"><x-icon name="arrow-left" /> All jobs</a>
                 @if ($categorySlug)
                     <span aria-hidden="true">/</span>
-                    <a href="{{ route('jobs.index', ['category' => $categorySlug]) }}">{{ $job['field'] }}</a>
+                    <a href="{{ route('workable-jobs.index', ['category' => $categorySlug]) }}">{{ $job['field'] }}</a>
                 @endif
             </nav>
 
@@ -129,7 +129,7 @@
                     @endif
                     @if (! empty($job['closed']))
                         <p class="nw-form-hint">This role is no longer accepting applications.</p>
-                        <a class="nw-link" href="{{ route('jobs.index') }}">Browse open roles <x-icon name="arrow-right" /></a>
+                        <a class="nw-link" href="{{ route('workable-jobs.index') }}">Browse open roles <x-icon name="arrow-right" /></a>
                     @else
                         <x-apply-button :job="$job" class="nw-apply-card__button" />
                         @if (auth()->guest() && empty($job['apply_url']))
@@ -151,7 +151,7 @@
             <div class="nw-container">
                 <div class="nw-section-heading">
                     <div><h2 id="similar-heading" class="nw-heading">More roles<br><em>you might like.</em></h2></div>
-                    <a class="nw-link" href="{{ route('jobs.index') }}">Browse all jobs <x-icon name="arrow-right" /></a>
+                    <a class="nw-link" href="{{ route('workable-jobs.index') }}">Browse all jobs <x-icon name="arrow-right" /></a>
                 </div>
                 <div class="nw-job-grid">
                     @foreach ($similar as $other)

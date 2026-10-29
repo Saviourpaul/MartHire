@@ -204,14 +204,14 @@
                     <h2 id="applications-heading">{{ __('Recent applications') }}</h2>
                     <p>{{ __('The roles you’ve applied for, newest first.') }}</p>
                 </div>
-                <a class="nw-link nw-link--small" href="{{ route('jobs.index') }}">{{ __('Browse jobs') }} <x-icon name="arrow-up-right" /></a>
+                <a class="nw-link nw-link--small" href="{{ route('workable-jobs.index') }}">{{ __('Browse jobs') }} <x-icon name="arrow-up-right" /></a>
             </header>
 
             @if ($recent->isEmpty())
                 <div class="nw-empty">
                     <h3>{{ __('No applications yet.') }}</h3>
                     <p>{{ __('When you apply for a role, you’ll be able to follow it here.') }}</p>
-                    <a class="nw-button nw-button--primary" href="{{ route('jobs.index') }}">{{ __('Find a role') }} <x-icon name="arrow-up-right" /></a>
+                    <a class="nw-button nw-button--primary" href="{{ route('workable-jobs.index') }}">{{ __('Find a role') }} <x-icon name="arrow-up-right" /></a>
                 </div>
             @else
                 <div class="nw-table-wrap">
@@ -232,14 +232,14 @@
                                         <div class="nw-table__role">
                                             <x-company-mark :company="$job['company'] ?? 'NearbyWorks'" />
                                             <div>
-                                                <a href="{{ route('jobs.show', $job['id']) }}">{{ $job['title'] }}</a>
+                                                <a href="{{ route('workable-jobs.show', $job['id']) }}">{{ $job['title'] }}</a>
                                                 <small>{{ collect([$job['company'] ?? null, $job['location'] ?? null])->filter()->implode(', ') }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>{{ Carbon::parse($application['applied_at'])->format('j M Y') }}</td>
                                     <td><x-status-badge :status="$application['status']" /></td>
-                                    <td class="nw-table__go"><a href="{{ route('jobs.show', $job['id']) }}" aria-label="{{ __('View :title', ['title' => $job['title']]) }}"><x-icon name="arrow-up-right" /></a></td>
+                                    <td class="nw-table__go"><a href="{{ route('workable-jobs.show', $job['id']) }}" aria-label="{{ __('View :title', ['title' => $job['title']]) }}"><x-icon name="arrow-up-right" /></a></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -267,7 +267,7 @@
                             <span>{{ $when->format('M') }}</span>
                         </time>
                         <div>
-                            <a class="nw-interview__role" href="{{ route('jobs.show', $interviewJob['id']) }}">{{ $interviewJob['title'] }}</a>
+                            <a class="nw-interview__role" href="{{ route('workable-jobs.show', $interviewJob['id']) }}">{{ $interviewJob['title'] }}</a>
                             <small>{{ $interviewJob['company'] ?? '' }}</small>
                             <small><x-icon name="clock" /> {{ $when->format('l, g:i a') }}@if (! empty($nextInterview['format'])), {{ $nextInterview['format'] }}@endif</small>
                         </div>
@@ -332,7 +332,7 @@
                     <h2 id="recommended-heading">{{ __('New roles to look at') }}</h2>
                     <p>{{ __('Fresh listings you haven’t applied for yet.') }}</p>
                 </div>
-                <a class="nw-link" href="{{ route('jobs.index') }}">{{ __('Browse all jobs') }} <x-icon name="arrow-right" /></a>
+                <a class="nw-link" href="{{ route('workable-jobs.index') }}">{{ __('Browse all jobs') }} <x-icon name="arrow-right" /></a>
             </div>
             <div class="nw-job-grid">
                 @foreach ($suggested as $job)

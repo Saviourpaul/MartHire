@@ -1,0 +1,136 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\CandidatePipelineStage;
+use App\Models\Concerns\BelongsToOrganization;
+use App\Models\Scopes\OrganizationScope;
+use App\Support\OrganizationPermissions;
+use Database\Factories\ApplicationFormFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class ApplicationForm extends Model
+{
+    /** @use HasFactory<ApplicationFormFactory> */
+    use BelongsToOrganization, HasFactory;
+
+    protected $fillable = [
+        'organization_id',
+        'job_id',
+        'user_id',
+        'reference',
+        'status',
+        'submitted_at',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'email',
+        'phone',
+        'nationality',
+        'date_of_birth',
+        'gender',
+        'marital_status',
+        'state_of_origin',
+        'local_government_area',
+        'country_code',
+        'country',
+        'state',
+        'city',
+        'address',
+        'profile_image_path',
+        'reviewed_by',
+        'reviewed_at',
+        'employer_remarks',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => CandidatePipelineStage::class,
+            'submitted_at' => 'datetime',
+            'date_of_birth' => 'date',
+            'reviewed_at' => 'datetime',
+
+        ];
+    }
+
+    public function job(): BelongsTo
+    {
+        return $this->belongsTo(Job::class);
+    }
+
+    public function applicant(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by')->withTrashed();
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ApplicationDocument::class);
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(ApplicationStatusHistory::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function interviews(): HasMany
+    {
+        return $this->hasMany(Interview::class);
+    }
+
+    public function candidateMessages(): HasMany
+    {
+        return $this->hasMany(CandidateMessage::class);
+    }
+
+    protected function parentOrganizationId(): ?int
+    {
+        return Job::withoutGlobalScope(OrganizationScope::class)
+            ->whereKey($this->job_id)->value('organization_id');
+    }
+
+    public function scopeForEmployer(Builder $query, User $employer): Builder
+    {
+        return app(OrganizationPermissions::class)->scopeApplications($query, $employer);
+    }
+
+    public function scopeStatus(Builder $query, CandidatePipelineStage|string $status): Builder
+    {
+        return $query->where('status', $status instanceof CandidatePipelineStage ? $status->value : $status);
+    }
+
+    public function scopeSearch(Builder $query, ?string $search): Builder
+    {
+        if (blank($search)) {
+            return $query;
+        }
+
+        $term = '%'.trim($search).'%';
+
+        return $query->where(function (Builder $query) use ($term) {
+            $query->where('reference', 'like', $term)
+                ->orWhere('first_name', 'like', $term)
+                ->orWhere('last_name', 'like', $term)
+                ->orWhere('email', 'like', $term)
+                ->orWhereHas('job', function (Builder $jobQuery) use ($term) {
+                    $jobQuery->where('title', 'like', $term)
+                        ->orWhere('company', 'like', $term);
+                });
+        });
+    }
+}

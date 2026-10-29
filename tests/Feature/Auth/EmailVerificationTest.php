@@ -1,9 +1,10 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\VerifyEmailCode;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Notification;
 
 test('email verification screen can be rendered', function () {
     $user = User::factory()->unverified()->create();
@@ -13,34 +14,39 @@ test('email verification screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('email can be verified', function () {
+test('email can be verified with the code from the notification', function () {
+    Notification::fake();
+    Event::fake([Verified::class]);
+
     $user = User::factory()->unverified()->create();
 
-    Event::fake();
+    app(App\Services\EmailVerificationService::class)->sendCode($user);
 
-    $verificationUrl = URL::temporarySignedRoute(
-        'verification.verify',
-        now()->addMinutes(60),
-        ['id' => $user->id, 'hash' => sha1($user->email)]
-    );
+    Notification::assertSentTo($user, VerifyEmailCode::class, function (VerifyEmailCode $notification) use ($user) {
+        $response = $this->actingAs($user)->post('/verify-email', [
+            'code' => $notification->code,
+        ]);
 
-    $response = $this->actingAs($user)->get($verificationUrl);
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        return true;
+    });
 
     Event::assertDispatched(Verified::class);
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
-    $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
 });
 
-test('email is not verified with invalid hash', function () {
+test('email is not verified with an incorrect code', function () {
+    Notification::fake();
+
     $user = User::factory()->unverified()->create();
 
-    $verificationUrl = URL::temporarySignedRoute(
-        'verification.verify',
-        now()->addMinutes(60),
-        ['id' => $user->id, 'hash' => sha1('wrong-email')]
-    );
+    app(App\Services\EmailVerificationService::class)->sendCode($user);
 
-    $this->actingAs($user)->get($verificationUrl);
+    $this->actingAs($user)->post('/verify-email', ['code' => '000000'])
+        ->assertSessionHasErrors('code');
 
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 });

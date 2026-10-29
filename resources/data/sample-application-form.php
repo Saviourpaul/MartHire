@@ -15,7 +15,7 @@
  *
  * ":company" in any label, body or hint is replaced with the employer's name.
  *
- * Submitting is the backend's job: define a POST route named `jobs.apply.store` (see routes/web.php) and the
+ * Submitting is the backend's job: define a POST route named `workable-jobs.apply.store` (see routes/web.php) and the
  * preview notice goes away. It should send the answers to Workable (POST .../jobs/{shortcode}/candidates with
  * a token that has the w_candidates scope), turn Workable's "candidate already exists" reply into an error on
  * `email`, and redirect back with ->with('applied', true) to show the confirmation.
