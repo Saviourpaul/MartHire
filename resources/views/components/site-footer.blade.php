@@ -5,7 +5,7 @@
         @unless ($compact)
             <div class="nw-footer__top">
                 <div class="nw-footer__brand">
-                    <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('NearbyWorks home') }}"><x-application-logo /></a>
+                    <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('MartHire home') }}"><x-application-logo /></a>
                     <p>{{ __('Good people. Great possibilities.') }}</p>
                 </div>
 
@@ -54,7 +54,7 @@
 
     @unless ($compact)
         <div class="nw-footer-art" aria-hidden="true">
-            <span class="nw-footer-art__wordmark" style="--nw-footer-photo: url('{{ asset('asset/nearbyworks/conversation.png') }}')">nearbyworks</span>
+            <span class="nw-footer-art__wordmark" style="--nw-footer-photo: url('{{ asset('asset/nearbyworks/conversation.png') }}'); padding-inline-end: .1em">MartHire</span>
         </div>
     @endunless
 </footer>
