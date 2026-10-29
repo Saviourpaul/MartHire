@@ -2,7 +2,7 @@
 
 <header class="nw-header{{ $account ? ' nw-header--account' : '' }}" x-data="{ open: false }" x-on:keydown.escape.window="if (open) { open = false; $refs.navigationToggle.focus(); }">
     <div class="nw-container nw-header__inner">
-        <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('NearbyWorks home') }}">
+        <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('MartHire home') }}">
             <x-application-logo />
         </a>
 
@@ -19,7 +19,7 @@
                 <a class="nw-button nw-button--primary nw-button--small" href="{{ route('dashboard') }}">{{ __('Your workspace') }} <x-icon name="arrow-up-right" /></a>
             @else
                 <a class="nw-header__login" href="{{ route('login') }}">{{ __('Log in') }}</a>
-                <a class="nw-button nw-button--primary nw-button--small" href="{{ route('register') }}">{{ __('Get started') }} <x-icon name="arrow-up-right" /></a>
+                <a class="nw-button nw-button--primary nw-button--small nw-header__cta" href="{{ route('register') }}">{{ __('Get started') }} <x-icon name="arrow-up-right" /></a>
             @endauth
         </div>
 

@@ -9,16 +9,15 @@
     $pins = $catalog->pins();
 @endphp
 
-<x-layout title="Good people. Great possibilities." description="Search open roles, sign up and apply. NearbyWorks brings employers and job seekers together to make the next connection count.">
+<x-layout title="Recruitment Management Platform" description="MartHire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.">
     <div x-data="jobBoard(@js($jobIndex), 6)">
         <section class="nw-hero" aria-labelledby="home-heading">
             <div class="nw-container nw-hero__grid">
                 <div class="nw-hero__copy">
-                    <span class="nw-eyebrow">A better way to come together</span>
-                    <h1 id="home-heading">Good people.<br><em>Great possibilities.</em></h1>
-                    <p class="nw-copy">Search open roles, apply with your own profile, or find your next hire. NearbyWorks brings employers and job seekers together to make the next connection count.</p>
-                    <a href="{{ route('register') }}" class="nw-link">Hiring? Start your hiring journey <x-icon name="arrow-right" /></a>
-                    <div class="nw-hero__footnote"><x-icon name="users" /> For the people hiring. And the people ready for what’s next.</div>
+                    <h1 id="home-heading">One platform to manage<br><em>Recruitment across African businesses,</em><br>and international organisations</h1>
+                    <p class="nw-copy">MartHire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.</p>
+                    <a href="#how-it-works" class="nw-link">See how it works <x-icon name="arrow-right" /></a>
+                    <div class="nw-hero__footnote"><x-icon name="users" /> Designed for better recruitment</div>
                 </div>
                 <div class="nw-hero__search">
                     <form class="nw-search" role="search" aria-label="Search jobs" method="get" action="{{ route('workable-jobs.index') }}">
@@ -36,7 +35,7 @@
                                 <input class="nw-search__input" type="search" name="place" placeholder="City, country or remote" autocomplete="off">
                             </span>
                         </label>
-                        <button class="nw-button nw-button--primary nw-search__submit" type="submit">Search jobs <x-icon name="arrow-right" /></button>
+                        <button class="nw-button nw-button--primary nw-search__submit" type="submit">Browse jobs <x-icon name="arrow-right" /></button>
                     </form>
                     @if ($categories->isNotEmpty())
                         <div class="nw-popular" role="group" aria-label="Popular categories">
@@ -86,17 +85,18 @@
 
         <div class="nw-intro-strip">
             <div class="nw-container nw-intro-strip__inner">
-                <span><x-icon name="briefcase" /> Opportunities worth exploring</span>
-                <span><x-icon name="users" /> People worth getting to know</span>
-                <span><x-icon name="globe" /> One place to connect</span>
+                <span><x-icon name="briefcase" /> Centralized applicant tracking</span>
+                <span><x-icon name="check" /> Structured shortlisting</span>
+                <span><x-icon name="users" /> Hiring-team collaboration</span>
+                <span><x-icon name="globe" /> Clear recruitment oversight</span>
             </div>
         </div>
 
         <section id="jobs" class="nw-section" aria-labelledby="jobs-heading">
             <div class="nw-container">
                 <div class="nw-section-heading">
-                    <div><span class="nw-eyebrow">Latest jobs</span><h2 id="jobs-heading" class="nw-heading">Fresh roles,<br><em>ready when you are.</em></h2></div>
-                    <p>Look around as long as you like. When something fits, create a free account and apply in a few steps.</p>
+                    <div><span class="nw-eyebrow">For every vacancy</span><h2 id="jobs-heading" class="nw-heading">Recruitment without the<br><em>manual chase</em></h2></div>
+                    <p>MartHire brings candidates, recruitment stages, and hiring activity into one organized workflow—so your team can spend less time chasing updates across spreadsheets and emails.</p>
                 </div>
 
                 @if ($jobs->isEmpty())
@@ -149,8 +149,8 @@
         <section id="categories" class="nw-section nw-section--soft" aria-labelledby="categories-heading">
             <div class="nw-container">
                 <div class="nw-section-heading">
-                    <div><span class="nw-eyebrow">Browse by category</span><h2 id="categories-heading" class="nw-heading">Find work in the<br>field <em>you love.</em></h2></div>
-                    <p>Pick a field to see every open role in it, from first jobs to leadership.</p>
+                    <div><span class="nw-eyebrow">From application to decision</span><h2 id="categories-heading" class="nw-heading">A complete <em>recruitment workspace</em><br>for every hiring stage</h2></div>
+                    <p>Keep every application, profile, and supporting document connected to the right vacancy.</p>
                 </div>
                 <div class="nw-category-grid">
                     @foreach ($categories as $category)
@@ -175,39 +175,39 @@
         @hashchange.window="if (window.location.hash === '#for-job-seekers') audience = 'job-seekers'; if (window.location.hash === '#for-employers') audience = 'employers'">
         <div class="nw-container">
             <div class="nw-section-heading">
-                <div><span class="nw-eyebrow">Two sides. One better connection.</span><h2 id="audience-heading" class="nw-heading">Your next chapter<br>starts with <em>who.</em></h2></div>
-                <p>Whether you’re growing a team or ready for a new direction, there’s a place for you here.</p>
+                <div><span class="nw-eyebrow">For authorized stakeholders</span><h2 id="audience-heading" class="nw-heading">One platform for every<br><em>recruitment workflow</em></h2></div>
+                <p>Bring vacancies, applications, documents, and decisions into one organized recruitment process.</p>
             </div>
-            <div class="nw-audience-switch" role="tablist" aria-label="Explore NearbyWorks">
+            <div class="nw-audience-switch" role="tablist" aria-label="Explore MartHire">
                 <button id="for-employers" x-ref="employersTab" role="tab" aria-controls="employers-panel" :aria-selected="(audience === 'employers').toString()" :tabindex="audience === 'employers' ? 0 : -1" @click="select('employers')" @keydown.right.prevent="select('job-seekers', true)" @keydown.left.prevent="select('job-seekers', true)" @keydown.home.prevent="select('employers', true)" @keydown.end.prevent="select('job-seekers', true)">For employers</button>
                 <button id="for-job-seekers" x-ref="jobseekersTab" role="tab" aria-controls="jobseekers-panel" :aria-selected="(audience === 'job-seekers').toString()" :tabindex="audience === 'job-seekers' ? 0 : -1" @click="select('job-seekers')" @keydown.right.prevent="select('employers', true)" @keydown.left.prevent="select('employers', true)" @keydown.home.prevent="select('employers', true)" @keydown.end.prevent="select('job-seekers', true)">For job seekers</button>
             </div>
             <div id="employers-panel" class="nw-audience-grid" role="tabpanel" aria-labelledby="for-employers" tabindex="0" x-show="audience === 'employers'">
                 <div class="nw-audience-content">
-                    <h3>Great teams begin<br>with the right people.</h3>
-                    <p>Bring your hiring story to the people who should hear it. Make room for talent, potential, and a fresh perspective.</p>
-                    <ul class="nw-check-list"><li><x-icon name="check" /> Put your opportunities in focus</li><li><x-icon name="check" /> Make meaningful talent connections</li><li><x-icon name="check" /> Build what comes next, together</li></ul>
-                    <a href="{{ route('register') }}" class="nw-link">Start your hiring journey <x-icon name="arrow-right" /></a>
+                    <h3>Replace disconnected<br>recruitment administration</h3>
+                    <p>Bring vacancies, applications, documents, and recruitment decisions into one organized workspace instead of relying on fragmented spreadsheets, email threads, and manual follow-ups.</p>
+                    <ul class="nw-check-list"><li><x-icon name="check" /> Applicant Tracking</li><li><x-icon name="check" /> Screening Workflows</li><li><x-icon name="check" /> Candidate Shortlisting</li></ul>
+                    <a href="{{ route('register') }}" class="nw-link">Explore the platform <x-icon name="arrow-right" /></a>
                 </div>
                 <div class="nw-audience-art" aria-label="The foundations of better hiring">
-                    <span class="nw-art-label">Make space for possibility</span>
-                    <div class="nw-opportunity"><x-icon name="briefcase" /><div><strong>Your opportunity</strong><span>A role with purpose. A team with ambition.</span></div></div>
-                    <div class="nw-opportunity"><x-icon name="users" /><div><strong>The next great addition</strong><span>Skills, experience, and a new perspective.</span></div></div>
-                    <p class="nw-art-caption">People and opportunities. Better together.</p>
+                    <span class="nw-art-label">A single recruitment workspace</span>
+                    <div class="nw-opportunity"><x-icon name="briefcase" /><div><strong>Vacancy planning</strong><span>Set up roles and define the workflow your organization will use to fill them.</span></div></div>
+                    <div class="nw-opportunity"><x-icon name="users" /><div><strong>Application management</strong><span>Receive and organize applicant information in one place from the moment a candidate applies.</span></div></div>
+                    <p class="nw-art-caption">Make screening and shortlisting easier to manage with visible candidate stages and a clearer recruitment pipeline.</p>
                 </div>
             </div>
             <div id="jobseekers-panel" class="nw-audience-grid" role="tabpanel" aria-labelledby="for-job-seekers" tabindex="0" x-show="audience === 'job-seekers'" x-cloak>
                 <div class="nw-audience-content">
-                    <h3>Your potential deserves<br>a new possibility.</h3>
-                    <p>You’re more than a list of past roles. Take the first step toward the people and opportunities that could shape your future.</p>
-                    <ul class="nw-check-list"><li><x-icon name="check" /> Start with your own NearbyWorks account</li><li><x-icon name="check" /> Keep your profile details up to date</li><li><x-icon name="check" /> Be ready for your next chapter</li></ul>
-                    <a href="{{ route('register') }}" class="nw-link">Take your next step <x-icon name="arrow-right" /></a>
+                    <h3>Keep candidate progression<br>clear and consistent</h3>
+                    <p>Move applicants through Submitted, Shortlisted, Interview, Selected, and Rejected stages with a recorded history of each progression decision.</p>
+                    <ul class="nw-check-list"><li><x-icon name="check" /> Interview Coordination</li><li><x-icon name="check" /> Team Collaboration</li><li><x-icon name="check" /> Recruitment Oversight</li></ul>
+                    <a href="{{ route('register') }}" class="nw-link">See the workflow <x-icon name="arrow-right" /></a>
                 </div>
                 <div class="nw-audience-art nw-audience-art--peach" aria-label="Your next chapter">
-                    <span class="nw-art-label">Bring your whole story</span>
-                    <div class="nw-opportunity"><x-icon name="spark" /><div><strong>What makes you, you</strong><span>Your experience. Your ambition. Your perspective.</span></div></div>
-                    <div class="nw-opportunity"><x-icon name="globe" /><div><strong>A world of possibilities</strong><span>A fresh start begins with a connection.</span></div></div>
-                    <p class="nw-art-caption">Make your next move a meaningful one.</p>
+                    <span class="nw-art-label">A clearer candidate pipeline</span>
+                    <div class="nw-opportunity"><x-icon name="spark" /><div><strong>Screening and shortlisting</strong><span>Review applications, identify qualified candidates, and maintain structured shortlists.</span></div></div>
+                    <div class="nw-opportunity"><x-icon name="globe" /><div><strong>Interview management</strong><span>Track interview stages and decisions so candidates continue moving through the process.</span></div></div>
+                    <p class="nw-art-caption">Keep hiring teams informed without relying on scattered spreadsheets, inboxes, and disconnected systems.</p>
                 </div>
             </div>
         </div>
@@ -215,11 +215,11 @@
 
     <section id="how-it-works" class="nw-section nw-section--soft" aria-labelledby="how-heading">
         <div class="nw-container">
-            <div class="nw-section-heading"><div><span class="nw-eyebrow">A thoughtful place to start</span><h2 id="how-heading" class="nw-heading">Less distance.<br><em>More possibility.</em></h2></div><p>A simple starting point for people with something to offer, and teams with something to build.</p></div>
+            <div class="nw-section-heading"><div><span class="nw-eyebrow">A more accountable process</span><h2 id="how-heading" class="nw-heading">Recruitment questions<br><em>answered</em></h2></div><p>See where every candidate stands and what action is needed next.</p></div>
             <div class="nw-feature-grid">
-                <article class="nw-feature"><span class="nw-feature__number">01</span><h3>Find a role.</h3><p>Browse open roles and narrow them by type or place. You don’t need an account to look around.</p></article>
-                <article class="nw-feature"><span class="nw-feature__number">02</span><h3>Create your account.</h3><p>Found one you like? Sign up in a minute, so your details travel with every application you send.</p></article>
-                <article class="nw-feature"><span class="nw-feature__number">03</span><h3>Apply as yourself.</h3><p>Keep your name and contact details current, so each application comes from the person behind it.</p></article>
+                <article class="nw-feature"><span class="nw-feature__number">01</span><h3>What does MartHire help organizations manage?</h3><p>MartHire centralizes vacancies, applications, candidate records, screening, shortlisting, interviews, and hiring administration in one workflow.</p></article>
+                <article class="nw-feature"><span class="nw-feature__number">02</span><h3>How does MartHire reduce manual recruitment work?</h3><p>By replacing scattered spreadsheets, emails, and disconnected tools with a shared workspace that keeps recruitment activity and candidate statuses together.</p></article>
+                <article class="nw-feature"><span class="nw-feature__number">03</span><h3>Can teams collaborate on recruitment?</h3><p>Authorized administrators and hiring stakeholders can work from the same view of vacancies, candidates, and recruitment progress.</p></article>
             </div>
         </div>
     </section>
@@ -227,13 +227,13 @@
     <section class="nw-section" aria-labelledby="people-heading">
         <div class="nw-container nw-editorial">
             <img class="nw-editorial__image" src="{{ asset('asset/nearbyworks/conversation.png') }}" width="585" height="444" loading="lazy" alt="A professional smiling during a video conversation">
-            <div><span class="nw-eyebrow">Built around people</span><h2 id="people-heading" class="nw-heading">The best next step<br>is a <em>human one.</em></h2><p class="nw-copy">Hiring is about more than filling a role. It’s a new colleague, a fresh perspective, a chance to do meaningful work. That’s the kind of connection NearbyWorks is here for.</p><a class="nw-link" href="{{ url('/About') }}">Get to know NearbyWorks <x-icon name="arrow-right" /></a></div>
+            <div><span class="nw-eyebrow">Who is MartHire built for?</span><h2 id="people-heading" class="nw-heading">Recruitment management<br><em>made for Africa</em></h2><p class="nw-copy">MartHire supports structured recruitment for organizations that need clear applicant records, consistent candidate progression, and accountable administration.</p><a class="nw-link" href="{{ url('/About') }}">About us <x-icon name="arrow-right" /></a></div>
         </div>
     </section>
 
     <aside class="nw-resources" aria-labelledby="resources-heading">
         <div class="nw-container">
-            <div class="nw-resources__heading"><h2 id="resources-heading" class="nw-eyebrow">Keep exploring</h2><p>Independent career resources, beyond NearbyWorks.</p></div>
+            <div class="nw-resources__heading"><h2 id="resources-heading" class="nw-eyebrow">How can our organization access MartHire?</h2><p>Contact MartHire to discuss platform access for your organization. Applicants can create an account and browse available opportunities.</p></div>
             <div class="nw-resource-grid">
                 <a class="nw-resource" href="https://www.linkedin.com/learning/" rel="external"><img src="{{ asset('asset/nearbyworks/linkedin.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>LinkedIn Learning</strong><x-icon name="arrow-up-right" /></a>
                 <a class="nw-resource" href="https://www.indeed.com/career-advice" rel="external"><img src="{{ asset('asset/nearbyworks/indeed.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>Indeed Career Guide</strong><x-icon name="arrow-up-right" /></a>
@@ -242,5 +242,5 @@
         </div>
     </aside>
 
-    <section class="nw-cta" aria-labelledby="cta-heading"><div class="nw-container nw-cta__inner"><div><span class="nw-eyebrow">Let’s see what’s possible</span><h2 id="cta-heading" class="nw-heading">Your next great connection<br>could start <em>right here.</em></h2></div><a href="{{ route('register') }}" class="nw-button nw-button--light">Get started with NearbyWorks <x-icon name="arrow-up-right" /></a></div></section>
+    <section class="nw-cta" aria-labelledby="cta-heading"><div class="nw-container nw-cta__inner"><div><span class="nw-eyebrow">Get started</span><h2 id="cta-heading" class="nw-heading">Ready to improve your<br><em>recruitment process</em>?</h2></div><a href="{{ url('/ContactUs') }}" class="nw-button nw-button--light">Contact us <x-icon name="arrow-up-right" /></a></div></section>
 </x-layout>
