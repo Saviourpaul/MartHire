@@ -1,5 +1,7 @@
 <?php
 
+$userAgent = env('WORKABLE_USER_AGENT', 'Marthire/1.0 (+ops@marthire.test)');
+
 return [
 
     /*
@@ -18,7 +20,7 @@ return [
 
     'host_template' => env('WORKABLE_HOST_TEMPLATE', 'https://%s.workable.com/spi/%s'),
 
-    'user_agent' => env('WORKABLE_USER_AGENT', 'NearbyWorks/1.0 (+ops@nearbyworks.test)'),
+    'user_agent' => $userAgent === 'NearbyWorks/1.0 (+ops@nearbyworks.test)' ? 'Marthire/1.0 (+ops@marthire.test)' : $userAgent,
 
     'fake' => filter_var(env('WORKABLE_FAKE', false), FILTER_VALIDATE_BOOLEAN),
 

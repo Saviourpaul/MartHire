@@ -1,5 +1,7 @@
 <?php
 
+$applicationName = env('APP_NAME', 'Marthire');
+
 return [
 
     /*
@@ -13,7 +15,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => in_array(strtolower(trim($applicationName)), ['laravel', 'nearbyworks', 'marthire'], true) ? 'Marthire' : $applicationName,
 
     /*
     |--------------------------------------------------------------------------

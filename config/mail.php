@@ -1,5 +1,7 @@
 <?php
 
+$senderName = env('MAIL_FROM_NAME', env('APP_NAME', 'Marthire'));
+
 return [
 
     /*
@@ -112,7 +114,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'name' => in_array(strtolower(trim($senderName)), ['laravel', 'nearbyworks', 'marthire'], true) ? 'Marthire' : $senderName,
     ],
 
     /*
@@ -137,7 +139,7 @@ return [
     ],
 
     'markdown' => [
-        'theme' => 'martHire',
+        'theme' => 'marthire-theme',
         'paths' => [resource_path('views/vendor/mail')],
     ],
 
