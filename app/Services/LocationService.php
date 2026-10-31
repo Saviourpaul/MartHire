@@ -175,7 +175,7 @@ class LocationService
         $store = null;
         try {
             $store = Cache::store(config('locations.cache.driver'));
-            $key = config('locations.cache.prefix', 'nearbyworks.locations.v2').':'.WorldLocations::cacheIdentity().':'.$key;
+            $key = config('locations.cache.prefix', 'marthire.locations.v2').':'.WorldLocations::cacheIdentity().':'.$key;
             $cached = $store->get($key);
             if (is_array($cached) && $cached !== []) {
                 return $cached;

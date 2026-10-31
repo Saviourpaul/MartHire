@@ -273,7 +273,7 @@ class UserManagementController extends Controller
         $this->validateFilters($request);
         $search = trim((string) $request->input('search', $request->input('name', '')));
         $users = $this->filteredQuery($request, $role, $status, 'created_at', 'desc', $search)->get();
-        $filename = 'nearbyworks-'.$filenameSlug.'-'.now()->toDateString().'.csv';
+        $filename = 'marthire-'.$filenameSlug.'-'.now()->toDateString().'.csv';
 
         return response()->streamDownload(function () use ($users): void {
             $handle = fopen('php://output', 'w');

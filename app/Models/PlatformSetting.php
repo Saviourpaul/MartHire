@@ -14,7 +14,7 @@ class PlatformSetting extends Model
 
     protected $fillable = ['display_name', 'mail_from_name', 'mail_from_address', 'support_email', 'support_phone', 'support_address', 'support_url', 'privacy_url', 'terms_url', 'site_logo_path', 'logo_light_path', 'logo_dark_path', 'icon_path', 'facebook_url', 'x_url', 'instagram_url', 'linkedin_url', 'youtube_url', 'tiktok_url', 'public_registration_enabled', 'version', 'updated_by'];
 
-    protected $attributes = ['display_name' => 'MartHire', 'public_registration_enabled' => true, 'version' => 1];
+    protected $attributes = ['display_name' => 'Marthire', 'public_registration_enabled' => true, 'version' => 1];
 
     protected function casts(): array
     {

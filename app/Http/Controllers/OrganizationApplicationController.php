@@ -47,7 +47,7 @@ class OrganizationApplicationController extends Controller
             ->latest('submitted_at')
             ->get();
 
-        $filename = 'nearbyworks-candidates-'.now()->toDateString().'.csv';
+        $filename = 'marthire-candidates-'.now()->toDateString().'.csv';
 
         return response()->streamDownload(function () use ($applications): void {
             $handle = fopen('php://output', 'w');

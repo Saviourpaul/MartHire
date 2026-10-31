@@ -106,7 +106,7 @@ class JobCountryService
             return null;
         }
 
-        $path = 'asset/nearbyworks/flags/'.$code.'.svg';
+        $path = 'asset/marthire/flags/'.$code.'.svg';
 
         return is_file(public_path($path)) ? asset($path) : null;
     }
