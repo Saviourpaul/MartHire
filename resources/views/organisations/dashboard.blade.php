@@ -5,6 +5,8 @@
         <p>{{ __('Recruitment activity for your organization.') }}</p>
     </x-slot>
 
+    @fragment('organization-dashboard')
+    <div data-live-table="organization-dashboard" data-live-topics="users,jobs,candidates,applications,team,interviews" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-notice" role="status">
         {{ __('Signed in as :role', ['role' => $membership->role->value]) }}
     </div>
@@ -15,7 +17,7 @@
                 <span class="nw-stat__label">{{ __('Open jobs') }}</span>
                 <span class="nw-stat__icon"><x-icon name="briefcase" /></span>
             </div>
-            <span class="nw-stat__value">{{ number_format($metrics['total_jobs']) }}</span>
+            <span class="nw-stat__value">{{ number_format($metrics['open_jobs']) }}</span>
         </div>
         <div class="nw-stat nw-stat--lime">
             <div class="nw-stat__top">
@@ -123,4 +125,6 @@
             </section>
         </div>
     </div>
+    </div>
+    @endfragment
 </x-app-layout>

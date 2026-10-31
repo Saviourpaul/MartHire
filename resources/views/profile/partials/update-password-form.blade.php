@@ -29,10 +29,6 @@
 
         <x-form.actions>
             <x-primary-button>{{ __('Update password') }}</x-primary-button>
-
-            @if (session('status') === 'password-updated')
-                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)" class="nw-form-hint" role="status">{{ __('Your password has been updated.') }}</p>
-            @endif
         </x-form.actions>
     </form>
 </section>

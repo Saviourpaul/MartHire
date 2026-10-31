@@ -3,10 +3,15 @@
 @php
     $paths = [
         'arrow-right' => '<path d="M5 12h14m-6-6 6 6-6 6"/>',
+        'arrow-down' => '<path d="M12 5v14m-6-6 6 6 6-6"/>',
         'arrow-up-right' => '<path d="M7 17 17 7M7 7h10v10"/>',
         'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
         'close' => '<path d="m6 6 12 12M6 18 18 6"/>',
         'check' => '<path d="m5 12 4 4L19 6"/>',
+        'check-circle' => '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+        'circle-x' => '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>',
+        'alert-triangle' => '<path d="m10.3 4-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0ZM12 9v4m0 4h.01"/>',
+        'info' => '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>',
         'briefcase' => '<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12a24 24 0 0 0 18 0m-9 0v3"/>',
         'users' => '<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2m1-16a3 3 0 0 1 0 6m3 10v-2a6 6 0 0 0-3-5"/>',
         'spark' => '<path d="m12 3 2.8 6.2L21 12l-6.2 2.8L12 21l-2.8-6.2L3 12l6.2-2.8L12 3Z"/>',

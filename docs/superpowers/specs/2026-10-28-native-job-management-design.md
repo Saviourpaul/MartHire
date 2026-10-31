@@ -38,7 +38,7 @@ adds a Quill rich-text editor for the description, reusing the existing architec
 
 ## Constraints
 
-- Laravel 12 + Blade + `nw-*` CSS + Alpine + Vite (builds into `public/asset/nearbyworks/build/`).
+- Laravel 12 + Blade + `nw-*` CSS + Alpine + Vite (builds into `public/asset/marthire/build/`).
 - Reuse: `JobController`, `Job` model (slug route key, `employmentTypeOptions`, scopes),
   `JobPolicy` (`create_jobs`/`edit_jobs`/`delete_jobs` permissions), `JobDescription`
   sanitizer, `JobPostMember`, `CloseJobRequest`, `OrganizationContext`.

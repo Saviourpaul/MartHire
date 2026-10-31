@@ -1,0 +1,7 @@
+.nw-live-table-status { display: flex; align-items: center; justify-content: flex-end; gap: 16px; min-height: 28px; margin-bottom: 12px; color: var(--nw-muted); font-size: 11px; }
+.nw-live-table-status.has-error { color: var(--nw-error); }
+[data-live-table][aria-busy="true"] > .nw-live-table-status [data-live-status]::before { display: inline-block; content: ''; width: 10px; height: 10px; margin-right: 7px; border: 1px solid var(--nw-line); border-top-color: currentColor; border-radius: 50%; animation: nw-review-spin .8s linear infinite; }
+[data-live-table] [data-live-validation] { margin-block: 8px; }
+[data-live-table] [data-live-invalid] { border-color: var(--nw-error); }
+[data-live-table] button:disabled { cursor: wait; }
+@media (prefers-reduced-motion: reduce) { [data-live-table][aria-busy="true"] > .nw-live-table-status [data-live-status]::before { animation: none; } }

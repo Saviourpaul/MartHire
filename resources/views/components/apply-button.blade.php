@@ -1,7 +1,8 @@
 @props(['job'])
 
 @php
-    // Synced postings retain their hosted application destination.
+    // Native jobs provide their own application route; imported postings retain
+    // their hosted destination or the existing Workable application route.
     $applyUrl = ($job['apply_url'] ?? null) ?: (auth()->check()
         ? route('workable-jobs.apply', $job['id'])
         : route('register', ['job' => $job['id']]));

@@ -5,7 +5,7 @@
         <header class="nw-auth-heading">
             <span class="nw-eyebrow">{{ __('Account security') }}</span>
             <h1 id="auth-heading">{{ __('Your password has been updated.') }}</h1>
-            <p>{{ __('You can now log in to your NearbyWorks account with your new password.') }}</p>
+            <p>{{ __('You can now log in to your Marthire account with your new password.') }}</p>
         </header>
 
         <p class="nw-form-footer">
@@ -17,7 +17,7 @@
         <header class="nw-auth-heading">
             <span class="nw-eyebrow">{{ __('Account security') }}</span>
             <h1 id="auth-heading">{{ __('Make a fresh start.') }}</h1>
-            <p>{{ __('Choose a new password for your NearbyWorks account.') }}</p>
+            <p>{{ __('Choose a new password for your Marthire account.') }}</p>
         </header>
 
         <form method="POST" action="{{ route('password.store') }}" class="nw-form-stack">

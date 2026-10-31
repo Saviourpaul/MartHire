@@ -6,7 +6,7 @@ Supersedes: `2026-10-24-greenhouse-integration-design.md` (provider pivot Greenh
 Grounding: Workable API reference (workable.readme.io), fetched 2026-10-24 — endpoints, auth, and payload shapes in §2 are copied from the live docs; where a real payload disagrees with this doc, the real payload wins.
 
 ## Intent and why
-Make NearbyWorks a Workable-backed job board with a full candidate journey: sync an employer's **published** Workable jobs into our DB, show them on public list/detail pages, let registered candidates apply through a native form we build from Workable's application-form schema and submit server-side (create-candidate) with the account's token, and fall back to the job's hosted Workable application URL when native apply can't be guaranteed. The browser never talks to Workable; the account token never leaves the server. Submission is at-most-once with human-resolved ambiguity (a duplicate application harms the employer relationship more than a rare manual resubmit).
+Make Marthire a Workable-backed job board with a full candidate journey: sync an employer's **published** Workable jobs into our DB, show them on public list/detail pages, let registered candidates apply through a native form we build from Workable's application-form schema and submit server-side (create-candidate) with the account's token, and fall back to the job's hosted Workable application URL when native apply can't be guaranteed. The browser never talks to Workable; the account token never leaves the server. Submission is at-most-once with human-resolved ambiguity (a duplicate application harms the employer relationship more than a rare manual resubmit).
 
 ## Scope
 Full journey (user-chosen 2026-10-24): jobs + candidate accounts + apply. Build order still phases the demo floor first (see §12). Out of scope: Workable employees/talent-pool/webhooks/candidate-management endpoints; anything beyond reading jobs and creating candidates.
@@ -47,7 +47,7 @@ Same shapes and rules as the Greenhouse design (idempotent sync with empty/faile
 
 ## Decisions / codebase deltas
 1. Namespace `App\Integrations\Workable` (new). The superseded Greenhouse files (`config/greenhouse.php`, `App\Integrations\Greenhouse\*`, `tests/Fixtures/greenhouse/*`, Greenhouse tests) are removed in the first Workable task — non-destructive (they remain in branch history). *Ruling: supersede, don't hard-reset — keeps history, matches "not merged".*
-2. DB queue + cache (no Redis); build list/detail/apply/status pages on the NearbyWorks design system (`build-frontend.mjs`). *My call.*
+2. DB queue + cache (no Redis); build list/detail/apply/status pages on the Marthire design system (`build-frontend.mjs`). *My call.*
 3. **Auth-registration fix is now a prerequisite (finding #1).** Full journey needs working candidate accounts; registration is currently broken (users table has only `name`; model/controller write nonexistent `firstName`/`lastName`). The first functional task fixes it: migration for `first_name`/`last_name`, align model/validation/controller, fix the 2 known-red tests (`RegistrationTest`, `ProfileTest`).
 4. Config `config/workable.php`: `api_version` (`v3`), `host_template` (`https://%s.workable.com/spi/%s`), `user_agent`, `fake` (bool), `sync_empty_guard_min_open` (5), `schema_cache_minutes` (15), `application.max_file_mb` (5), `application.payload_retention_days` (30). Subdomain + token are per-company (DB), never env.
 

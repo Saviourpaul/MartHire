@@ -9,14 +9,14 @@
     $pins = $catalog->pins();
 @endphp
 
-<x-layout title="Recruitment Management Platform" description="MartHire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.">
+<x-layout title="Recruitment Management Platform" description="Marthire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.">
     <div x-data="jobBoard(@js($jobIndex), 6)">
         <section class="nw-hero" aria-labelledby="home-heading">
             <div class="nw-container nw-hero__grid">
                 <div class="nw-hero__copy">
                     <h1 id="home-heading">One platform to manage<br><em>Recruitment across African businesses,</em><br>and international organisations</h1>
-                    <p class="nw-copy">MartHire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.</p>
-                    <a href="#how-it-works" class="nw-link">See how it works <x-icon name="arrow-right" /></a>
+                    <p class="nw-copy">Marthire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.</p>
+                    <a href="{{ route('how-it-works') }}" class="nw-link">See how it works <x-icon name="arrow-right" /></a>
                     <div class="nw-hero__footnote"><x-icon name="users" /> Designed for better recruitment</div>
                 </div>
                 <div class="nw-hero__search">
@@ -55,7 +55,11 @@
                         @foreach ($pins as $pin)
                             <li class="nw-pin{{ $loop->first ? ' is-hub' : '' }}" data-pin data-lat="{{ $pin['lat'] }}" data-lon="{{ $pin['lon'] }}">
                                 <a class="nw-pin__link" href="{{ route('workable-jobs.index', ['place' => $pin['country']]) }}" aria-label="{{ $pin['country'] }}: {{ $pin['count'] }} {{ \Illuminate\Support\Str::plural('role', $pin['count']) }}">
-                                    <img src="{{ asset('asset/nearbyworks/flags/'.$pin['code'].'.svg') }}" width="40" height="40" alt="" loading="lazy" onerror="this.hidden = true">
+                                    @if ($pin['flag_url'])
+                                        <img src="{{ $pin['flag_url'] }}" width="40" height="40" alt="" loading="lazy">
+                                    @else
+                                        <span class="nw-pin__flag" aria-hidden="true">{{ $pin['flag_emoji'] }}</span>
+                                    @endif
                                     <span class="nw-pin__label" aria-hidden="true">
                                         <strong>{{ $pin['country'] }}</strong>
                                         <span>{{ $pin['count'] }} {{ \Illuminate\Support\Str::plural('role', $pin['count']) }}</span>
@@ -96,7 +100,7 @@
             <div class="nw-container">
                 <div class="nw-section-heading">
                     <div><span class="nw-eyebrow">For every vacancy</span><h2 id="jobs-heading" class="nw-heading">Recruitment without the<br><em>manual chase</em></h2></div>
-                    <p>MartHire brings candidates, recruitment stages, and hiring activity into one organized workflow—so your team can spend less time chasing updates across spreadsheets and emails.</p>
+                    <p>Marthire brings candidates, recruitment stages, and hiring activity into one organized workflow—so your team can spend less time chasing updates across spreadsheets and emails.</p>
                 </div>
 
                 @if ($jobs->isEmpty())
@@ -178,7 +182,7 @@
                 <div><span class="nw-eyebrow">For authorized stakeholders</span><h2 id="audience-heading" class="nw-heading">One platform for every<br><em>recruitment workflow</em></h2></div>
                 <p>Bring vacancies, applications, documents, and decisions into one organized recruitment process.</p>
             </div>
-            <div class="nw-audience-switch" role="tablist" aria-label="Explore MartHire">
+            <div class="nw-audience-switch" role="tablist" aria-label="Explore Marthire">
                 <button id="for-employers" x-ref="employersTab" role="tab" aria-controls="employers-panel" :aria-selected="(audience === 'employers').toString()" :tabindex="audience === 'employers' ? 0 : -1" @click="select('employers')" @keydown.right.prevent="select('job-seekers', true)" @keydown.left.prevent="select('job-seekers', true)" @keydown.home.prevent="select('employers', true)" @keydown.end.prevent="select('job-seekers', true)">For employers</button>
                 <button id="for-job-seekers" x-ref="jobseekersTab" role="tab" aria-controls="jobseekers-panel" :aria-selected="(audience === 'job-seekers').toString()" :tabindex="audience === 'job-seekers' ? 0 : -1" @click="select('job-seekers')" @keydown.right.prevent="select('employers', true)" @keydown.left.prevent="select('employers', true)" @keydown.home.prevent="select('employers', true)" @keydown.end.prevent="select('job-seekers', true)">For job seekers</button>
             </div>
@@ -217,8 +221,8 @@
         <div class="nw-container">
             <div class="nw-section-heading"><div><span class="nw-eyebrow">A more accountable process</span><h2 id="how-heading" class="nw-heading">Recruitment questions<br><em>answered</em></h2></div><p>See where every candidate stands and what action is needed next.</p></div>
             <div class="nw-feature-grid">
-                <article class="nw-feature"><span class="nw-feature__number">01</span><h3>What does MartHire help organizations manage?</h3><p>MartHire centralizes vacancies, applications, candidate records, screening, shortlisting, interviews, and hiring administration in one workflow.</p></article>
-                <article class="nw-feature"><span class="nw-feature__number">02</span><h3>How does MartHire reduce manual recruitment work?</h3><p>By replacing scattered spreadsheets, emails, and disconnected tools with a shared workspace that keeps recruitment activity and candidate statuses together.</p></article>
+                <article class="nw-feature"><span class="nw-feature__number">01</span><h3>What does Marthire help organizations manage?</h3><p>Marthire centralizes vacancies, applications, candidate records, screening, shortlisting, interviews, and hiring administration in one workflow.</p></article>
+                <article class="nw-feature"><span class="nw-feature__number">02</span><h3>How does Marthire reduce manual recruitment work?</h3><p>By replacing scattered spreadsheets, emails, and disconnected tools with a shared workspace that keeps recruitment activity and candidate statuses together.</p></article>
                 <article class="nw-feature"><span class="nw-feature__number">03</span><h3>Can teams collaborate on recruitment?</h3><p>Authorized administrators and hiring stakeholders can work from the same view of vacancies, candidates, and recruitment progress.</p></article>
             </div>
         </div>
@@ -226,18 +230,18 @@
 
     <section class="nw-section" aria-labelledby="people-heading">
         <div class="nw-container nw-editorial">
-            <img class="nw-editorial__image" src="{{ asset('asset/nearbyworks/conversation.png') }}" width="585" height="444" loading="lazy" alt="A professional smiling during a video conversation">
-            <div><span class="nw-eyebrow">Who is MartHire built for?</span><h2 id="people-heading" class="nw-heading">Recruitment management<br><em>made for Africa</em></h2><p class="nw-copy">MartHire supports structured recruitment for organizations that need clear applicant records, consistent candidate progression, and accountable administration.</p><a class="nw-link" href="{{ url('/About') }}">About us <x-icon name="arrow-right" /></a></div>
+            <img class="nw-editorial__image" src="{{ asset('asset/marthire/conversation.png') }}" width="585" height="444" loading="lazy" alt="A professional smiling during a video conversation">
+            <div><span class="nw-eyebrow">Who is Marthire built for?</span><h2 id="people-heading" class="nw-heading">Recruitment management<br><em>made for Africa</em></h2><p class="nw-copy">Marthire supports structured recruitment for organizations that need clear applicant records, consistent candidate progression, and accountable administration.</p><a class="nw-link" href="{{ url('/About') }}">About us <x-icon name="arrow-right" /></a></div>
         </div>
     </section>
 
     <aside class="nw-resources" aria-labelledby="resources-heading">
         <div class="nw-container">
-            <div class="nw-resources__heading"><h2 id="resources-heading" class="nw-eyebrow">How can our organization access MartHire?</h2><p>Contact MartHire to discuss platform access for your organization. Applicants can create an account and browse available opportunities.</p></div>
+            <div class="nw-resources__heading"><h2 id="resources-heading" class="nw-eyebrow">How can our organization access Marthire?</h2><p>Contact Marthire to discuss platform access for your organization. Applicants can create an account and browse available opportunities.</p></div>
             <div class="nw-resource-grid">
-                <a class="nw-resource" href="https://www.linkedin.com/learning/" rel="external"><img src="{{ asset('asset/nearbyworks/linkedin.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>LinkedIn Learning</strong><x-icon name="arrow-up-right" /></a>
-                <a class="nw-resource" href="https://www.indeed.com/career-advice" rel="external"><img src="{{ asset('asset/nearbyworks/indeed.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>Indeed Career Guide</strong><x-icon name="arrow-up-right" /></a>
-                <a class="nw-resource" href="https://www.glassdoor.com/blog/" rel="external"><img src="{{ asset('asset/nearbyworks/glassdoor.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>Glassdoor career insights</strong><x-icon name="arrow-up-right" /></a>
+                <a class="nw-resource" href="https://www.linkedin.com/learning/" rel="external"><img src="{{ asset('asset/marthire/linkedin.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>LinkedIn Learning</strong><x-icon name="arrow-up-right" /></a>
+                <a class="nw-resource" href="https://www.indeed.com/career-advice" rel="external"><img src="{{ asset('asset/marthire/indeed.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>Indeed Career Guide</strong><x-icon name="arrow-up-right" /></a>
+                <a class="nw-resource" href="https://www.glassdoor.com/blog/" rel="external"><img src="{{ asset('asset/marthire/glassdoor.svg') }}" width="27" height="27" loading="lazy" alt=""><strong>Glassdoor career insights</strong><x-icon name="arrow-up-right" /></a>
             </div>
         </div>
     </aside>

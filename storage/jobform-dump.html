@@ -1,8 +1,10 @@
 class="nw-label" for="description">
     Job description
 </label>
-        <div x-ref="editor" class="nw-editor"></div>
-        <textarea name="description" x-ref="input" class="nw-input nw-editor__fallback" rows="10"></textarea>
+        <div x-ref="editorShell">
+            <div data-job-editor x-ignore class="nw-editor"></div>
+        </div>
+        <textarea id="description" name="description" x-ref="input" class="nw-input nw-editor__fallback" rows="10"></textarea>
         <p class="nw-form-hint"><span x-text="count">0</span> / 100000 characters</p>
             </div>
 
@@ -14,5 +16,10 @@ class="nw-label" for="description">
     </section>
             </main>
         </div>
-    </body>
-</html>
+        <section class="nw-toasts" data-position="bottom-right" data-toast-region aria-label="Notifications">
+        <ol class="nw-toasts__list" data-toast-list>
+                    </ol>
+    </section>
+<dialog class="nw-alert-dialog" data-alert-dialog aria-labelledby="nw-alert-title" aria-describedby="nw-alert-message">
+    <div class="nw-alert-dialog__body">
+        <button type="button" class="nw-alert-dialog__dismiss" data-alert-dismiss aria-label="Close alert"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="roun

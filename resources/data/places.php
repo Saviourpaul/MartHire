@@ -9,7 +9,7 @@
  *   countries: code => [name, latitude, longitude] (the middle of the country)
  *   aliases:   other spelling => country code
  *
- * Flags live in public/asset/nearbyworks/flags/{code}.svg.
+ * Flags live in public/asset/marthire/flags/{code}.svg.
  */
 
 return [

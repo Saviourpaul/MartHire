@@ -230,7 +230,7 @@
                                 <tr>
                                     <td class="nw-table__main">
                                         <div class="nw-table__role">
-                                            <x-company-mark :company="$job['company'] ?? 'NearbyWorks'" />
+                                            <x-company-mark :company="$job['company'] ?? 'Marthire'" :logo="$job['logo_url'] ?? null" />
                                             <div>
                                                 <a href="{{ route('workable-jobs.show', $job['id']) }}">{{ $job['title'] }}</a>
                                                 <small>{{ collect([$job['company'] ?? null, $job['location'] ?? null])->filter()->implode(', ') }}</small>

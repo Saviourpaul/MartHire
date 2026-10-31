@@ -2,13 +2,14 @@
 
 @php
     $posted = ! empty($job['posted_at']) ? \Illuminate\Support\Carbon::parse($job['posted_at'])->diffForHumans() : null;
+    $locationLabel = $job['location_label'] ?? $job['location'] ?? null;
 @endphp
 
 <article {{ $attributes->class('nw-job') }}>
     <header class="nw-job__top">
-        <x-company-mark :company="$job['company'] ?? 'NearbyWorks'" />
+        <x-company-mark :company="$job['company'] ?? 'Marthire'" :logo="$job['logo_url'] ?? null" />
         <div>
-            <p class="nw-job__company">{{ $job['company'] ?? 'NearbyWorks' }}</p>
+            <p class="nw-job__company">{{ $job['company'] ?? 'Marthire' }}</p>
             @if ($posted)
                 <p class="nw-job__posted"><x-icon name="clock" /> {{ $posted }}</p>
             @endif
@@ -18,15 +19,18 @@
         @endif
     </header>
 
-    <h3 class="nw-job__title"><a href="{{ route('workable-jobs.show', $job['id']) }}">{{ $job['title'] }}</a></h3>
+    <h3 class="nw-job__title"><a href="{{ $job['detail_url'] ?? route('workable-jobs.show', $job['id']) }}">{{ $job['title'] }}</a></h3>
     @if (! empty($job['summary']))
         <p class="nw-job__summary">{{ $job['summary'] }}</p>
     @endif
 
-    @if (! empty($job['location']) || ! empty($job['type']) || ! empty($job['salary']))
+    @if (! empty($job['location']) || ! empty($job['country']) || ! empty($job['type']) || ! empty($job['salary']))
         <ul class="nw-job__meta" aria-label="{{ __('Role details') }}">
-            @if (! empty($job['location']))
-                <li><x-icon name="map-pin" /> {{ $job['location'] }}</li>
+            @if (! empty($locationLabel))
+                <li><x-icon name="map-pin" /> {{ $locationLabel }}</li>
+            @endif
+            @if (! empty($job['country']))
+                <li><x-job-country :job="$job" /></li>
             @endif
             @if (! empty($job['type']))
                 <li><x-icon name="briefcase" /> {{ $job['type'] }}</li>

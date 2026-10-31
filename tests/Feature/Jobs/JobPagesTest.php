@@ -121,9 +121,17 @@ it('previews the real job application without sending HTTP requests when no host
         ->assertOk()
         ->assertViewIs('Apply')
         ->assertViewHas('job', fn (array $presented) => $presented['id'] === $job->shortcode)
+        ->assertViewHas('preview', true)
+        ->assertViewHas('form', function (array $form): bool {
+            expect(array_column($form['fields'], 'key'))->toBe(['firstname', 'lastname', 'email', 'phone', 'resume', 'cover_letter'])
+                ->and($form['questions'])->toBeEmpty();
+
+            return true;
+        })
         ->assertSee($job->title)
         ->assertSee('This is a preview.')
         ->assertDontSee('/workable-jobs/sample-', false);
 
     Http::assertNothingSent();
+    $this->assertDatabaseCount('job_applications', 0);
 });

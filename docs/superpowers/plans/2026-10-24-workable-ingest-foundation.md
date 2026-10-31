@@ -58,7 +58,7 @@
 
 **Interfaces:**
 - Produces: `config('workable.api_version')` = `v3`; `.host_template` = `https://%s.workable.com/spi/%s`; `.user_agent`; `.fake` (bool); `.sync_empty_guard_min_open` (int 5); `.schema_cache_minutes` (int 15); `.application.max_file_mb` (int 5); `.application.payload_retention_days` (int 30).
-- Env vars: `WORKABLE_API_VERSION` (v3), `WORKABLE_HOST_TEMPLATE`, `WORKABLE_USER_AGENT` (`NearbyWorks/1.0 (+ops@nearbyworks.test)`), `WORKABLE_FAKE` (false), `WORKABLE_SYNC_EMPTY_GUARD_MIN_OPEN` (5), `WORKABLE_SCHEMA_CACHE_MINUTES` (15), `APPLICATION_MAX_FILE_MB` (5), `APPLICATION_PAYLOAD_RETENTION_DAYS` (30). No token/subdomain in env.
+- Env vars: `WORKABLE_API_VERSION` (v3), `WORKABLE_HOST_TEMPLATE`, `WORKABLE_USER_AGENT` (`Marthire/1.0 (+ops@marthire.test)`), `WORKABLE_FAKE` (false), `WORKABLE_SYNC_EMPTY_GUARD_MIN_OPEN` (5), `WORKABLE_SCHEMA_CACHE_MINUTES` (15), `APPLICATION_MAX_FILE_MB` (5), `APPLICATION_PAYLOAD_RETENTION_DAYS` (30). No token/subdomain in env.
 
 - [ ] **Step 1: Write failing test** `config_has_expected_defaults()` asserting each key/default above (ints via `toBe`, fake `false`).
 - [ ] **Step 2: Run** `--filter=Workable\\ConfigTest` → FAIL.

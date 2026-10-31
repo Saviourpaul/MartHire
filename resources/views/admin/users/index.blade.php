@@ -1,16 +1,20 @@
 <x-app-layout>
     <x-slot name="title">{{ $title }}</x-slot>
-    <x-slot name="header">
+    @fragment('admin-users')
+    <div data-live-table="admin-users" data-live-topics="users,team,candidates,jobs" data-live-pages="page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
+    <header class="nw-page-heading nw-page-heading--app">
+        <div>
         <h1 class="nw-heading">{{ $title }}</h1>
         <p>{{ __('Manage platform accounts.') }}</p>
-    </x-slot>
-    <form method="GET" role="search">
+        </div>
+    </header>
+    <form method="GET" action="{{ request()->url() }}" role="search" data-live-filter>
         <x-table.toolbar :tabs-label="__('User categories')">
             <x-slot:tabs>
-                <a class="nw-segmented__item{{ request()->routeIs('admin.users.organizations') ? ' is-active' : '' }}" href="{{ route('admin.users.organizations') }}">{{ __('Organizations') }}</a>
-                <a class="nw-segmented__item{{ request()->routeIs('admin.users.applicants') ? ' is-active' : '' }}" href="{{ route('admin.users.applicants') }}">{{ __('Applicants') }}</a>
-                <a class="nw-segmented__item{{ request()->routeIs('admin.users.administrators') ? ' is-active' : '' }}" href="{{ route('admin.users.administrators') }}">{{ __('Admins') }}</a>
-                <a class="nw-segmented__item{{ request()->routeIs('admin.users.suspended') ? ' is-active' : '' }}" href="{{ route('admin.users.suspended') }}">{{ __('Suspended') }}</a>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.organizations') ? ' is-active' : '' }}" href="{{ route('admin.users.organizations') }}" data-live-link>{{ __('Organizations') }}</a>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.applicants') ? ' is-active' : '' }}" href="{{ route('admin.users.applicants') }}" data-live-link>{{ __('Applicants') }}</a>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.administrators') ? ' is-active' : '' }}" href="{{ route('admin.users.administrators') }}" data-live-link>{{ __('Admins') }}</a>
+                <a class="nw-segmented__item{{ request()->routeIs('admin.users.suspended') ? ' is-active' : '' }}" href="{{ route('admin.users.suspended') }}" data-live-link>{{ __('Suspended') }}</a>
             </x-slot:tabs>
 
             <div class="nw-search-field">
@@ -28,6 +32,15 @@
                         @endforeach
                     </select>
                 @endunless
+                <select class="nw-select" name="sort" aria-label="{{ __('Sort users by') }}">
+                    @foreach (['created_at' => __('Joined'), 'first_name' => __('First name'), 'last_name' => __('Last name'), 'email' => __('Email'), 'phone' => __('Phone')] as $column => $label)
+                        <option value="{{ $column }}" @selected($sortColumn === $column)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <select class="nw-select" name="direction" aria-label="{{ __('Sort direction') }}">
+                    <option value="desc" @selected($sortDirection === 'desc')>{{ __('Descending') }}</option>
+                    <option value="asc" @selected($sortDirection === 'asc')>{{ __('Ascending') }}</option>
+                </select>
 
                 @unless ($statusConstraint)
                     <select class="nw-select" name="status" aria-label="{{ __('Filter by status') }}">
@@ -42,7 +55,7 @@
             <x-slot:actions>
                 <button type="submit" class="nw-button nw-button--outline nw-button--small">{{ __('Filter') }}</button>
                 @if ($filterValues['search'] || $filterValues['role'] || $filterValues['status'] || $filterValues['created_from'] || $filterValues['created_to'])
-                    <a href="{{ request()->url() }}" class="nw-link nw-link--small">{{ __('Clear') }}</a>
+                    <a href="{{ request()->url() }}" class="nw-link nw-link--small" data-live-link>{{ __('Clear') }}</a>
                 @endif
                 @if ($exportRoute)
                     <a href="{{ route($exportRoute, request()->query()) }}" class="nw-button nw-button--outline nw-button--small">
@@ -53,9 +66,6 @@
         </x-table.toolbar>
     </form>
 
-    @if (session('success'))
-        <div class="nw-notice" role="status">{{ session('success') }}</div>
-    @endif
     @if ($errors->any())
         <div class="nw-notice nw-notice--error" role="alert">{{ $errors->first() }}</div>
     @endif
@@ -131,7 +141,7 @@
 
                 <dl class="nw-detail-list">
                     <div><dt>{{ __('Phone') }}</dt><dd>{{ $managedUser->phone ?: '—' }}</dd></div>
-                    <div><dt>{{ __('Location') }}</dt><dd>{{ collect([$managedUser->city, $managedUser->state, $managedUser->country])->filter()->implode(', ') ?: '—' }}</dd></div>
+                    <div><dt>{{ __('Location') }}</dt><dd>{{ collect([$managedUser->city, $managedUser->state])->filter()->implode(', ') }} @if($managedUser->country_code || $managedUser->country)<x-country-display :code="$managedUser->country_code" :name="$managedUser->country" />@elseif(!$managedUser->city && !$managedUser->state) — @endif</dd></div>
                     <div><dt>{{ __('Joined') }}</dt><dd>{{ $managedUser->created_at->format('j M Y') }}</dd></div>
                 </dl>
 
@@ -166,14 +176,14 @@
 
                 <div class="nw-modal-actions nw-modal-actions--secondary">
                     @if ($managedUser->status->value === 'suspended')
-                        <form method="POST" action="{{ route('admin.users.activate', $managedUser) }}" onsubmit="return confirm('{{ __('Reactivate this account?') }}');">
+                        <form method="POST" action="{{ route('admin.users.activate', $managedUser) }}" data-confirm="{{ __('Reactivate this account?') }}" data-confirm-label="{{ __('Reactivate account') }}" data-confirm-type="info">
                             @csrf
                             <button type="submit" class="nw-button nw-button--outline nw-button--small">
                                 <x-icon name="check" /> {{ __('Activate') }}
                             </button>
                         </form>
                     @elseif (! $managedUser->is(auth()->user()))
-                        <form method="POST" action="{{ route('admin.users.suspend', $managedUser) }}" onsubmit="return confirm('{{ __('Suspend this account?') }}');">
+                        <form method="POST" action="{{ route('admin.users.suspend', $managedUser) }}" data-confirm="{{ __('Suspend this account?') }}" data-confirm-label="{{ __('Suspend account') }}" data-confirm-type="warning">
                             @csrf
                             <button type="submit" class="nw-button nw-button--outline nw-button--small">
                                 <x-icon name="pause" /> {{ __('Suspend') }}
@@ -189,7 +199,7 @@
                     </form>
 
                     @unless ($managedUser->is(auth()->user()))
-                        <form method="POST" action="{{ route('admin.users.destroy', $managedUser) }}" onsubmit="return confirm('{{ __('Permanently delete this account? This cannot be undone.') }}');">
+                        <form method="POST" action="{{ route('admin.users.destroy', $managedUser) }}" data-confirm="{{ __('Permanently delete this account? This cannot be undone.') }}" data-confirm-label="{{ __('Delete account') }}" data-confirm-type="error">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="nw-button nw-button--danger nw-button--small">
@@ -201,4 +211,6 @@
             </div>
         </x-modal>
     @endforeach
+    </div>
+    @endfragment
 </x-app-layout>

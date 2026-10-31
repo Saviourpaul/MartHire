@@ -4,10 +4,12 @@ use App\Actions\Workable\BuildApplicationValidator;
 use App\Actions\Workable\PayloadBuilder;
 use App\Actions\Workable\ResolveApplicationSchema;
 use App\Integrations\Workable\DTO\ApplicationSchema;
+use App\Integrations\Workable\DTO\QuestionData;
 use App\Integrations\Workable\WorkableClient;
 use App\Models\Company;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -35,6 +37,20 @@ it('builds server-side validation rules from the schema', function () {
     expect($rules['question_q_drop'])->toContain('in:c1,c2');
     expect($rules['question_q_mc'])->toContain('array');
     expect($rules['question_q_mc.*'])->toContain('in:s1,s2');
+});
+
+it('uses the stricter schema or configured file size consistently', function () {
+    config(['workable.application.max_file_mb' => 5]);
+    $validator = new BuildApplicationValidator;
+    $schema = new ApplicationSchema(
+        [['key' => 'resume', 'type' => 'file', 'required' => true, 'max_file_size' => 2 * 1024 * 1024]],
+        [new QuestionData('portfolio', 'Portfolio', 'file', false, null, [], ['pdf'], 1024 * 1024)],
+    );
+
+    expect($validator->rules($schema)['resume'])->toContain('max:2048')
+        ->and($validator->rules($schema)['question_portfolio'])->toContain('max:1024')
+        ->and($validator->maxFileSizeBytes(10 * 1024 * 1024))->toBe(5 * 1024 * 1024)
+        ->and($validator->maxFileSizeBytes(512))->toBe(512);
 });
 
 it('builds a create-candidate payload with sourced=false and type-correct answers', function () {
@@ -114,5 +130,5 @@ it('stores the application payload encrypted and blocks a duplicate email per po
         'job_posting_id' => $posting->id,
         'idempotency_key' => (string) Str::uuid(),
         'email' => 'dupe@example.com', 'first_name' => 'C', 'last_name' => 'D', 'status' => 'queued',
-    ]))->toThrow(\Illuminate\Database\QueryException::class);
+    ]))->toThrow(QueryException::class);
 });

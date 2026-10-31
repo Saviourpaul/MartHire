@@ -8,15 +8,17 @@
         <p>{{ __('Review and move candidates through your recruitment pipeline.') }}</p>
     </x-slot>
 
-    <form method="GET" action="{{ route($routeName) }}" role="search">
+    @fragment('organization-candidates')
+    <div data-live-table="organization-candidates" data-live-topics="candidates,applications,interviews,jobs,team" data-live-pages="page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
+    <form method="GET" action="{{ route($routeName) }}" role="search" data-live-filter>
         @if ($statusFilter)
             <input type="hidden" name="stage" value="{{ $statusFilter->value }}">
         @endif
         <x-table.toolbar :tabs-label="__('Pipeline stage')">
             <x-slot:tabs>
-                <a class="nw-segmented__item{{ ! $statusFilter ? ' is-active' : '' }}" href="{{ route($routeName) }}">{{ __('All') }}</a>
+                <a class="nw-segmented__item{{ ! $statusFilter ? ' is-active' : '' }}" href="{{ route($routeName, request()->except('page', 'stage')) }}" data-live-link>{{ __('All') }}</a>
                 @foreach ($stages as $stage)
-                    <a class="nw-segmented__item{{ $statusFilter === $stage ? ' is-active' : '' }}" href="{{ route($routeName, ['stage' => $stage->value]) }}">
+                    <a class="nw-segmented__item{{ $statusFilter === $stage ? ' is-active' : '' }}" href="{{ route($routeName, array_merge(request()->except('page', 'stage'), ['stage' => $stage->value])) }}" data-live-link>
                         {{ $stage->label() }}
                     </a>
                 @endforeach
@@ -47,10 +49,6 @@
             </x-slot:actions>
         </x-table.toolbar>
     </form>
-
-    @if (session('success'))
-        <div class="nw-notice" role="status">{{ session('success') }}</div>
-    @endif
 
     <section class="nw-panel" aria-labelledby="candidates-heading">
         <header class="nw-panel__head nw-sr-only">
@@ -102,4 +100,6 @@
             <div class="nw-pagination">{{ $applications->onEachSide(1)->links() }}</div>
         @endif
     </section>
+    </div>
+    @endfragment
 </x-app-layout>

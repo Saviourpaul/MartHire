@@ -3,7 +3,32 @@
 use App\Enums\JobStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Job;
+use App\Models\JobPostMember;
+use App\Models\Organization;
 use App\Models\Scopes\OrganizationScope;
+use App\Models\User;
+use App\Services\JobCountryService;
+use App\Support\OrganizationContext;
+use Illuminate\Database\Schema\Blueprint;
+use Nnjeim\World\Models\Country;
+
+beforeEach(function () {
+    $countryClass = config('world.models.countries', Country::class);
+    $model = new $countryClass;
+    $schema = $model->getConnection()->getSchemaBuilder();
+
+    if (! $schema->hasTable($model->getTable())) {
+        $schema->create($model->getTable(), function (Blueprint $table) {
+            $table->id();
+            $table->string('iso2', 2)->unique();
+            $table->string('name');
+        });
+    }
+
+    $model->newQuery()->updateOrCreate(['iso2' => 'NG'], ['name' => 'Nigeria']);
+    $model->newQuery()->updateOrCreate(['iso2' => 'GB'], ['name' => 'United Kingdom']);
+    app()->forgetInstance(JobCountryService::class);
+});
 
 function jobPayload(array $overrides = []): array
 {
@@ -12,7 +37,7 @@ function jobPayload(array $overrides = []): array
         'description' => '<p>We need a backend engineer to build and maintain our services.</p>',
         'company' => 'Acme Co',
         'category' => 'Engineering',
-        'location' => 'Remote',
+        'country_code' => 'NG',
         'employment_type' => 'full_time',
         'start_date' => now()->toDateString(),
         'due_date' => now()->addDays(30)->toDateString(),
@@ -25,9 +50,9 @@ function latestJob(): Job
     return Job::withoutGlobalScope(OrganizationScope::class)->latest('id')->firstOrFail();
 }
 
-function createOrgJob(\App\Models\Organization $organization, \App\Models\User $user, array $overrides = []): Job
+function createOrgJob(Organization $organization, User $user, array $overrides = []): Job
 {
-    return app(\App\Support\OrganizationContext::class)->runInOrganization($organization, fn () => $user->jobs()->create(array_merge([
+    return app(OrganizationContext::class)->runInOrganization($organization, fn () => $user->jobs()->create(array_merge([
         'organization_id' => $organization->id,
         'title' => 'Existing Job',
         'description' => '<p>An existing job description.</p>',
@@ -40,13 +65,103 @@ function createOrgJob(\App\Models\Organization $organization, \App\Models\User $
     ], $overrides)));
 }
 
-test('an owner can publish a job', function () {
+test('an owner can publish a job using only country for its location', function () {
     [$organization, $owner] = organizationWithOwner();
 
     $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload(['action' => 'publish']))
         ->assertRedirect();
 
     expect(latestJob()->status)->toBe(JobStatus::Open);
+    expect(latestJob()->country_code)->toBe('NG');
+    expect(latestJob()->location)->toBeNull();
+});
+
+test('submitted legacy location fields are ignored while existing stored locations remain intact', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload([
+        'location' => ['unexpected' => 'client location data'],
+    ]))->assertSessionHasNoErrors();
+
+    expect(latestJob()->location)->toBeNull();
+    expect(latestJob()->country_code)->toBe('NG');
+
+    $legacyJob = createOrgJob($organization, $owner, ['location' => 'Lagos, Nigeria']);
+    $this->actingAs($owner)->patch(route('organisations.jobs.update', $legacyJob), jobPayload([
+        'country_code' => 'GB',
+        'location' => 'An untrusted replacement',
+    ]))->assertSessionHasNoErrors();
+
+    expect($legacyJob->fresh()->location)->toBe('Lagos, Nigeria');
+    expect($legacyJob->fresh()->country_code)->toBe('GB');
+    $this->get(route('organisations.jobs.show', $legacyJob))
+        ->assertOk()->assertSee('United Kingdom')->assertDontSee('Lagos, Nigeria');
+    $this->get(route('jobs.show', $legacyJob))
+        ->assertOk()->assertSee('United Kingdom')->assertDontSee('Lagos, Nigeria');
+});
+
+test('a job country must be selected from the installed world countries', function (?string $countryCode) {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload([
+        'country_code' => $countryCode,
+        'country' => 'Nigeria',
+    ]))->assertSessionHasErrors('country_code');
+
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->count())->toBe(0);
+})->with([
+    'missing selection' => [null],
+    'unknown code' => ['ZZ'],
+    'name instead of code' => ['Nigeria'],
+    'real country absent from installed dataset' => ['US'],
+]);
+
+test('a job stores normalized country codes and ignores submitted country names', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload([
+        'country_code' => ' ng ',
+        'country' => 'United Kingdom',
+    ]))->assertSessionHasNoErrors();
+
+    $job = latestJob();
+    expect($job->country_code)->toBe('NG');
+
+    $this->actingAs($owner)->patch(route('organisations.jobs.update', $job), jobPayload([
+        'country_code' => 'gb',
+    ]))->assertSessionHasNoErrors();
+
+    expect($job->fresh()->country_code)->toBe('GB');
+    $this->get(route('organisations.jobs.edit', $job))
+        ->assertOk()->assertSee('value="GB" selected', false);
+    $this->get(route('organisations.jobs.show', $job))
+        ->assertOk()->assertSee('United Kingdom');
+});
+
+test('editing a legacy job requires a real country without guessing its location', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $job = createOrgJob($organization, $owner, ['location' => 'Lagos, Nigeria']);
+    expect($job->country_code)->toBeNull();
+
+    foreach ([null, 'ZZ'] as $countryCode) {
+        $this->actingAs($owner)->patch(route('organisations.jobs.update', $job), jobPayload([
+            'country_code' => $countryCode,
+        ]))->assertSessionHasErrors('country_code');
+    }
+
+    expect($job->fresh()->country_code)->toBeNull();
+});
+
+test('job country validation does not allow fallback codes when world data is unavailable', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $countryClass = config('world.models.countries', Country::class);
+    $model = new $countryClass;
+    $model->getConnection()->getSchemaBuilder()->drop($model->getTable());
+    app()->forgetInstance(JobCountryService::class);
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload())
+        ->assertSessionHasErrors('country_code');
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->count())->toBe(0);
 });
 
 test('a job can be saved as a draft and is excluded from the public board and applications', function () {
@@ -92,7 +207,8 @@ test('the job create form renders for an authorized user', function () {
     [$organization, $owner] = organizationWithOwner();
 
     $this->actingAs($owner)->get(route('organisations.jobs.create'))
-        ->assertOk()->assertSee('Save as draft')->assertSee('Publish');
+        ->assertOk()->assertSee('Save as draft')->assertSee('Publish')
+        ->assertSee('name="country_code"', false)->assertDontSee('name="location"', false);
 });
 
 test('the job edit form renders with the job values', function () {
@@ -126,7 +242,7 @@ test('delete is hidden from a recruiter but shown to the owner', function () {
     [$organization, $owner] = organizationWithOwner();
     $recruiter = addOrganizationMember($organization, OrganizationRole::Recruiter)->user;
     $job = createOrgJob($organization, $owner, ['title' => 'Shared Role']);
-    app(\App\Support\OrganizationContext::class)->runInOrganization($organization, fn () => \App\Models\JobPostMember::create([
+    app(OrganizationContext::class)->runInOrganization($organization, fn () => JobPostMember::create([
         'organization_id' => $organization->id, 'job_id' => $job->id, 'user_id' => $recruiter->id,
     ]));
 

@@ -4,10 +4,8 @@
     <header class="nw-auth-heading">
         <span class="nw-eyebrow">{{ __('Welcome back') }}</span>
         <h1 id="auth-heading">{{ __('Your next chapter awaits.') }}</h1>
-        <p>{{ __('Log in to your NearbyWorks account.') }}</p>
+        <p>{{ __('Log in to your Marthire account.') }}</p>
     </header>
-
-    <x-auth-session-status :status="session('status')" />
 
     <form method="POST" action="{{ route('login') }}" class="nw-form-stack">
         @csrf
@@ -45,7 +43,7 @@
     </a>
 
     <p class="nw-form-footer">
-        {{ __('New to NearbyWorks?') }}
+        {{ __('New to Marthire?') }}
         <a class="nw-link" href="{{ route('register') }}">{{ __('Create an account') }}</a>
     </p>
 </x-guest-layout>

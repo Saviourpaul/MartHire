@@ -1,21 +1,25 @@
-<x-layout title="Contact and support" description="Find your next step with NearbyWorks, whether you are hiring, exploring opportunities, or looking for help with your account.">
+@php
+    $supportEmail = filled($platformBrand['support_email'] ?? null) ? $platformBrand['support_email'] : null;
+@endphp
+
+<x-layout title="Contact and support" description="Find your next step with Marthire, whether you are hiring, exploring opportunities, or looking for help with your account.">
     <section class="nw-interior-hero nw-container">
         <p class="nw-eyebrow">We're here to help</p>
         <h1>A little help.<br> A better connection.</h1>
-        <p class="nw-copy">Whether you are building a team or thinking about your next role, we're happy to hear from you. Email <a href="mailto:Nearbywork@gmail.com">Nearbywork@gmail.com</a> or find your next step below.</p>
+        <p class="nw-copy">Whether you are building a team or thinking about your next role, we're happy to hear from you. @if ($supportEmail) Email <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a> or find your next step below. @else Find your next step below. @endif</p>
     </section>
 
     <section class="nw-container nw-contact-grid" aria-label="Find your next step">
         <article class="nw-contact-card">
             <x-icon name="briefcase" />
             <h2>I'm hiring.</h2>
-            <p>Bring your next hiring conversation to NearbyWorks. Create an account to get started.</p>
+            <p>Bring your next hiring conversation to Marthire. Create an account to get started.</p>
             <a class="nw-link" href="{{ route('register') }}">Get started as an employer <x-icon name="arrow-up-right" /></a>
         </article>
         <article class="nw-contact-card">
             <x-icon name="users" />
             <h2>I'm looking ahead.</h2>
-            <p>Your experience has a next chapter. Create your NearbyWorks account and take the first step.</p>
+            <p>Your experience has a next chapter. Create your Marthire account and take the first step.</p>
             <a class="nw-link" href="{{ route('register') }}">Get started as a job seeker <x-icon name="arrow-up-right" /></a>
         </article>
         <article class="nw-contact-card">
@@ -31,8 +35,13 @@
         <article class="nw-contact-card">
             <x-icon name="mail" />
             <h2>General enquiries.</h2>
-            <p>Have a question about NearbyWorks or something you would like to share? Get in touch by email.</p>
-            <a class="nw-link" href="mailto:Nearbywork@gmail.com">Nearbywork@gmail.com <x-icon name="arrow-up-right" /></a>
+            @if ($supportEmail)
+                <p>Have a question about Marthire or something you would like to share? Get in touch by email.</p>
+                <a class="nw-link" href="mailto:{{ $supportEmail }}">{{ $supportEmail }} <x-icon name="arrow-up-right" /></a>
+            @else
+                <p>For help with your account or an application, sign in to your workspace.</p>
+                <a class="nw-link" href="{{ auth()->check() ? route('dashboard') : route('login') }}">Get account help <x-icon name="arrow-up-right" /></a>
+            @endif
         </article>
     </section>
 
@@ -62,8 +71,8 @@
                     </p>
                 </details>
                 <details>
-                    <summary>Who is NearbyWorks for?</summary>
-                    <p>NearbyWorks is built for employers sourcing talent and posting jobs, and for job seekers looking for their next opportunity. Learn more <a href="{{ url('/About') }}">about our approach</a>.</p>
+                    <summary>Who is Marthire for?</summary>
+                    <p>Marthire is built for employers sourcing talent and posting jobs, and for job seekers looking for their next opportunity. Learn more <a href="{{ url('/About') }}">about our approach</a>.</p>
                 </details>
             </div>
         </div>

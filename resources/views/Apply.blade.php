@@ -1,16 +1,16 @@
 @use('Illuminate\Support\Str')
 
 @php
-    // Real data: pass $jobs and $form (the job's own application form) in from the route/controller.
-    // Until then, sample listings and a sample form are shown and nothing is sent anywhere.
+    // The controller supplies the real posting and normalized application fields.
     $catalog = \App\Support\JobCatalog::make($jobs ?? null);
     $job = $job ?? $catalog->jobs->firstWhere('id', $id) ?? abort(404);
     $company = $job['company'] ?? __('the employer');
-    $form = $form ?? require resource_path('data/sample-application-form.php');
+    $locationLabel = $job['location_label'] ?? $job['location'] ?? null;
     $fill = fn (?string $text) => $text === null ? null : str_replace(':company', $company, $text);
 
-    // The backend switches this off simply by defining a POST route named workable-jobs.apply.store.
-    $preview = ! \Illuminate\Support\Facades\Route::has('workable-jobs.apply.store');
+    // Whether a particular posting can accept submissions is decided by its
+    // controller; having a POST route does not make every import submittable.
+    $preview = $preview ?? ! \Illuminate\Support\Facades\Route::has('workable-jobs.apply.store');
     $action = $preview ? route('workable-jobs.apply', $job['id']) : route('workable-jobs.apply.store', $job['id']);
 
     $account = auth()->user();
@@ -19,10 +19,15 @@
     if ($given === '' && $account->getAttribute('name')) {
         [$given, $family] = array_pad(explode(' ', trim($account->getAttribute('name')), 2), 2, '');
     }
-    $prefill = ['firstname' => $given, 'lastname' => $family, 'email' => $account->email];
+    $prefill = ['firstname' => $given, 'lastname' => $family, 'email' => $account->email, 'phone' => $account->phone];
 
     // (Values on the left win in PHP's `+`, so the filled-in label and hint go first.)
-    $standard = collect($form['fields'] ?? [])->map(fn ($field) => ['name' => $field['key'], 'label' => $fill($field['label']), 'hint' => $fill($field['hint'] ?? null)] + $field);
+    $standard = collect($form['fields'] ?? [])->map(fn ($field) => [
+        'name' => $field['key'],
+        'error_key' => match ($field['key']) { 'firstname' => 'first_name', 'lastname' => 'last_name', default => $field['key'] },
+        'label' => $fill($field['label']),
+        'hint' => $fill($field['hint'] ?? null),
+    ] + $field);
     $questions = collect($form['questions'] ?? [])->map(function ($question) use ($fill) {
         $isFile = $question['type'] === 'file';
         $isGroup = $question['type'] === 'multiple_choice' && ! ($question['single_answer'] ?? true);
@@ -30,6 +35,7 @@
         return [
             'name' => 'answers['.$question['id'].']',
             'input_name' => $isFile ? 'answer_files['.$question['id'].']' : 'answers['.$question['id'].']'.($isGroup ? '[]' : ''),
+            'error_key' => 'question_'.$question['id'],
             'label' => $fill($question['body']),
             'hint' => $fill($question['hint'] ?? null),
             'type' => $question['type'],
@@ -41,16 +47,16 @@
         ];
     });
     // For a file question the field is tracked under its answers[...] name, but the file itself is posted as answer_files[...].
-    $sections = [
-        ['title' => __('About you'), 'fields' => $standard->where('section', 'details')->values()],
-        ['title' => __('Your CV'), 'fields' => $standard->where('section', 'documents')->values()],
-        ['title' => __('A few questions from :company', ['company' => $company]), 'fields' => $questions],
-    ];
+    $sections = collect([
+        ['title' => __('About you'), 'description' => __('Start with your contact details so the hiring team can reach you.'), 'fields' => $standard->where('section', 'details')->values()],
+        ['title' => __('CV and supporting details'), 'description' => __('Share your experience and the documents that support this application.'), 'fields' => $standard->where('section', 'documents')->values()],
+        ['title' => __('Employer questions'), 'description' => __('Answer the questions :company has asked for this role.', ['company' => $company]), 'fields' => $questions],
+    ])->filter(fn ($section) => $section['fields']->isNotEmpty())->values();
     $serverErrors = collect($errors->messages())->map(fn ($messages) => $messages[0])->all();
     $alreadySent = session('applied') === true;
 @endphp
 
-<x-layout :title="__('Apply for :title', ['title' => $job['title']])" :description="__('Apply for :title at :company on NearbyWorks.', ['title' => $job['title'], 'company' => $company])">
+<x-layout :title="__('Apply for :title', ['title' => $job['title']])" :description="__('Apply for :title at :company on Marthire.', ['title' => $job['title'], 'company' => $company])">
     <div class="nw-apply">
         <div class="nw-container">
             <nav class="nw-breadcrumb" aria-label="{{ __('Breadcrumb') }}">
@@ -73,6 +79,18 @@
                             </div>
                         @endif
 
+                        <x-form.wizard-progress />
+
+                        @if ($errors->any())
+                            <p class="nw-form-hint" role="status">{{ __('Your entered details have been restored. Please check the highlighted fields and choose your files again.') }}</p>
+                            <noscript>
+                                <div class="nw-error-summary" role="alert">
+                                    <h2>{{ __('Please check these first') }}</h2>
+                                    <ul>@foreach ($errors->all() as $message)<li>{{ $message }}</li>@endforeach</ul>
+                                </div>
+                            </noscript>
+                        @endif
+
                         <div class="nw-error-summary" x-ref="summary" tabindex="-1" role="alert" x-show="summary.length" x-cloak>
                             <h2>{{ __('Please check these first') }}</h2>
                             <ul>
@@ -82,43 +100,41 @@
                             </ul>
                         </div>
 
+                        <div class="nw-error-summary" x-ref="submissionError" tabindex="-1" role="alert" x-show="submissionError" x-text="submissionError" x-cloak></div>
+
                         <form method="POST" action="{{ $action }}" enctype="multipart/form-data" novalidate x-ref="form" x-on:submit="submit($event)">
                             @csrf
 
-                            @foreach ($sections as $section)
-                                @if ($section['fields']->isNotEmpty())
-                                    <fieldset class="nw-form-section">
-                                        <legend>{{ $section['title'] }}</legend>
-                                        <div class="nw-form-section__grid">
-                                            @foreach ($section['fields'] as $field)
-                                                <div class="nw-form-section__item {{ in_array($field['name'], ['firstname', 'lastname'], true) ? 'is-half' : '' }}">
-                                                    <x-application-field :field="$field" :value="old(preg_replace('/\[([^\]]+)\]/', '.$1', $field['name']), $prefill[$field['name']] ?? null)" />
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </fieldset>
-                                @endif
+                            @foreach ($sections as $index => $section)
+                                <fieldset class="nw-form-section nw-wizard__step" data-wizard-step data-step-title="{{ $section['title'] }}" data-step-description="{{ $section['description'] }}"
+                                          x-show="!ready || step === {{ $index }}" x-bind:aria-hidden="ready && step !== {{ $index }}">
+                                    <legend data-wizard-heading tabindex="-1">{{ $section['title'] }}</legend>
+                                    <p class="nw-form-hint">{{ $section['description'] }}</p>
+                                    <div class="nw-form-section__grid">
+                                        @foreach ($section['fields'] as $field)
+                                            <div class="nw-form-section__item {{ in_array($field['name'], ['firstname', 'lastname'], true) ? 'is-half' : '' }}">
+                                                <x-application-field :field="$field" :value="old(preg_replace('/\[([^\]]+)\]/', '.$1', $field['name']), $prefill[$field['name']] ?? null)" />
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </fieldset>
                             @endforeach
 
-                            <div class="nw-form-section nw-form-section--confirm">
-                                <div class="nw-field" data-field="confirm" data-type="boolean" data-label="{{ __('Confirmation') }}" data-required data-required-message="{{ __('Please tick this box to send your application.') }}">
+                            <fieldset class="nw-form-section nw-form-section--confirm nw-wizard__step" data-wizard-step data-step-title="{{ __('Review and send') }}" data-step-description="{{ __('Check your answers and confirm you are ready to send your application.') }}"
+                                      x-show="!ready || step === {{ $sections->count() }}" x-bind:aria-hidden="ready && step !== {{ $sections->count() }}">
+                                <legend data-wizard-heading tabindex="-1">{{ __('Review and send') }}</legend>
+                                <p class="nw-form-hint">{{ __('Check your answers and confirm you are ready to send your application.') }}</p>
+                                <x-form.wizard-review />
+                                <div class="nw-field" data-field="confirm" data-type="boolean" data-label="{{ __('Confirmation') }}" data-required data-must-accept data-required-message="{{ __('Please tick this box to send your application.') }}">
                                     <label class="nw-choice nw-choice--check">
                                         <input type="checkbox" name="confirm" value="1" @checked(old('confirm')) aria-describedby="field-confirm-error" x-on:change="clear('confirm')">
-                                        <span>{{ __('I confirm these details are correct, and I’m happy for NearbyWorks to share them with :company for this application.', ['company' => $company]) }}</span>
+                                        <span>{{ __('I confirm these details are correct, and I’m happy for Marthire to share them with :company for this application.', ['company' => $company]) }}</span>
                                     </label>
                                     <p class="nw-field__error" id="field-confirm-error" role="alert" x-show="error('confirm')" x-text="error('confirm')" x-cloak></p>
                                 </div>
 
-                                <x-form.actions>
-                                    <x-slot:cancel>
-                                        <a class="nw-link" href="{{ route('workable-jobs.show', $job['id']) }}">{{ __('Cancel') }}</a>
-                                    </x-slot:cancel>
-                                    <button type="submit" class="nw-button nw-button--primary" x-bind:disabled="submitting">
-                                        <span x-text="submitting ? @js(__('Sending…')) : @js(__('Send application'))">{{ __('Send application') }}</span>
-                                        <x-icon name="send" />
-                                    </button>
-                                </x-form.actions>
-                            </div>
+                            </fieldset>
+                            <x-form.wizard-actions :cancel-url="route('workable-jobs.show', $job['id'])" :submit-label="__('Send application')" />
                         </form>
                     </div>
 
@@ -139,14 +155,15 @@
                 <aside class="nw-apply__aside" aria-label="{{ __('About this role') }}">
                     <div class="nw-summary-card">
                         <div class="nw-summary-card__top">
-                            <x-company-mark :company="$company" />
+                            <x-company-mark :company="$company" :logo="$job['logo_url'] ?? null" />
                             <div>
                                 <p class="nw-job__company">{{ $company }}</p>
                                 <h2>{{ $job['title'] }}</h2>
                             </div>
                         </div>
                         <ul class="nw-job__meta">
-                            @if (! empty($job['location']))<li><x-icon name="map-pin" /> {{ $job['location'] }}</li>@endif
+                            @if (! empty($locationLabel))<li><x-icon name="map-pin" /> {{ $locationLabel }}</li>@endif
+                            @if (! empty($job['country']))<li><x-job-country :job="$job" /></li>@endif
                             @if (! empty($job['type']))<li><x-icon name="briefcase" /> {{ $job['type'] }}@if (! empty($job['workplace'])), {{ $job['workplace'] }}@endif</li>@endif
                             @if (! empty($job['salary']))<li><x-icon name="wallet" /> {{ $job['salary'] }}</li>@endif
                         </ul>

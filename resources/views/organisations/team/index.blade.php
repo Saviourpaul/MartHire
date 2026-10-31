@@ -5,9 +5,8 @@
         <p>{{ __('Invite teammates and manage who can work on your hiring.') }}</p>
     </x-slot>
 
-    @if (session('success'))
-        <div class="nw-notice" role="status">{{ session('success') }}</div>
-    @endif
+    @fragment('organization-team')
+    <div data-live-table="organization-team" data-live-topics="team,jobs" data-live-pages="members_page,invitations_page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     @if ($errors->any())
         <div class="nw-notice nw-notice--error" role="alert">{{ $errors->first() }}</div>
     @endif
@@ -21,7 +20,7 @@
                 </div>
             </header>
 
-            <form method="POST" action="{{ route('organisations.team.invitations.store') }}" class="nw-form-bar">
+            <form method="POST" action="{{ route('organisations.team.invitations.store') }}" class="nw-form-bar" data-live-reset>
                 @csrf
                 <div class="nw-form-bar__grow">
                     <x-input-label for="invite-email" :value="__('Email')" />
@@ -45,13 +44,13 @@
     <section class="nw-panel" aria-labelledby="invitations-heading">
         <header class="nw-panel__head">
             <div>
-                <h2 id="invitations-heading">{{ __('Pending invitations') }}</h2>
+                <h2 id="invitations-heading">{{ __('Invitations') }}</h2>
             </div>
         </header>
 
         @if ($invitations->isEmpty())
             <div class="nw-empty">
-                <h3>{{ __('No pending invitations.') }}</h3>
+                <h3>{{ __('No invitations yet.') }}</h3>
             </div>
         @else
             <div class="nw-table-wrap">
@@ -60,6 +59,7 @@
                         <tr>
                             <th scope="col">{{ __('Email') }}</th>
                             <th scope="col">{{ __('Role') }}</th>
+                            <th scope="col">{{ __('Status') }}</th>
                             <th scope="col">{{ __('Invited by') }}</th>
                             <th scope="col">{{ __('Expires') }}</th>
                         </tr>
@@ -69,6 +69,7 @@
                             <tr>
                                 <td class="nw-table__main">{{ $invitation->email }}</td>
                                 <td><x-status-badge :status="$invitation->role->label()" /></td>
+                                <td><x-status-badge :status="$invitation->status" /></td>
                                 <td>{{ trim(($invitation->invitedBy?->first_name ?? '').' '.($invitation->invitedBy?->last_name ?? '')) ?: '—' }}</td>
                                 <td>{{ $invitation->expires_at->format('j M Y') }}</td>
                             </tr>
@@ -180,7 +181,7 @@
 
                 @unless ($member->user->is(auth()->user()))
                     <div class="nw-modal-actions nw-modal-actions--secondary">
-                        <form method="POST" action="{{ route('organisations.team.members.destroy', $member) }}" onsubmit="return confirm('{{ __('Remove this team member? Their job assignments will be cleared.') }}');">
+                        <form method="POST" action="{{ route('organisations.team.members.destroy', $member) }}" data-confirm="{{ __('Remove this team member? Their job assignments will be cleared.') }}" data-confirm-label="{{ __('Remove member') }}" data-confirm-type="error">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="nw-button nw-button--danger nw-button--small">
@@ -192,4 +193,6 @@
             </div>
         </x-modal>
     @endforeach
+    </div>
+    @endfragment
 </x-app-layout>

@@ -1,0 +1,55 @@
+{
+  "node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs": {
+    "file": "assets/pdf.worker.min-Dkey6ZUl.mjs",
+    "src": "node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs"
+  },
+  "public/asset/marthire/how-it-works/banner.png": {
+    "file": "assets/banner-BH5N0nsL.png",
+    "src": "public/asset/marthire/how-it-works/banner.png"
+  },
+  "public/asset/marthire/how-it-works/common-bg.png": {
+    "file": "assets/common-bg-CKdI0bNh.png",
+    "src": "public/asset/marthire/how-it-works/common-bg.png"
+  },
+  "public/asset/marthire/how-it-works/cta-bg.png": {
+    "file": "assets/cta-bg-DjtjymBV.png",
+    "src": "public/asset/marthire/how-it-works/cta-bg.png"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-te7Uzj16.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-C5GmH7oe.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/candidate-pdf.js",
+      "resources/js/international-phone.js"
+    ],
+    "css": [
+      "assets/app-CQ7DNbul.css"
+    ]
+  },
+  "resources/js/candidate-pdf.js": {
+    "file": "assets/candidate-pdf-D3UhOM_F.js",
+    "name": "candidate-pdf",
+    "src": "resources/js/candidate-pdf.js",
+    "isDynamicEntry": true,
+    "assets": [
+      "assets/pdf.worker.min-Dkey6ZUl.mjs"
+    ]
+  },
+  "resources/js/international-phone.js": {
+    "file": "assets/international-phone-Ke99Mi54.js",
+    "name": "international-phone",
+    "src": "resources/js/international-phone.js",
+    "isDynamicEntry": true
+  }
+}

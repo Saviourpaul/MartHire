@@ -29,7 +29,7 @@ return new class extends Migration
         });
         Schema::create('platform_settings', function (Blueprint $table): void {
             $table->unsignedTinyInteger('id')->primary();
-            $table->string('display_name', 120)->default('MartHire');
+            $table->string('display_name', 120)->default('Marthire');
             $table->string('support_email', 254)->nullable();
             $table->string('support_url', 2048)->nullable();
             $table->string('privacy_url', 2048)->nullable();

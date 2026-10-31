@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give every form, button, and table in NearbyWorks one shadcn-style visual and structural language, via CSS consolidation plus two shared Blade components, without changing any behavior.
+**Goal:** Give every form, button, and table in Marthire one shadcn-style visual and structural language, via CSS consolidation plus two shared Blade components, without changing any behavior.
 
 **Architecture:** Markup + CSS only on the existing Laravel Blade + `nw-*` CSS + Alpine stack (no React). Consolidate the control sizing/spacing tokens in `resources/css/app.css`, add `<x-form.actions>` (action footer) and `<x-table.toolbar>` (list toolbar) components, and migrate the enumerated views onto those plus the already-shipped `.nw-form-bar` inline pattern.
 
-**Tech Stack:** Laravel 12, Blade, custom `nw-*` CSS, Alpine.js, Vite (builds into `public/asset/nearbyworks/`), Pest 3 feature tests (`php artisan test`).
+**Tech Stack:** Laravel 12, Blade, custom `nw-*` CSS, Alpine.js, Vite (builds into `public/asset/marthire/`), Pest 3 feature tests (`php artisan test`).
 
 **Spec:** `docs/superpowers/specs/2026-10-28-design-system-consistency-design.md`
 
@@ -18,14 +18,14 @@
 - Every `nw-table` row's primary (first) `<td>` keeps `class="nw-table__main"`; action cells keep `nw-table__go` (with `nw-table__go--persist` where the action must stay reachable on mobile).
 - Keep all existing CSS class names and button variants (`--primary/--outline/--light/--danger/--small/--block`); this is value consolidation, not renaming.
 - Control sizing target: unify `.nw-button` (50px), `.nw-input` (49px), `.nw-select` (44px) to a single ~40px default height + one small size; button icon gap `22px`/`15px` → `8px`; one border-radius + one focus-ring across the three.
-- Every CSS change must be rebuilt (`npm run build`) to ship, and the serving manifest `public/asset/nearbyworks/manifest.json` must update (vite.config `buildDirectory` is set to `asset/nearbyworks`).
+- Every CSS change must be rebuilt (`npm run build`) to ship, and the serving manifest `public/asset/marthire/manifest.json` must update (vite.config `buildDirectory` is set to `asset/marthire`).
 - **Verification honesty:** no browser/screenshot tool is available. Automated tests confirm no content/behavior regression and that views render without error; they CANNOT confirm the visual result looks right. Every task ends with an explicit **human-eyeball** checklist item that is NOT automatable this session.
 - Known-baseline failure: `tests/Feature/Jobs/JobPagesTest` has ONE pre-existing unrelated red test (the "This is a preview." assertion) that predates this work. Treat only *new* failures as regressions.
 
 ## Review Focus
 
 - **Mobile card-table breakage:** a migrated/restyled table losing `nw-table__main` on its primary `<td>` silently breaks the ≤767px card layout; `assertSee` text tests never catch it. → Task 7 asserts every migrated table's primary cell keeps `nw-table__main` (grep gate).
-- **CSS never ships (stale bundle):** the session's core bug — editing `app.css` without a rebuild that lands in `public/asset/nearbyworks/` means nothing reaches the browser. → every CSS-touching task asserts the rebuilt serving manifest changed AND the served CSS contains the new value.
+- **CSS never ships (stale bundle):** the session's core bug — editing `app.css` without a rebuild that lands in `public/asset/marthire/` means nothing reaches the browser. → every CSS-touching task asserts the rebuilt serving manifest changed AND the served CSS contains the new value.
 - **Accessibility dropped during markup churn:** removing `aria-label`/`for`/`nw-sr-only`/`role` while swapping wrappers degrades screen-reader use; text tests don't check it. → Tasks 3/4/6/8 assert the migrated view still contains its key `aria`/`for` attributes.
 - **Alpine wiring severed:** a modal or cascading select whose `x-on`/`x-data`/`x-model` is lost renders but stops working; no JS runs in tests. → Tasks 4 and 8 assert the migrated markup still contains the exact `$dispatch(...)` / `x-model` strings.
 - **Silent button-text change:** consolidating two action buttons into the footer component drops or reworders a label a user relies on (and may break a content assertion elsewhere). → each migration task asserts the pre-migration visible action labels are all still present.
@@ -66,8 +66,8 @@ Set `.nw-button`, `.nw-input`, `.nw-select` to one shared default `min-height` i
 
 - [ ] **Step 4: Rebuild and assert the new values ship**
 
-Run: `npm run build` — Expected: output lists `public/asset/nearbyworks/assets/app-*.css`.
-Run: `CSS=$(grep -o 'assets/app-[^"]*\.css' public/asset/nearbyworks/manifest.json | head -1); grep -c 'gap:8px' "public/asset/nearbyworks/$CSS"` — Expected: ≥1 (the tightened gap is in the SERVED bundle, confirming the manifest now points at the new CSS).
+Run: `npm run build` — Expected: output lists `public/asset/marthire/assets/app-*.css`.
+Run: `CSS=$(grep -o 'assets/app-[^"]*\.css' public/asset/marthire/manifest.json | head -1); grep -c 'gap:8px' "public/asset/marthire/$CSS"` — Expected: ≥1 (the tightened gap is in the SERVED bundle, confirming the manifest now points at the new CSS).
 
 - [ ] **Step 5: Run the full suite (no content regression)**
 
@@ -473,7 +473,7 @@ git commit -m "refactor(ui): convert Apply wizard footers to x-form.actions"
 
 - [ ] **Step 1: Clean rebuild + manifest assertion**
 
-Run: `npm run build`; then assert `public/asset/nearbyworks/manifest.json` points at a fresh `app-*.css` (mtime now) and that CSS contains `gap:8px`. Expected: both true.
+Run: `npm run build`; then assert `public/asset/marthire/manifest.json` points at a fresh `app-*.css` (mtime now) and that CSS contains `gap:8px`. Expected: both true.
 
 - [ ] **Step 2: Full suite**
 

@@ -1,6 +1,6 @@
 @props([
     'title' => 'Hiring starts with a connection',
-    'description' => 'NearbyWorks brings employers and job seekers together. Discover a more connected way to approach hiring and your next opportunity.',
+    'description' => 'Marthire brings employers and job seekers together. Discover a more connected way to approach hiring and your next opportunity.',
 ])
 
 <!DOCTYPE html>
@@ -17,5 +17,6 @@
         </main>
 
         <x-site-footer />
+        <x-toast-notifications />
     </body>
 </html>

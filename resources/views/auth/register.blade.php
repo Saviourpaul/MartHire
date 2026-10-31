@@ -4,7 +4,7 @@
     <header class="nw-auth-heading">
         <span class="nw-eyebrow">{{ __('Start something good') }}</span>
         <h1 id="auth-heading">{{ __('Your possibilities start here.') }}</h1>
-        <p>{{ __('Create your NearbyWorks account and take the first step.') }}</p>
+        <p>{{ __('Create your Marthire account and take the first step.') }}</p>
     </header>
 
     <form method="POST" action="{{ route('register') }}" class="nw-form-stack">

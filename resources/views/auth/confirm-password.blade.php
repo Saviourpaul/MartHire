@@ -4,7 +4,7 @@
     <header class="nw-auth-heading">
         <span class="nw-eyebrow">{{ __('One quick check') }}</span>
         <h1 id="auth-heading">{{ __('Confirm it is you.') }}</h1>
-        <p>{{ __('This is a secure area of NearbyWorks. Confirm your password to continue.') }}</p>
+        <p>{{ __('This is a secure area of Marthire. Confirm your password to continue.') }}</p>
     </header>
 
     <form method="POST" action="{{ route('password.confirm') }}" class="nw-form-stack">

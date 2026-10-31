@@ -8,7 +8,7 @@
         <x-site-header />
 
         <main id="main-content" class="nw-auth-layout">
-            <aside class="nw-auth-story" aria-label="{{ __('Welcome to NearbyWorks') }}">
+            <aside class="nw-auth-story" aria-label="{{ __('Welcome to Marthire') }}">
                 <div class="nw-auth-story__content">
                     <span class="nw-eyebrow">{{ __('People. Possibility. Progress.') }}</span>
                     <h2>{{ __('Good people.') }}<br><em>{{ __('Great possibilities.') }}</em></h2>
@@ -30,5 +30,6 @@
         </main>
 
         <x-site-footer :compact="true" />
+        <x-toast-notifications />
     </body>
 </html>

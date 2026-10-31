@@ -6,7 +6,7 @@
 
 **Architecture:** Revive the orphaned `JobController` under a new `organisations.jobs.*` route group; extract validation into FormRequests; render `nw-*`-styled views using the shared `<x-form.actions>`/`<x-table.toolbar>` components; add a Quill editor (npm/Vite/Alpine) whose toolbar is scoped to formats that round-trip through the `JobDescription` sanitizer; add a `Draft` job status that is excluded from the public board, the candidate pipeline, and admin moderation.
 
-**Tech Stack:** Laravel 12, Blade, custom `nw-*` CSS, Alpine.js, Quill, Vite (builds into `public/asset/nearbyworks/build/`), Pest 3.
+**Tech Stack:** Laravel 12, Blade, custom `nw-*` CSS, Alpine.js, Quill, Vite (builds into `public/asset/marthire/build/`), Pest 3.
 
 **Spec:** `docs/superpowers/specs/2026-10-28-native-job-management-design.md`
 
@@ -21,7 +21,7 @@
 - Decisions (resolved): jobs index shows all org jobs by role via `OrganizationPermissions::scopeJobs`; `store`/`update` redirect to the job's show page; `Draft` is org-private (excluded from `AdminReportService` and `Admin\JobManagementController`).
 - Permissions (existing matrix): create/edit = Owner/HR/Recruiter; delete = Owner/HR only — the UI must gate Delete on `delete_jobs`.
 - No DB migration: `jobs.status` is `varchar(20)` default `'open'`; `'draft'` needs no schema change or backfill.
-- Every CSS/JS change is rebuilt (`npm run build`) and the served `public/asset/nearbyworks/build/manifest.json` confirmed. No browser this session — visual/JS-interaction result needs human eyeball (state honestly).
+- Every CSS/JS change is rebuilt (`npm run build`) and the served `public/asset/marthire/build/manifest.json` confirmed. No browser this session — visual/JS-interaction result needs human eyeball (state honestly).
 - Known-baseline: `tests/Feature/Jobs/JobPagesTest` has ONE pre-existing unrelated failure ("This is a preview."). Only NEW failures are regressions.
 
 ## Review Focus
@@ -84,7 +84,7 @@ Expected: the two new tests PASS; whole suite green except the known baseline.
 Run: `npm run build`.
 
 ```bash
-git add app/Enums/JobStatus.php resources/css/app.css app/Services/AdminReportService.php app/Http/Controllers/Admin/JobManagementController.php public/asset/nearbyworks tests/Feature/DesignSystem/JobStatusDraftTest.php
+git add app/Enums/JobStatus.php resources/css/app.css app/Services/AdminReportService.php app/Http/Controllers/Admin/JobManagementController.php public/asset/marthire tests/Feature/DesignSystem/JobStatusDraftTest.php
 git commit -m "feat(jobs): add org-private Draft job status with badge + admin exclusion"
 ```
 
@@ -267,15 +267,15 @@ Expected: it likely PASSES already (the sanitizer strips class/div), confirming 
 
 - [ ] **Step 4: Rebuild + verify it ships**
 
-Run: `npm run build` — Expected: builds into `public/asset/nearbyworks/build/assets/`.
-Run: assert the served JS bundle exists and the manifest updated (`grep` the new `app-*.js` in `public/asset/nearbyworks/build/manifest.json`). Confirm `quill` is in `package.json`.
+Run: `npm run build` — Expected: builds into `public/asset/marthire/build/assets/`.
+Run: assert the served JS bundle exists and the manifest updated (`grep` the new `app-*.js` in `public/asset/marthire/build/manifest.json`). Confirm `quill` is in `package.json`.
 
 - [ ] **Step 5: Human-eyeball note + commit**
 
 Note: Quill's actual editing, counter, autosave, and leave-guard are JS behaviors NOT exercised by PHP tests this session (no browser) — they need a human to open the create form, type, reload (autosave), and try to navigate away (guard). State this honestly.
 
 ```bash
-git add resources/js/job-form.js resources/js/app.js package.json package-lock.json public/asset/nearbyworks
+git add resources/js/job-form.js resources/js/app.js package.json package-lock.json public/asset/marthire
 git commit -m "feat(jobs): add Quill description editor (scoped toolbar, counter, autosave, leave-guard)"
 ```
 

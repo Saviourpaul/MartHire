@@ -28,7 +28,7 @@
 
         <aside id="app-sidebar" class="nw-sidebar" x-bind:class="{ 'is-open': sidebar }" x-bind:inert="mobile && ! sidebar" aria-label="{{ __('Account navigation') }}">
             <div class="nw-sidebar__brand">
-                <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('MartHire home') }}"><x-application-logo :on-dark="true" /></a>
+                <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('Marthire home') }}"><x-application-logo :on-dark="true" /></a>
                 <button type="button" class="nw-sidebar__close" x-on:click="sidebar = false" aria-label="{{ __('Close menu') }}"><x-icon name="close" /></button>
             </div>
 
@@ -102,5 +102,6 @@
                 {{ $slot }}
             </main>
         </div>
+        <x-toast-notifications />
     </body>
 </html>

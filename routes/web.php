@@ -2,17 +2,26 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\ApplicationDocumentDownloadController;
+use App\Http\Controllers\ApplicationDocumentPreviewController;
 use App\Http\Controllers\ClientDashboardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InterviewResponseController;
+use App\Http\Controllers\JobApplicationController;
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrganizationApplicationController;
 use App\Http\Controllers\OrganizationDashboardController;
-use App\Http\Controllers\JobController;
+use App\Http\Controllers\OrganizationInterviewController;
 use App\Http\Controllers\OrganizationTeamController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicJobController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\WorkableJobController;
+use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
+use App\Models\CandidateMessage;
+use App\Models\Interview;
 use App\Models\Job;
 use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
@@ -26,6 +35,14 @@ use Illuminate\Support\Facades\Route;
 Route::bind('applicationForm', fn (string $value) => ApplicationForm::withoutGlobalScope(OrganizationScope::class)
     ->findOrFail($value));
 
+// Bind private resources before organization middleware, then authorize them in
+// the existing document/interview policies after the context is initialized.
+Route::bind('applicationDocument', fn (string $value) => ApplicationDocument::withoutGlobalScope(OrganizationScope::class)->findOrFail($value));
+Route::bind('candidateMessage', fn (string $value) => CandidateMessage::withoutGlobalScope(OrganizationScope::class)->findOrFail($value));
+Route::bind('interview', fn (string $value, Illuminate\Routing\Route $route) => str_starts_with($route->getName() ?? '', 'interviews.response')
+    ? (int) $value
+    : Interview::withoutGlobalScope(OrganizationScope::class)->findOrFail($value));
+
 // Same reasoning as the applicationForm binding above: implicit binding runs
 // before InitializeOrganizationContext sets the active organization.
 Route::bind('organizationMember', fn (string $value) => OrganizationMember::withoutGlobalScope(OrganizationScope::class)
@@ -36,8 +53,7 @@ Route::bind('organizationMember', fn (string $value) => OrganizationMember::with
 Route::bind('job', fn (string $value) => Job::withoutGlobalScope(OrganizationScope::class)
     ->where('slug', $value)->firstOrFail());
 
-Route::get('/', [WorkableJobController::class, 'home'])->name('home');
-
+Route::get('/', [PublicJobController::class, 'home'])->name('home');
 
 Route::get('About', function () {
     return view('About');
@@ -47,10 +63,17 @@ Route::get('ContactUs', function () {
     return view('ContactUs');
 })->name('contact');
 
-// Public job board — reads synced Workable postings from our database.
-// Kept at its own path/name (workable-jobs.*) so it doesn't collide with
-// JobController's own (non-Workable) job postings under "jobs".
-Route::get('workable-jobs', [WorkableJobController::class, 'index'])->name('workable-jobs.index');
+Route::view('how-it-works', 'HowItWorks')->name('how-it-works');
+
+// One public board includes published organization jobs and imported postings.
+// Preserve Workable URLs while native jobs use their own slug-based destinations.
+Route::get('jobs', [PublicJobController::class, 'index'])->name('jobs.index');
+Route::get('jobs/{job}', [PublicJobController::class, 'show'])->name('jobs.show');
+Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])
+    ->middleware(['auth', 'verified', 'active.account', 'role:applicant'])->name('applications.create');
+Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])
+    ->middleware(['auth', 'verified', 'active.account', 'role:applicant', 'throttle:10,1'])->name('applications.store');
+Route::get('workable-jobs', [PublicJobController::class, 'index'])->name('workable-jobs.index');
 Route::get('workable-jobs/{id}', [WorkableJobController::class, 'show'])->name('workable-jobs.show');
 
 // Hosted applications keep their destination; roles without one show the form preview.
@@ -68,6 +91,19 @@ Route::post('team-invitations/{token}/accept', [TeamInvitationController::class,
     ->middleware('throttle:team-invitations')->name('team-invitations.accept');
 Route::post('team-invitations/{token}/decline', [TeamInvitationController::class, 'decline'])
     ->middleware('throttle:team-invitations')->name('team-invitations.decline');
+
+// Versioned signed links work for candidates without requiring an account login.
+Route::middleware(['signed', 'throttle:30,1'])->group(function () {
+    Route::get('interviews/{interview}/{response}', [InterviewResponseController::class, 'show'])
+        ->whereNumber('interview')->where('response', 'confirmed|declined')->name('interviews.response');
+    Route::post('interviews/{interview}/{response}', [InterviewResponseController::class, 'store'])
+        ->whereNumber('interview')->where('response', 'confirmed|declined')->name('interviews.response.store');
+});
+
+Route::middleware(['auth', 'verified', 'active.account', 'throttle:downloads'])->group(function () {
+    Route::get('application-documents/{applicationDocument}/preview', ApplicationDocumentPreviewController::class)->name('application-documents.preview');
+    Route::get('application-documents/{applicationDocument}/download', ApplicationDocumentDownloadController::class)->name('application-documents.download');
+});
 
 // Generic entry point: every login/registration/verification redirect keeps
 // using route('dashboard'); it just forwards each role to its own dashboard.
@@ -110,6 +146,19 @@ Route::middleware(['auth', 'verified', 'role:organization'])->prefix('organisati
     Route::get('candidates/{applicationForm}', [OrganizationApplicationController::class, 'show'])->name('candidates.show');
     Route::patch('candidates/{applicationForm}/move', [OrganizationApplicationController::class, 'movePipeline'])->name('candidates.move');
 
+    Route::middleware('active.account')->group(function () {
+        Route::get('candidates/{applicationForm}/interviews/create', [OrganizationInterviewController::class, 'create'])->name('interviews.create');
+        Route::get('interviews/{interview}/edit', [OrganizationInterviewController::class, 'edit'])->name('interviews.edit');
+        Route::patch('interviews/{interview}/complete', [OrganizationInterviewController::class, 'complete'])->name('interviews.complete');
+        Route::middleware('throttle:candidate-email')->group(function () {
+            Route::post('candidates/{applicationForm}/interviews', [OrganizationInterviewController::class, 'store'])->name('interviews.store');
+            Route::post('candidates/{applicationForm}/interviews/preview', [OrganizationInterviewController::class, 'preview'])->name('interviews.preview');
+            Route::patch('interviews/{interview}', [OrganizationInterviewController::class, 'update'])->name('interviews.update');
+            Route::post('interviews/{interview}/cancel', [OrganizationInterviewController::class, 'cancel'])->name('interviews.cancel');
+            Route::post('candidate-messages/{candidateMessage}/retry', [OrganizationInterviewController::class, 'retry'])->name('interviews.retry');
+        });
+    });
+
     // Hiring team roster: OrganizationPolicy::manageTeam gates every action.
     Route::get('team', [OrganizationTeamController::class, 'index'])->name('team.index');
     Route::post('team/invitations', [OrganizationTeamController::class, 'storeInvitation'])
@@ -131,6 +180,8 @@ Route::middleware(['auth', 'verified', 'role:organization'])->prefix('organisati
 
 Route::middleware(['auth', 'verified', 'role:applicant'])->prefix('client')->name('client.')->group(function () {
     Route::get('dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('applications/{applicationForm}', [JobApplicationController::class, 'show'])
+        ->middleware('active.account')->name('applications.show');
 });
 
 Route::middleware('auth')->group(function () {
@@ -140,8 +191,9 @@ Route::middleware('auth')->group(function () {
 
     // Cascading country -> state -> city lookups for the profile form's
     // location picker (and anywhere else that needs them).
-    Route::get('locations/states', [LocationController::class, 'states'])->name('locations.states');
-    Route::get('locations/cities', [LocationController::class, 'cities'])->name('locations.cities');
+    // Three segments avoid World's optional-prefix /{prefix?}/states|cities routes.
+    Route::get('lookups/locations/states', [LocationController::class, 'states'])->name('locations.states');
+    Route::get('lookups/locations/cities', [LocationController::class, 'cities'])->name('locations.cities');
 });
 
 require __DIR__.'/auth.php';

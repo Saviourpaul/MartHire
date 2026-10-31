@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -40,7 +42,7 @@ test('an applicant can update their profile information', function () {
 
     $this->assertSame('Updated', $user->first_name);
     $this->assertSame('Name', $user->last_name);
-    $this->assertSame('08012345678', $user->phone);
+    $this->assertSame('+2348012345678', $user->phone);
     $this->assertNotNull($user->location_confirmed_at);
 });
 
@@ -93,7 +95,7 @@ test('a non-applicant is not required to fill optional profile fields', function
 });
 
 test('a user can upload a new profile photo', function () {
-    Illuminate\Support\Facades\Storage::fake('public');
+    Storage::fake('public');
     $user = User::factory()->create(['profile_image_path' => null]);
 
     $this->actingAs($user)
@@ -108,14 +110,14 @@ test('a user can upload a new profile photo', function () {
             'country' => 'Nigeria',
             'state' => 'Lagos',
             'city' => 'Ikeja',
-            'profile_image' => Illuminate\Http\UploadedFile::fake()->create('avatar.jpg', 100, 'image/jpeg'),
+            'profile_image' => UploadedFile::fake()->create('avatar.jpg', 100, 'image/jpeg'),
         ])
         ->assertSessionHasNoErrors()
         ->assertRedirect('/profile');
 
     $path = $user->fresh()->profile_image_path;
     $this->assertNotNull($path);
-    Illuminate\Support\Facades\Storage::disk('public')->assertExists($path);
+    Storage::disk('public')->assertExists($path);
 });
 
 test('email verification status is unchanged when profile information is updated', function () {

@@ -2,9 +2,10 @@
     <x-slot name="title">{{ __('Admin dashboard') }}</x-slot>
     <x-slot name="header">
         <h1 class="nw-heading">{{ __('Admin dashboard') }}</h1>
-        <p>{{ __('Platform-wide activity across organizations, applicants, and jobs.') }}</p>
     </x-slot>
 
+    @fragment('admin-dashboard')
+    <div data-live-table="admin-dashboard" data-live-topics="users,jobs,candidates,applications,team,interviews" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-stats">
         <div class="nw-stat">
             <div class="nw-stat__top">
@@ -151,4 +152,6 @@
             @endif
         </section>
     </div>
+    </div>
+    @endfragment
 </x-app-layout>

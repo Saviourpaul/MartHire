@@ -8,12 +8,6 @@
         </p>
     </header>
 
-    @if (session('status') == 'verification-code-sent')
-        <div class="nw-notice" role="status">
-            {{ __('A new verification code has been sent to the email address you provided during registration.') }}
-        </div>
-    @endif
-
     <div class="nw-form-stack">
         <form method="POST" action="{{ route('verification.verify') }}" class="nw-form-stack">
             @csrf

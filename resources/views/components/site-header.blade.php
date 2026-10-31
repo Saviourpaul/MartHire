@@ -2,12 +2,13 @@
 
 <header class="nw-header{{ $account ? ' nw-header--account' : '' }}" x-data="{ open: false }" x-on:keydown.escape.window="if (open) { open = false; $refs.navigationToggle.focus(); }">
     <div class="nw-container nw-header__inner">
-        <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('MartHire home') }}">
+        <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('Marthire home') }}">
             <x-application-logo />
         </a>
 
         <nav class="nw-desktop-nav" aria-label="{{ __('Main navigation') }}">
             <a href="{{ route('workable-jobs.index') }}" @if (request()->routeIs('workable-jobs.*')) aria-current="page" @endif>{{ __('Browse jobs') }}</a>
+            <a href="{{ route('how-it-works') }}" @if (request()->routeIs('how-it-works')) aria-current="page" @endif>{{ __('How it works') }}</a>
             <a href="{{ url('/') }}#for-employers">{{ __('For employers') }}</a>
             <a href="{{ url('/') }}#for-job-seekers">{{ __('For job seekers') }}</a>
             <a href="{{ url('/About') }}" @if (request()->is('About')) aria-current="page" @endif>{{ __('About') }}</a>
@@ -32,6 +33,7 @@
     <nav id="site-mobile-navigation" class="nw-mobile-nav" aria-label="{{ __('Mobile navigation') }}" x-show="open" x-cloak x-on:click="if ($event.target.closest('a')) open = false">
         <div class="nw-container">
             <a href="{{ route('workable-jobs.index') }}">{{ __('Browse jobs') }}</a>
+            <a href="{{ route('how-it-works') }}" @if (request()->routeIs('how-it-works')) aria-current="page" @endif>{{ __('How it works') }}</a>
             <a href="{{ url('/') }}#for-employers">{{ __('For employers') }}</a>
             <a href="{{ url('/') }}#for-job-seekers">{{ __('For job seekers') }}</a>
             <a href="{{ url('/About') }}">{{ __('About') }}</a>

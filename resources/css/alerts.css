@@ -1,0 +1,33 @@
+.nw-alert-dialog {
+    --alert-color: var(--nw-ink);
+    --alert-soft: var(--nw-mint);
+    position: fixed;
+    inset: 0;
+    width: min(440px, calc(100vw - 32px));
+    max-height: calc(100dvh - 40px);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--nw-line);
+    border-radius: 14px;
+    background: var(--nw-paper);
+    color: var(--nw-ink);
+    box-shadow: 0 24px 80px rgb(0 0 0 / 20%);
+    overflow: auto;
+}
+.nw-alert-dialog::backdrop { background: rgb(3 18 40 / 48%); backdrop-filter: blur(3px); }
+.nw-alert-dialog[data-alert-type="success"] { --alert-color: #00802b; --alert-soft: #ecfdf3; }
+.nw-alert-dialog[data-alert-type="error"] { --alert-color: #be123c; --alert-soft: #fff1f2; }
+.nw-alert-dialog[data-alert-type="warning"] { --alert-color: #92400e; --alert-soft: #fffbeb; }
+.nw-alert-dialog__body { position: relative; padding: 30px; }
+.nw-alert-dialog__dismiss { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: var(--nw-muted); }
+.nw-alert-dialog__dismiss:hover { background: var(--nw-soft); }
+.nw-alert-dialog__dismiss .nw-icon { width: 17px; height: 17px; }
+.nw-alert-dialog__icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 20px; border-radius: 50%; background: var(--alert-soft); color: var(--alert-color); }
+.nw-alert-dialog__icon .nw-icon { width: 26px; height: 26px; }
+.nw-alert-dialog h2 { margin: 0 0 10px; padding-right: 12px; font-size: 19px; font-weight: 600; line-height: 1.4; }
+.nw-alert-dialog p { margin: 0; color: var(--nw-muted); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.nw-alert-dialog__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.nw-alert-dialog [hidden] { display: none !important; }
+[data-theme="dark"] .nw-alert-dialog[data-alert-type="success"] { --alert-color: #86efac; --alert-soft: #052e1a; }
+[data-theme="dark"] .nw-alert-dialog[data-alert-type="error"] { --alert-color: #fda4af; --alert-soft: #4c0519; }
+[data-theme="dark"] .nw-alert-dialog[data-alert-type="warning"] { --alert-color: #fde68a; --alert-soft: #451a03; }

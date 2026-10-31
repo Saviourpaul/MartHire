@@ -2,7 +2,7 @@
 
 ## Intent and why
 
-Forms, buttons, and tables look and behave inconsistently across NearbyWorks.
+Forms, buttons, and tables look and behave inconsistently across Marthire.
 The same kind of control is built three different ways in three places: form
 field-grouping uses `nw-form-stack` in some views, a 2-column `nw-form-row--fields`
 grid in others (which strands controls and forces full-width buttons — the
@@ -50,7 +50,7 @@ Laravel Blade + `nw-*` CSS + Alpine.
 ## Constraints
 
 - Blade + `nw-*` CSS (`resources/css/app.css`) + Alpine only.
-- Assets build into `public/asset/nearbyworks/` (vite.config `buildDirectory`, fixed
+- Assets build into `public/asset/marthire/` (vite.config `buildDirectory`, fixed
   this session); every CSS change must be rebuilt to ship, and verification is by
   code audit — no browser/screenshot tool is available this session.
 - The mobile card-table pattern must be preserved: each `nw-table` row's primary `<td>`

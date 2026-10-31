@@ -31,9 +31,17 @@
             <x-input-error :messages="$errors->get('category')" />
         </div>
         <div>
-            <x-input-label for="location" :value="__('Location')" />
-            <x-text-input id="location" name="location" :value="old('location', $job?->location)" required />
-            <x-input-error :messages="$errors->get('location')" />
+            <x-input-label for="country_code" :value="__('Country')" />
+            <select id="country_code" name="country_code" class="nw-select" required>
+                <option value="">{{ __('Select a country') }}</option>
+                @foreach ($countries as $countryOption)
+                    <option value="{{ $countryOption['value'] }}" @selected(old('country_code', $job?->country_code) === $countryOption['value'])>{{ $countryOption['label'] }}</option>
+                @endforeach
+            </select>
+            @if (empty($countries))
+                <p class="nw-form-hint">{{ __('Country options are temporarily unavailable. Please try again later.') }}</p>
+            @endif
+            <x-input-error :messages="$errors->get('country_code')" />
         </div>
     </div>
 
@@ -47,10 +55,10 @@
             </select>
             <x-input-error :messages="$errors->get('employment_type')" />
         </div>
-        <div x-data="{ preview: null }">
+        <div x-data="{ preview: @js($job?->logoUrl()) }">
             <x-input-label for="logo" :value="__('Logo (optional)')" />
             <input type="file" id="logo" name="logo" accept="image/*" class="nw-input"
-                   x-on:change="const f=$event.target.files[0]; if(f){const r=new FileReader(); r.onload=e=>preview=e.target.result; r.readAsDataURL(f);}">
+                   x-on:change="const f=$event.target.files[0]; if(f){const r=new FileReader(); r.onload=e=>preview=e.target.result; r.readAsDataURL(f);}else{preview=@js($job?->logoUrl());}">
             <template x-if="preview">
                 <img :src="preview" alt="" class="nw-logo-preview">
             </template>

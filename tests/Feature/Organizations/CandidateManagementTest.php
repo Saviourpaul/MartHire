@@ -100,7 +100,7 @@ test('a candidate cannot skip pipeline stages', function () {
     $application = createApplicationForOrganization($organizationUser, User::factory()->create());
 
     $this->actingAs($organizationUser)
-        ->patch(route('organisations.candidates.move', $application), ['stage' => 'selected'])
+        ->patch(route('organisations.candidates.move', $application), ['stage' => 'selected', 'selection_confirmed' => 1])
         ->assertSessionHasErrors('stage');
 
     expect($application->fresh()->status)->toBe(CandidatePipelineStage::Submitted);

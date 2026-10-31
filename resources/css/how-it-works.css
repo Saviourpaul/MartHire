@@ -1,0 +1,73 @@
+.nw-how { padding-bottom: 88px; }
+.nw-how-hero { padding: 90px 0 105px; text-align: center; background: linear-gradient(rgb(255 255 255 / 52%), rgb(255 255 255 / 52%)), url('../../public/asset/marthire/how-it-works/banner.png') center 48% / cover no-repeat; }
+.nw-how-hero h1 { margin: 20px 0 26px; font-family: var(--nw-display); font-size: clamp(54px, 6.5vw, 86px); font-weight: 400; line-height: 1.03; letter-spacing: -.035em; }
+.nw-how-hero h1 em { font-weight: 400; }
+.nw-how-hero .nw-copy { max-width: 690px; margin: 0 auto 26px; text-wrap: pretty; }
+.nw-how-hero .nw-link { justify-content: center; }
+.nw-how-features { display: grid; gap: 40px; }
+.nw-how-feature { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 44px; padding: 62px 52px; border: 1px solid var(--nw-line); border-radius: 18px; background: var(--nw-paper); }
+.nw-how-feature__copy { grid-column: 2; grid-row: 1; }
+.nw-how-feature__copy .nw-heading { margin: 18px 0 20px; font-size: clamp(32px, 3.4vw, 44px); line-height: 1.12; }
+.nw-how-feature__copy .nw-copy { margin-bottom: 28px; }
+.nw-how-feature__copy .nw-button { min-height: 46px; max-width: 100%; white-space: normal; text-align: center; }
+.nw-how-feature__visual { grid-column: 1; grid-row: 1; min-width: 0; margin: 0; }
+.nw-how-feature__visual img { display: block; width: 100%; height: auto; }
+.nw-how-feature__visual figcaption { margin-top: 10px; color: var(--nw-muted); font-size: 10px; letter-spacing: .04em; text-align: center; }
+.nw-how-feature--reverse { grid-template-columns: 1fr 1.15fr; }
+.nw-how-feature--reverse .nw-how-feature__copy { grid-column: 1; }
+.nw-how-feature--reverse .nw-how-feature__visual { grid-column: 2; }
+.nw-how-process { margin-top: 72px; padding: 78px 64px; border: 1px solid var(--nw-line); border-radius: 18px; background: linear-gradient(rgb(255 255 255 / 90%), rgb(255 255 255 / 90%)), var(--nw-paper) url('../../public/asset/marthire/how-it-works/common-bg.png') center / cover no-repeat; scroll-margin-top: 32px; }
+.nw-how-process__heading { max-width: 740px; margin: 0 auto 64px; text-align: center; }
+.nw-how-process__heading .nw-heading { margin: 18px 0 22px; font-size: clamp(34px, 4vw, 50px); }
+.nw-how-process__heading .nw-copy { max-width: 590px; margin-inline: auto; }
+.nw-how-steps { max-width: 944px; margin: 0 auto; padding: 0; list-style: none; }
+.nw-how-step { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: 96px; min-height: 300px; padding-bottom: 64px; scroll-margin-top: 36px; }
+.nw-how-step::before { content: ''; position: absolute; top: calc(50% - 32px); bottom: calc(-50% + 32px); left: 50%; width: 1px; background: var(--nw-accent); }
+.nw-how-step:last-child { padding-bottom: 0; }
+.nw-how-step:last-child::before { content: none; }
+.nw-how-step__number { position: absolute; top: calc(50% - 48px); left: calc(50% - 16px); z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--nw-accent); color: #032a5e; font-size: 13px; font-weight: 600; box-shadow: 0 0 0 8px var(--nw-soft); }
+.nw-how-step:last-child .nw-how-step__number { top: calc(50% - 16px); }
+.nw-how-step__copy { grid-column: 2; grid-row: 1; }
+.nw-how-step__copy h3 { margin: 12px 0 16px; font-family: var(--nw-body); font-size: 21px; font-weight: 600; line-height: 1.35; letter-spacing: -.025em; }
+.nw-how-step__copy > p:last-child { color: var(--nw-muted); font-size: 14px; line-height: 1.8; }
+.nw-how-step__image { grid-column: 1; grid-row: 1; width: 100%; height: auto; border: 1px solid var(--nw-line); border-radius: 12px; background: #fff; }
+.nw-how-step--reverse .nw-how-step__copy { grid-column: 1; }
+.nw-how-step--reverse .nw-how-step__image { grid-column: 2; }
+.nw-how-contact { margin-top: 72px; padding: 60px; border: 1px solid var(--nw-line); border-radius: 18px; background: linear-gradient(rgb(255 255 255 / 35%), rgb(255 255 255 / 35%)), url('../../public/asset/marthire/how-it-works/cta-bg.png') center / cover no-repeat; }
+.nw-how-contact__card { max-width: 860px; margin: auto; padding: 58px 40px; border: 1px solid var(--nw-line); border-radius: 14px; background: color-mix(in srgb, var(--nw-paper) 87%, transparent); text-align: center; }
+.nw-how-contact__card .nw-heading { margin: 20px 0 24px; font-size: clamp(34px, 4vw, 50px); }
+.nw-how-contact__card .nw-copy { max-width: 600px; margin: 0 auto 28px; }
+.nw-how-contact__actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px 28px; }
+[data-theme='dark'] .nw-how-hero, [data-theme='dark'] .nw-how-process, [data-theme='dark'] .nw-how-contact { background-image: radial-gradient(ellipse at 70% 30%, var(--nw-mint), transparent 70%); }
+[data-theme='dark'] .nw-how-feature__visual img { border-radius: 12px; }
+@media (max-width: 1100px) {
+    .nw-how-feature { gap: 30px; padding: 44px 32px; }
+    .nw-how-process { padding: 60px 38px; }
+    .nw-how-step { column-gap: 64px; }
+}
+@media (max-width: 991px) {
+    .nw-how-feature, .nw-how-feature--reverse { grid-template-columns: 1fr; gap: 32px; padding: 40px; }
+    .nw-how-feature__copy, .nw-how-feature__visual, .nw-how-feature--reverse .nw-how-feature__copy, .nw-how-feature--reverse .nw-how-feature__visual { grid-column: 1; grid-row: auto; }
+    .nw-how-feature__copy { max-width: 650px; }
+    .nw-how-feature__visual { width: 100%; max-width: 650px; margin-inline: auto; }
+    .nw-how-contact { padding: 36px; }
+}
+@media (max-width: 767px) {
+    .nw-how { padding-bottom: 48px; }
+    .nw-how-hero { padding: 64px 0 72px; }
+    .nw-how-features { gap: 24px; }
+    .nw-how-feature, .nw-how-feature--reverse { padding: 30px 24px; gap: 28px; }
+    .nw-how-feature__copy .nw-heading { font-size: 34px; }
+    .nw-how-process { margin-top: 40px; padding: 42px 24px; }
+    .nw-how-process__heading { margin-bottom: 40px; }
+    .nw-how-step { grid-template-columns: minmax(0, 1fr); gap: 24px; min-height: 0; padding: 0 0 42px 48px; }
+    .nw-how-step::before { top: 16px; bottom: -16px; left: 15px; }
+    .nw-how-step__number, .nw-how-step:last-child .nw-how-step__number { top: 0; left: 0; }
+    .nw-how-step__copy, .nw-how-step__image, .nw-how-step--reverse .nw-how-step__copy, .nw-how-step--reverse .nw-how-step__image { grid-column: 1; grid-row: auto; }
+    .nw-how-step__copy h3 { font-size: 19px; }
+    .nw-how-step__copy .nw-eyebrow { padding-top: 7px; }
+    .nw-how-step__image { max-width: 400px; }
+    .nw-how-contact { margin-top: 40px; padding: 18px; }
+    .nw-how-contact__card { padding: 38px 22px; }
+    .nw-how-contact__actions { flex-direction: column; }
+}

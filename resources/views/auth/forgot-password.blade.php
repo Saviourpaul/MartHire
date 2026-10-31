@@ -7,8 +7,6 @@
         <p>{{ __('Enter your email address and we will send you a link to choose a new password.') }}</p>
     </header>
 
-    <x-auth-session-status :status="session('status')" />
-
     <form method="POST" action="{{ route('password.email') }}" class="nw-form-stack">
         @csrf
 

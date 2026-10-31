@@ -5,11 +5,22 @@ import Alpine from 'alpinejs';
 import { registerDashboardCharts } from './dashboard-charts';
 import { registerApplicationForm } from './application-form';
 import { registerJobForm } from './job-form';
+import { registerToastNotifications } from './toast-notifications';
+import { registerLocationSelector } from './location-selector';
+import { registerAvatarUpload } from './avatar-upload';
+import { registerCandidateReview } from './candidate-review';
+import { initializeAlerts } from './alerts';
+import { initializeLiveTables } from './live-tables';
 
 window.Alpine = Alpine;
 registerDashboardCharts(Alpine);
 registerApplicationForm(Alpine);
 registerJobForm(Alpine);
+registerToastNotifications(Alpine);
+registerLocationSelector(Alpine);
+registerAvatarUpload(Alpine);
+registerCandidateReview(Alpine);
+initializeAlerts();
 
 const scrollToElement = (element) => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -124,7 +135,23 @@ Alpine.data('jobSearch', ({ jobs, categories, pageSize = 9 }) => ({
     },
 }));
 
-Alpine.start();
+// Keep full phone metadata off pages without a phone field. Register before
+// Alpine walks the form so nested phone components initialize in the right order.
+async function startApplication() {
+    if (document.querySelector('[data-phone-field]')) {
+        try {
+            const { registerInternationalPhone } = await import('./international-phone');
+            registerInternationalPhone(Alpine);
+        } catch (error) {
+            // A failed chunk request retains the native country select and input.
+            document.querySelectorAll('[data-phone-field]').forEach((field) => field.setAttribute('x-ignore', ''));
+            console.error('Unable to load phone formatting.', error);
+        }
+    }
+    Alpine.start();
+    initializeLiveTables({ Alpine });
+}
+startApplication();
 
 const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 const setTheme = (preference) => {
@@ -139,14 +166,14 @@ setTheme(document.documentElement.dataset.themePreference || 'system');
 document.querySelectorAll('[data-theme-control]').forEach(control => {
     control.addEventListener('change', () => {
         setTheme(control.value);
-        try { localStorage.setItem('nearbyworks-theme', control.value); } catch (_) {}
+        try { localStorage.setItem('marthire-theme', control.value); } catch (_) {}
     });
 });
 document.querySelectorAll('[data-theme-toggle]').forEach(button => {
     button.addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         setTheme(next);
-        try { localStorage.setItem('nearbyworks-theme', next); } catch (_) {}
+        try { localStorage.setItem('marthire-theme', next); } catch (_) {}
     });
 });
 themeQuery.addEventListener('change', () => {

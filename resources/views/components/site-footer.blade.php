@@ -5,7 +5,7 @@
         @unless ($compact)
             <div class="nw-footer__top">
                 <div class="nw-footer__brand">
-                    <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('MartHire home') }}"><x-application-logo /></a>
+                    <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('Marthire home') }}"><x-application-logo /></a>
                     <p>{{ __('Good people. Great possibilities.') }}</p>
                 </div>
 
@@ -20,7 +20,8 @@
                 </div>
 
                 <div class="nw-footer__group">
-                    <h2>{{ __('NearbyWorks') }}</h2>
+                    <h2>{{ __('Marthire') }}</h2>
+                    <a href="{{ route('how-it-works') }}">{{ __('How it works') }}</a>
                     <a href="{{ url('/About') }}">{{ __('About us') }}</a>
                     <a href="{{ url('/ContactUs') }}">{{ __('Contact us') }}</a>
                     @auth
@@ -38,7 +39,7 @@
         @endunless
 
         <div class="nw-footer__bottom">
-            <p>&copy; {{ date('Y') }} NearbyWorks. {{ __('All rights reserved.') }}</p>
+            <p>&copy; {{ date('Y') }} Marthire. {{ __('All rights reserved.') }}</p>
             <span class="nw-footer__people">{{ __('People first. Always.') }}</span>
             <div class="nw-theme-control">
                 <x-icon name="sun" />
@@ -54,7 +55,7 @@
 
     @unless ($compact)
         <div class="nw-footer-art" aria-hidden="true">
-            <span class="nw-footer-art__wordmark" style="--nw-footer-photo: url('{{ asset('asset/nearbyworks/conversation.png') }}'); padding-inline-end: .1em">MartHire</span>
+            <span class="nw-footer-art__wordmark" style="--nw-footer-photo: url('{{ asset('asset/marthire/conversation.png') }}'); padding-inline-end: .1em">Marthire</span>
         </div>
     @endunless
 </footer>

@@ -5,21 +5,41 @@
         <p>{{ __('Post and manage your organization’s roles.') }}</p>
     </x-slot>
 
-    @if (session('success'))
-        <div class="nw-notice" role="status">{{ session('success') }}</div>
-    @endif
+    @fragment('organization-jobs')
+    <div data-live-table="organization-jobs" data-live-topics="jobs,applications,candidates,team" data-live-pages="page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     @if ($errors->any())
         <div class="nw-notice nw-notice--error" role="alert">{{ $errors->first() }}</div>
     @endif
 
-    <form method="GET" role="search">
+    <form method="GET" role="search" data-live-filter>
         <x-table.toolbar>
             <div class="nw-search-field">
                 <x-icon name="search" />
                 <label class="nw-sr-only" for="job-search">{{ __('Search jobs') }}</label>
                 <input id="job-search" class="nw-input" type="search" name="search" placeholder="{{ __('Search jobs…') }}" value="{{ request('search') }}">
             </div>
+            <x-slot:filters>
+                <select class="nw-select" name="status" aria-label="{{ __('Filter jobs by status') }}">
+                    <option value="">{{ __('All statuses') }}</option>
+                    @foreach (\App\Enums\JobStatus::cases() as $jobStatus)
+                        <option value="{{ $jobStatus->value }}" @selected(request('status') === $jobStatus->value)>{{ $jobStatus->label() }}</option>
+                    @endforeach
+                </select>
+                <select class="nw-select" name="sort" aria-label="{{ __('Sort jobs by') }}">
+                    @foreach (['created_at' => __('Created'), 'title' => __('Title'), 'due_date' => __('Deadline')] as $column => $label)
+                        <option value="{{ $column }}" @selected($sortColumn === $column)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <select class="nw-select" name="direction" aria-label="{{ __('Sort direction') }}">
+                    <option value="desc" @selected($sortDirection === 'desc')>{{ __('Descending') }}</option>
+                    <option value="asc" @selected($sortDirection === 'asc')>{{ __('Ascending') }}</option>
+                </select>
+            </x-slot:filters>
             <x-slot:actions>
+                <button type="submit" class="nw-button nw-button--outline nw-button--small">{{ __('Filter') }}</button>
+                @if (request()->filled('search') || request()->filled('status'))
+                    <a href="{{ route('organisations.jobs.index') }}" class="nw-link nw-link--small" data-live-link>{{ __('Clear') }}</a>
+                @endif
                 <a href="{{ route('organisations.jobs.create') }}" class="nw-button nw-button--primary nw-button--small">
                     <x-icon name="briefcase" /> {{ __('New job') }}
                 </a>
@@ -69,7 +89,7 @@
                                         <a class="nw-link nw-link--small" href="{{ route('organisations.jobs.edit', $job) }}">{{ __('Edit') }}</a>
                                     @endcan
                                     @can('delete', $job)
-                                        <form method="POST" action="{{ route('organisations.jobs.destroy', $job) }}" onsubmit="return confirm('{{ __('Delete this job? This cannot be undone.') }}');" class="nw-inline-form">
+                                        <form method="POST" action="{{ route('organisations.jobs.destroy', $job) }}" data-confirm="{{ __('Delete this job? This cannot be undone.') }}" data-confirm-label="{{ __('Delete job') }}" data-confirm-type="error" class="nw-inline-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="nw-button nw-button--danger nw-button--small">{{ __('Delete') }}</button>
@@ -85,4 +105,6 @@
             <div class="nw-pagination">{{ $jobs->onEachSide(1)->links() }}</div>
         @endif
     </section>
+    </div>
+    @endfragment
 </x-app-layout>

@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::table('platform_settings')->insertOrIgnore([
-            'id' => 1, 'display_name' => 'MartHire', 'public_registration_enabled' => true,
+            'id' => 1, 'display_name' => 'Marthire', 'public_registration_enabled' => true,
             'version' => 1, 'created_at' => now(), 'updated_at' => now(),
         ]);
     }

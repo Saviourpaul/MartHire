@@ -1,17 +1,17 @@
-<x-layout title="About NearbyWorks" description="Meet NearbyWorks: a hiring platform that brings employers and job seekers closer to their next connection.">
+<x-layout title="About Marthire" description="Meet Marthire: a hiring platform that brings employers and job seekers closer to their next connection.">
     <section class="nw-interior-hero nw-container">
-        <p class="nw-eyebrow">About NearbyWorks</p>
+        <p class="nw-eyebrow">About Marthire</p>
         <h1>Behind every opportunity,<br> a person.</h1>
-        <p class="nw-copy">A new role can change a career. The right person can change a team. NearbyWorks brings employers and job seekers closer to those possibilities.</p>
+        <p class="nw-copy">A new role can change a career. The right person can change a team. Marthire brings employers and job seekers closer to those possibilities.</p>
     </section>
 
     <div class="nw-container nw-about-visual">
-        <img src="{{ asset('asset/nearbyworks/conversation.png') }}" width="585" height="444" alt="A professional greeting someone during a laptop video call" loading="lazy">
+        <img src="{{ asset('asset/marthire/conversation.png') }}" width="585" height="444" alt="A professional greeting someone during a laptop video call" loading="lazy">
         <div>
             <p class="nw-eyebrow">Built around connection</p>
             <h2 class="nw-heading">Good work starts<br> with people.</h2>
             <p class="nw-copy">Hiring is more than filling a vacancy. It is a chance to bring new ideas into a business and open a new chapter in someone's working life.</p>
-            <p class="nw-copy">We are building NearbyWorks to give both sides of that conversation a place to begin.</p>
+            <p class="nw-copy">We are building Marthire to give both sides of that conversation a place to begin.</p>
         </div>
     </div>
 
