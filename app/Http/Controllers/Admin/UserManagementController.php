@@ -7,8 +7,10 @@ use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AccountLifecycleService;
+use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -20,22 +22,22 @@ class UserManagementController extends Controller
 {
     public function __construct(private AccountLifecycleService $accounts) {}
 
-    public function organizations(Request $request): View
+    public function organizations(Request $request): View|JsonResponse
     {
         return $this->index($request, 'admin.users.index', 'Organizations', UserRole::Organization, exportRoute: 'admin.users.organizations.export');
     }
 
-    public function administrators(Request $request): View
+    public function administrators(Request $request): View|JsonResponse
     {
         return $this->index($request, 'admin.users.index', 'Administrators', UserRole::Admin, exportRoute: 'admin.users.administrators.export');
     }
 
-    public function applicants(Request $request): View
+    public function applicants(Request $request): View|JsonResponse
     {
         return $this->index($request, 'admin.users.index', 'Applicants', UserRole::Applicant, exportRoute: 'admin.users.applicants.export');
     }
 
-    public function suspended(Request $request): View
+    public function suspended(Request $request): View|JsonResponse
     {
         return $this->index(
             request: $request,
@@ -67,7 +69,7 @@ class UserManagementController extends Controller
         return $this->export($request, 'suspended-accounts', null, UserStatus::Suspended);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
@@ -80,10 +82,10 @@ class UserManagementController extends Controller
 
         $this->accounts->createUser($request->user(), $data);
 
-        return back()->with('success', 'User created successfully.');
+        return LiveTables::mutation($request, 'User created successfully.', back()->with('success', 'User created successfully.'), ['users']);
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, User $user): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             // 'first_name' => ['required', 'string', 'max:255'],
@@ -98,39 +100,44 @@ class UserManagementController extends Controller
 
         $this->accounts->administer($request->user(), $user, $role, $status);
 
-        return back()->with('success', 'User updated successfully.');
+        return LiveTables::mutation($request, 'User updated successfully.', back()->with('success', 'User updated successfully.'), ['users']);
     }
 
-    public function suspend(Request $request, User $user): RedirectResponse
+    public function suspend(Request $request, User $user): RedirectResponse|JsonResponse
     {
         $this->accounts->administer($request->user(), $user, $user->role, UserStatus::Suspended);
 
-        return back()->with('success', 'User suspended successfully.');
+        return LiveTables::mutation($request, 'User suspended successfully.', back()->with('success', 'User suspended successfully.'), ['users']);
     }
 
-    public function activate(Request $request, User $user): RedirectResponse
+    public function activate(Request $request, User $user): RedirectResponse|JsonResponse
     {
         $this->accounts->administer($request->user(), $user, $user->role, UserStatus::Active);
 
-        return back()->with('success', 'User activated successfully.');
+        return LiveTables::mutation($request, 'User activated successfully.', back()->with('success', 'User activated successfully.'), ['users']);
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse|JsonResponse
     {
         $this->accounts->administer($request->user(), $user, $user->role, $user->status, delete: true);
 
-        return back()->with('success', 'User deleted successfully.');
+        return LiveTables::mutation($request, 'User deleted successfully.', back()->with('success', 'User deleted successfully.'), ['users']);
     }
 
-    public function sendPasswordReset(User $user): RedirectResponse
+    public function sendPasswordReset(Request $request, User $user): RedirectResponse|JsonResponse
     {
         $status = Password::sendResetLink(['email' => $user->email]);
 
         if ($status !== Password::RESET_LINK_SENT) {
+            if ($request->header('X-Live-Action') === '1') {
+                return response()->json(['message' => __($status), 'errors' => ['user' => [__($status)]]], 422)
+                    ->header('Cache-Control', 'private, no-store');
+            }
+
             return back()->withErrors(['user' => __($status)]);
         }
 
-        return back()->with('success', 'Password reset link sent.');
+        return LiveTables::mutation($request, 'Password reset link sent.', back()->with('success', 'Password reset link sent.'), ['users']);
     }
 
     /**
@@ -209,7 +216,8 @@ class UserManagementController extends Controller
                     $query->status($request->input('status'));
                 }
             })
-            ->orderBy($sortColumn, $sortDirection);
+            ->orderBy($sortColumn, $sortDirection)
+            ->orderBy('id', $sortDirection);
     }
 
     private function index(
@@ -220,7 +228,8 @@ class UserManagementController extends Controller
         ?UserStatus $status = null,
         bool $showCreate = true,
         ?string $exportRoute = null,
-    ): View {
+    ): View|JsonResponse {
+        $this->validateFilters($request);
         $sortableColumns = ['first_name', 'last_name', 'email', 'phone', 'created_at'];
         $sortColumn = $request->input('sort') && in_array($request->input('sort'), $sortableColumns, true)
             ? $request->input('sort')
@@ -230,11 +239,9 @@ class UserManagementController extends Controller
         $perPage = 10;
         $search = trim((string) $request->input('search', $request->input('name', '')));
 
-        $users = $this->filteredQuery($request, $role, $status, $sortColumn, $sortDirection, $search)
-            ->paginate($perPage)
-            ->withQueryString();
+        $users = LiveTables::paginate($this->filteredQuery($request, $role, $status, $sortColumn, $sortDirection, $search), $perPage);
 
-        return view($view, [
+        return LiveTables::view($request, view($view, [
             'users' => $users,
             'title' => $title,
             'roleConstraint' => $role,
@@ -258,11 +265,12 @@ class UserManagementController extends Controller
                 'created_to' => $request->input('created_to'),
                 'per_page' => $perPage,
             ],
-        ]);
+        ]), ['admin-users']);
     }
 
     private function export(Request $request, string $filenameSlug, ?UserRole $role, ?UserStatus $status = null): StreamedResponse
     {
+        $this->validateFilters($request);
         $search = trim((string) $request->input('search', $request->input('name', '')));
         $users = $this->filteredQuery($request, $role, $status, 'created_at', 'desc', $search)->get();
         $filename = 'nearbyworks-'.$filenameSlug.'-'.now()->toDateString().'.csv';
@@ -292,6 +300,23 @@ class UserManagementController extends Controller
     private function getAllowedRoles(): array
     {
         return UserRole::values();
+    }
+
+    private function validateFilters(Request $request): void
+    {
+        $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:80'],
+            'role' => ['nullable', Rule::enum(UserRole::class)],
+            'status' => ['nullable', Rule::enum(UserStatus::class)],
+            'sort' => ['nullable', Rule::in(['first_name', 'last_name', 'email', 'phone', 'created_at'])],
+            'direction' => ['nullable', Rule::in(['asc', 'desc'])],
+            'created_from' => ['nullable', 'date_format:Y-m-d'],
+            'created_to' => ['nullable', 'date_format:Y-m-d'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
     }
 
     private function getAllowedRolesAsEnums(): array

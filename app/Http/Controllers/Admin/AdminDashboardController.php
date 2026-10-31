@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\AdminDashboardService;
+use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,9 +13,9 @@ class AdminDashboardController extends Controller
 {
     public function __construct(private readonly AdminDashboardService $dashboardService) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
-        return view('admin.dashboard', $this->dashboardService->getOverview($request));
+        return LiveTables::view($request, view('admin.dashboard', $this->dashboardService->getOverview($request, LiveTables::requested($request))), ['admin-dashboard']);
     }
 
     public function analytics(Request $request): JsonResponse

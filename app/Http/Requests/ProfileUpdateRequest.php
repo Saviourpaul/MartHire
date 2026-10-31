@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesInternationalPhone;
 use App\Http\Requests\Concerns\ValidatesLocationSelection;
+use App\Rules\InternationalPhoneNumber;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -10,7 +12,7 @@ use Illuminate\Validation\Rules\File;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    use ValidatesLocationSelection;
+    use NormalizesInternationalPhone, ValidatesLocationSelection;
 
     /**
      * Get the validation rules that apply to the request.
@@ -36,7 +38,8 @@ class ProfileUpdateRequest extends FormRequest
                     ->max(2048),
             ],
             'date_of_birth' => $dateOfBirthRule,
-            'phone' => $profileFieldRule,
+            'phone' => [$this->user()->isApplicant() ? 'required' : 'nullable', 'bail', 'string', 'max:80', new InternationalPhoneNumber($this->input('phone_country'))],
+            ...$this->phonePartRules(),
             'address' => $profileFieldRule,
 
             ...$this->locationSelectionRules($presence),
@@ -65,5 +68,6 @@ class ProfileUpdateRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->mirrorNigerianLocalGovernmentArea();
+        $this->normalizePhoneInput();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\JobStatus;
 use App\Models\Job;
+use App\Services\JobCountryService;
 use App\Support\JobDescription;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -16,6 +17,13 @@ class UpdateJobRequest extends FormRequest
         $job = $this->route('job');
 
         return $job instanceof Job && ($this->user()?->can('update', $job) ?? false);
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('country_code'))) {
+            $this->merge(['country_code' => strtoupper(trim($this->input('country_code')))]);
+        }
     }
 
     /**
@@ -35,7 +43,7 @@ class UpdateJobRequest extends FormRequest
             ],
             'company' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
-            'location' => ['required', 'string', 'max:255'],
+            'country_code' => ['bail', 'required', 'string', 'size:2', Rule::in(array_keys(app(JobCountryService::class)->all()))],
             'employment_type' => ['required', 'string', Rule::in(array_keys(Job::employmentTypeOptions()))],
             'logo' => $this->hasFile('logo')
                 ? ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048']

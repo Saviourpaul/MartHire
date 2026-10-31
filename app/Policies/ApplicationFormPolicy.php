@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\ApplicationForm;
 use App\Models\User;
+use App\Services\CandidateSelectionService;
 use App\Support\OrganizationPermissions;
 
 class ApplicationFormPolicy
@@ -21,6 +22,13 @@ class ApplicationFormPolicy
     }
 
     public function select(User $user, ApplicationForm $application): bool
+    {
+        return $this->selectCandidates($user, $application)
+            && app(CandidateSelectionService::class)->eligible($application);
+    }
+
+    /** Permission check kept separate from the interview prerequisite. */
+    public function selectCandidates(User $user, ApplicationForm $application): bool
     {
         return $this->permissions->can($user, 'select_candidates', application: $application);
     }

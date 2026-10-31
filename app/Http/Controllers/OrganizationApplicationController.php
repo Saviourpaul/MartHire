@@ -6,21 +6,28 @@ use App\Enums\CandidatePipelineStage;
 use App\Http\Requests\MoveCandidatePipelineRequest;
 use App\Models\ApplicationForm;
 use App\Models\Job;
+use App\Services\ApplicationDocumentFileService;
 use App\Services\ApplicationFormService;
+use App\Services\CandidateReviewService;
 use App\Services\EmailTemplateService;
+use App\Services\InterviewWorkspaceData;
+use App\Support\LiveTables;
 use App\Support\OrganizationPermissions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrganizationApplicationController extends Controller
 {
-    public function applied(Request $request): View
+    public function applied(Request $request): View|JsonResponse
     {
+        $this->validateTableFilters($request);
         $stage = $request->filled('stage') ? CandidatePipelineStage::tryFrom($request->string('stage')->toString()) : null;
 
         abort_if($request->filled('stage') && ! $stage, 404);
@@ -30,6 +37,7 @@ class OrganizationApplicationController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
+        $this->validateTableFilters($request);
         $stage = $request->filled('stage') ? CandidatePipelineStage::tryFrom($request->string('stage')->toString()) : null;
 
         abort_if($request->filled('stage') && ! $stage, 404);
@@ -62,11 +70,11 @@ class OrganizationApplicationController extends Controller
         ]);
     }
 
-    public function show(Request $request, ApplicationForm $applicationForm): View
+    public function show(Request $request, ApplicationForm $applicationForm): Response|JsonResponse
     {
         $this->ensureOrganizationOwnsApplication($request, $applicationForm);
         $canSendEmail = Gate::allows('send_candidate_email', $applicationForm);
-        $relations = ['applicant', 'job', 'statusHistories.changedBy', 'reviewer',
+        $relations = ['applicant', 'job',
             'interviews' => fn (HasMany $query): HasMany => $query->latest('start_at')];
 
         if (Gate::allows('viewDocuments', $applicationForm)) {
@@ -98,18 +106,37 @@ class OrganizationApplicationController extends Controller
                 ->mapWithKeys(fn ($template): array => [$template->type->value => ['subject' => $template->subject, 'body' => $template->body]])->all()
             : [];
 
-        return view('organisations.candidates.show', [
+        $documents = Gate::allows('viewDocuments', $applicationForm)
+            ? $applicationForm->documents->sortBy(fn ($document): int => $document->document_type?->value === 'resume' ? 0 : 1)
+                ->map(function ($document): array {
+                    return [
+                        'id' => (string) $document->id,
+                        'label' => $document->displayLabel(),
+                        'size' => $document->size,
+                        'preview_url' => $document->previewUrl(),
+                        'download_url' => $document->downloadUrl(),
+                        ...app(ApplicationDocumentFileService::class)->metadataFor($document),
+                    ];
+                })->values()->all()
+            : [];
+
+        $response = LiveTables::view($request, view('organisations.candidates.show', [
             'allowedStages' => array_values(array_filter($applicationForm->status->allowedNextStages(),
                 fn (CandidatePipelineStage $stage): bool => Gate::allows('managePipeline', $applicationForm)
                     && ($stage !== CandidatePipelineStage::Selected || Gate::allows('select', $applicationForm)))),
             'application' => $applicationForm,
+            'review' => app(CandidateReviewService::class)->build($applicationForm, $request->user()),
+            'reviewDocuments' => $documents,
+            'interviewWorkspace' => $canSendEmail ? app(InterviewWorkspaceData::class)->forApplication($applicationForm, $request->user()) : [],
             'canSendCandidateEmail' => $canSendEmail,
             'cancelEmailSubject' => $templateDefaults['interview_cancel']['subject'] ?? '',
             'cancelEmailBody' => $templateDefaults['interview_cancel']['body'] ?? '',
-        ]);
+        ]), ['candidate-review']);
+
+        return $response instanceof JsonResponse ? $response : response($response)->header('Cache-Control', 'private, no-store');
     }
 
-    public function movePipeline(MoveCandidatePipelineRequest $request, ApplicationForm $applicationForm, ApplicationFormService $service): RedirectResponse
+    public function movePipeline(MoveCandidatePipelineRequest $request, ApplicationForm $applicationForm, ApplicationFormService $service): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
 
@@ -117,10 +144,13 @@ class OrganizationApplicationController extends Controller
             $applicationForm,
             $request->user(),
             CandidatePipelineStage::from($data['stage']),
-            $data['remarks'] ?? null
+            $data['remarks'] ?? null,
+            $request->boolean('selection_confirmed')
         );
 
-        return back()->with('success', "Candidate moved to {$application->status->label()}.");
+        $message = "Candidate moved to {$application->status->label()}.";
+
+        return LiveTables::mutation($request, $message, back()->with('success', $message), ['candidates', 'applications']);
     }
 
     /**
@@ -129,6 +159,12 @@ class OrganizationApplicationController extends Controller
      *
      * @return Builder<ApplicationForm>
      */
+    private function validateTableFilters(Request $request): void
+    {
+        $request->validate(['stage' => ['sometimes', 'nullable', 'string', 'max:40'], 'search' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'job_id' => ['sometimes', 'nullable', 'integer', 'min:1'], 'page' => ['sometimes', 'integer', 'min:1']]);
+    }
+
     private function filteredCandidates(Request $request, ?CandidatePipelineStage $status): Builder
     {
         return ApplicationForm::query()
@@ -138,14 +174,12 @@ class OrganizationApplicationController extends Controller
             ->search($request->string('search')->toString());
     }
 
-    private function candidateTable(Request $request, ?CandidatePipelineStage $status, string $title, string $routeName, string $viewName): View
+    private function candidateTable(Request $request, ?CandidatePipelineStage $status, string $title, string $routeName, string $viewName): View|JsonResponse
     {
-        $applications = $this->filteredCandidates($request, $status)
+        $applications = LiveTables::paginate($this->filteredCandidates($request, $status)
             ->with(['job:id,title,company', 'applicant:id,first_name,last_name,email'])
             ->withCount('documents')
-            ->latest('submitted_at')
-            ->paginate(10)
-            ->withQueryString();
+            ->latest('submitted_at')->latest('id'), 10);
 
         $jobs = Job::query()
             ->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $request->user()))
@@ -153,14 +187,14 @@ class OrganizationApplicationController extends Controller
             ->orderBy('title')
             ->get(['id', 'title']);
 
-        return view($viewName, [
+        return LiveTables::view($request, view($viewName, [
             'applications' => $applications,
             'jobs' => $jobs,
             'statusFilter' => $status,
             'exportRoute' => 'organisations.candidates.export',
             'title' => $title,
             'routeName' => $routeName,
-        ]);
+        ]), ['organization-candidates']);
     }
 
     private function ensureOrganizationOwnsApplication(Request $request, ApplicationForm $application): void

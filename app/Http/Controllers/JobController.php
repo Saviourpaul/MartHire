@@ -10,7 +10,10 @@ use App\Models\Job;
 use App\Models\JobPostMember;
 use App\Models\Organization;
 use App\Models\OrganizationMember;
+use App\Services\JobCountryService;
+use App\Services\LocationService;
 use App\Support\JobDescription;
+use App\Support\LiveTables;
 use App\Support\OrganizationContext;
 use App\Support\OrganizationPermissions;
 use Closure;
@@ -56,15 +59,17 @@ class JobController extends Controller
         return view('Browse-jobs', $data);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
+        $request->validate(['search' => ['sometimes', 'nullable', 'string', 'max:200'], 'status' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'sort' => ['sometimes', 'nullable', 'string', 'max:40'], 'direction' => ['sometimes', 'nullable', 'string', 'max:10'], 'page' => ['sometimes', 'integer', 'min:1']]);
         $sortableColumns = ['title', 'company', 'category', 'location', 'employment_type', 'start_date', 'due_date', 'created_at'];
         $sortColumn = $request->input('sort') && in_array($request->input('sort'), $sortableColumns, true)
             ? $request->input('sort')
             : 'created_at';
         $sortDirection = $request->input('direction') === 'asc' ? 'asc' : 'desc';
 
-        $jobs = app(OrganizationPermissions::class)->scopeJobs(Job::query(), $request->user())
+        $jobs = LiveTables::paginate(app(OrganizationPermissions::class)->scopeJobs(Job::query(), $request->user())
             ->when(is_string($request->query('status')) && JobStatus::tryFrom($request->query('status')), fn ($query) => $query->status($request->query('status')))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%'.$request->string('search')->trim().'%';
@@ -79,15 +84,14 @@ class JobController extends Controller
                 });
             })
             ->orderBy($sortColumn, $sortDirection)
-            ->withCount(['applications' => fn ($query) => app(OrganizationPermissions::class)->scopeApplications($query, $request->user())])
-            ->paginate(10)
-            ->withQueryString();
+            ->orderBy('id', $sortDirection)
+            ->withCount(['applications' => fn ($query) => app(OrganizationPermissions::class)->scopeApplications($query, $request->user())]), 10);
 
-        return view('organisations.jobs.index', [
+        return LiveTables::view($request, view('organisations.jobs.index', [
             'jobs' => $jobs,
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
-        ]);
+        ]), ['organization-jobs']);
     }
 
     public function create(Request $request): View
@@ -96,6 +100,7 @@ class JobController extends Controller
 
         return view('organisations.jobs.create', [
             'job' => null,
+            'countries' => app(LocationService::class)->jobCountries(),
             'categories' => $this->orgCategories($request),
             'employmentTypes' => Job::employmentTypeOptions(),
         ]);
@@ -107,6 +112,7 @@ class JobController extends Controller
 
         return view('organisations.jobs.edit', [
             'job' => $job,
+            'countries' => app(LocationService::class)->jobCountries(),
             'categories' => $this->orgCategories($request),
             'employmentTypes' => Job::employmentTypeOptions(),
         ]);
@@ -123,7 +129,7 @@ class JobController extends Controller
     public function store(StoreJobRequest $request): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        unset($data['action']);
+        unset($data['action'], $data['location']);
         $data['description'] = app(JobDescription::class)->toHtml($data['description']);
 
         if ($request->hasFile('logo')) {
@@ -146,6 +152,13 @@ class JobController extends Controller
             ? 'Job saved as a draft.'
             : 'Job published and open for applications.';
 
+        if (! LiveTables::actionRequested($request)) {
+            LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
+        }
+        if ($request->header('X-Live-Action') === '1') {
+            return LiveTables::mutation($request, $message, to_route('organisations.jobs.show', $job)->with('success', $message), ['jobs']);
+        }
+
         if ($request->expectsJson()) {
             $request->session()->flash('success', $message);
 
@@ -158,7 +171,7 @@ class JobController extends Controller
     public function update(UpdateJobRequest $request, Job $job): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        unset($data['action']);
+        unset($data['action'], $data['location']);
         $data['description'] = app(JobDescription::class)->toHtml($data['description']);
         if ($request->hasFile('logo')) {
             unset($data['logo']);
@@ -206,6 +219,13 @@ class JobController extends Controller
         }
         $message = $status === JobStatus::Draft ? 'Job saved as a draft.' : 'Job updated successfully.';
 
+        if (! LiveTables::actionRequested($request)) {
+            LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
+        }
+        if ($request->header('X-Live-Action') === '1') {
+            return LiveTables::mutation($request, $message, to_route('organisations.jobs.show', $job)->with('success', $message), ['jobs', 'candidates', 'applications']);
+        }
+
         if ($request->expectsJson()) {
             $request->session()->flash('success', $message);
 
@@ -225,6 +245,15 @@ class JobController extends Controller
 
         if ($updated === 0) {
             throw ValidationException::withMessages(['confirm_closure' => 'This job is already closed.']);
+        }
+
+        if (! LiveTables::actionRequested($request)) {
+            LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
+        }
+        if ($request->header('X-Live-Action') === '1') {
+            $message = 'Job closed. Existing applications remain available.';
+
+            return LiveTables::mutation($request, $message, to_route('organisations.jobs.show', $job)->with('success', $message), ['jobs', 'applications']);
         }
 
         if ($request->expectsJson()) {
@@ -253,6 +282,15 @@ class JobController extends Controller
         });
         $this->deleteStoredLogo($job);
 
+        if (! LiveTables::actionRequested($request)) {
+            LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
+        }
+        if ($request->header('X-Live-Action') === '1') {
+            $message = 'Job deleted successfully.';
+
+            return LiveTables::mutation($request, $message, to_route('organisations.jobs.index')->with('success', $message), ['jobs', 'candidates', 'applications']);
+        }
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Job deleted successfully.',
@@ -273,6 +311,7 @@ class JobController extends Controller
 
         return view('organisations.jobs.show', [
             'job' => $job,
+            'country' => app(JobCountryService::class)->find($job->country_code),
             'availableTeamMembers' => OrganizationMember::with('user')->where('status', 'active')
                 ->whereHas('user', fn ($query) => $query->where('status', 'active')->where('role', 'organization')->whereNull('users.deleted_at')->whereNotNull('email_verified_at'))->get(),
             'assignedUserIds' => JobPostMember::where('job_id', $job->id)->pluck('user_id')->all(),

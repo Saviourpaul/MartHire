@@ -3,19 +3,20 @@
 namespace App\Http\Requests;
 
 use App\Enums\ApplicationDocumentType;
+use App\Http\Requests\Concerns\NormalizesInternationalPhone;
 use App\Http\Requests\Concerns\ValidatesLocationSelection;
 use App\Models\ApplicationForm;
 use App\Models\Job;
-use App\Support\ExpirationResponse;
+use App\Rules\InternationalPhoneNumber;
+use App\Services\LocationService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\Validator;
 
 class StoreApplicationFormRequest extends FormRequest
 {
-    use ValidatesLocationSelection;
+    use NormalizesInternationalPhone, ValidatesLocationSelection;
 
     public const PROFILE_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'webp'];
 
@@ -37,9 +38,6 @@ class StoreApplicationFormRequest extends FormRequest
 
     private const PERSON_NAME_PATTERN = '/^[\pL\s\'-]+$/u';
 
-    private const PHONE_PATTERN = '/^\+?[0-9\s().-]{7,20}$/';
-
-
     public function authorize(): bool
     {
         $job = $this->route('job');
@@ -54,9 +52,8 @@ class StoreApplicationFormRequest extends FormRequest
     {
         $job = $this->route('job');
 
-        if ($this->user()?->isApplicant() && $job instanceof Job
-            && ! $job->isSuspended() && ! $job->isAcceptingApplications()) {
-            throw new HttpResponseException(app(ExpirationResponse::class)->gone($this, 'application_closed'));
+        if ($job instanceof Job && ! $job->isAcceptingApplications()) {
+            abort(404);
         }
 
         parent::failedAuthorization();
@@ -88,7 +85,8 @@ class StoreApplicationFormRequest extends FormRequest
             'middle_name' => ['bail', 'nullable', 'string', 'max:100', 'regex:'.self::PERSON_NAME_PATTERN],
             'last_name' => ['bail', 'required', 'string', 'min:2', 'max:100', 'regex:'.self::PERSON_NAME_PATTERN],
             'email' => ['bail', 'required', 'string', 'lowercase', 'email:rfc', 'max:255'],
-            'phone' => ['bail', 'required', 'string', 'regex:'.self::PHONE_PATTERN],
+            'phone' => ['bail', 'required', 'string', 'max:80', new InternationalPhoneNumber($this->input('phone_country'))],
+            ...$this->phonePartRules(),
             'date_of_birth' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:1900-01-01', 'before:today'],
             'gender' => ['bail', 'required', Rule::in(['male', 'female', 'other'])],
             'marital_status' => ['bail', 'required', Rule::in(['single', 'married', 'Other'])],
@@ -131,7 +129,6 @@ class StoreApplicationFormRequest extends FormRequest
             'first_name.regex' => 'The first name may only contain letters, spaces, hyphens, and apostrophes.',
             'middle_name.regex' => 'The middle name may only contain letters, spaces, hyphens, and apostrophes.',
             'last_name.regex' => 'The last name may only contain letters, spaces, hyphens, and apostrophes.',
-            'phone.regex' => 'Enter a valid phone number using 7 to 20 digits, with an optional leading plus sign.',
             'date_of_birth.date_format' => 'Enter the date of birth in YYYY-MM-DD format.',
             'date_of_birth.after_or_equal' => 'Enter a realistic date of birth.',
             'date_of_birth.before' => 'The date of birth must be before today.',
@@ -197,6 +194,11 @@ class StoreApplicationFormRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $countryCode = $this->input('country_code');
+        $countryCode = is_string($countryCode) ? mb_strtoupper(trim($countryCode)) : null;
+        $country = collect(app(LocationService::class)->countries())->firstWhere('value', $countryCode);
+        $this->merge(['country_code' => $countryCode, 'country' => $country['label'] ?? null]);
         $this->normalizeLocationForCountry();
+        $this->normalizePhoneInput();
     }
 }

@@ -66,6 +66,14 @@ class InterviewTemplateRenderer
         $template = $this->templates->resolve($interview->organization_id, $type);
         $subject ??= $template->subject;
         $body ??= $template->body;
+        // Reschedule templates are shared by online and onsite interviews. Always
+        // retain the current meeting destination when a generic template omits it.
+        if ($type === InterviewTemplateType::InterviewReschedule) {
+            $destination = $interview->mode === InterviewMode::Online ? 'meeting_link' : 'address';
+            if (! $this->containsPlaceholder($body, $destination)) {
+                $body .= "\n\n".($destination === 'meeting_link' ? 'Join here: ' : 'Location: ').'{{ '.$destination.' }}';
+            }
+        }
         $this->validate($type, $subject, $body);
         $interview->loadMissing(['applicationForm.job', 'organization']);
 

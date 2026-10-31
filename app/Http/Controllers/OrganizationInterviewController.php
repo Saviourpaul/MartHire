@@ -4,17 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Enums\InterviewTemplateType;
 use App\Http\Requests\CancelInterviewRequest;
+use App\Http\Requests\CompleteInterviewRequest;
 use App\Http\Requests\SaveInterviewRequest;
 use App\Models\ApplicationForm;
 use App\Models\CandidateMessage;
 use App\Models\Interview;
 use App\Services\CandidateMessageService;
-use App\Services\EmailTemplateService;
 use App\Services\InterviewService;
 use App\Services\InterviewTemplateRenderer;
-use App\Services\OrganizationSettingsService;
-use App\Services\UserPreferencesService;
-use DateTimeZone;
+use App\Services\InterviewWorkspaceData;
+use App\Support\LiveTables;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,10 +24,8 @@ class OrganizationInterviewController extends Controller
 {
     public function __construct(
         private InterviewService $interviews,
-        private EmailTemplateService $templates,
         private InterviewTemplateRenderer $renderer,
-        private OrganizationSettingsService $organizationSettings,
-        private UserPreferencesService $userPreferences,
+        private InterviewWorkspaceData $workspace,
     ) {}
 
     public function create(ApplicationForm $applicationForm): View
@@ -38,12 +35,13 @@ class OrganizationInterviewController extends Controller
         return $this->form($applicationForm);
     }
 
-    public function store(SaveInterviewRequest $request, ApplicationForm $applicationForm): RedirectResponse
+    public function store(SaveInterviewRequest $request, ApplicationForm $applicationForm): RedirectResponse|JsonResponse
     {
         $this->interviews->schedule($applicationForm, $request->user(), $request->validated());
 
-        return to_route('organisations.candidates.show', $applicationForm)
-            ->with('success', 'Interview scheduled. Check the invitation delivery status below.');
+        $message = 'Interview scheduled. Check the invitation delivery status below.';
+
+        return LiveTables::mutation($request, $message, $this->backToWorkspace($applicationForm->id)->with('success', $message), ['interviews', 'candidates']);
     }
 
     public function edit(Interview $interview): View
@@ -53,20 +51,22 @@ class OrganizationInterviewController extends Controller
         return $this->form($interview->applicationForm, $interview);
     }
 
-    public function update(SaveInterviewRequest $request, Interview $interview): RedirectResponse
+    public function update(SaveInterviewRequest $request, Interview $interview): RedirectResponse|JsonResponse
     {
         $this->interviews->reschedule($interview, $request->user(), $request->validated());
 
-        return to_route('organisations.candidates.show', $interview->application_form_id)
-            ->with('success', 'Interview rescheduled. Check the update email delivery status below.');
+        $message = 'Interview rescheduled. Check the update email delivery status below.';
+
+        return LiveTables::mutation($request, $message, $this->backToWorkspace($interview->application_form_id)->with('success', $message), ['interviews', 'candidates']);
     }
 
-    public function cancel(CancelInterviewRequest $request, Interview $interview): RedirectResponse
+    public function cancel(CancelInterviewRequest $request, Interview $interview): RedirectResponse|JsonResponse
     {
         $this->interviews->cancel($interview, $request->user(), $request->validated());
 
-        return to_route('organisations.candidates.show', $interview->application_form_id)
-            ->with('success', 'Interview cancelled. Check the cancellation email delivery status below.');
+        $message = 'Interview cancelled. Check the cancellation email delivery status below.';
+
+        return LiveTables::mutation($request, $message, $this->backToWorkspace($interview->application_form_id)->with('success', $message), ['interviews', 'candidates']);
     }
 
     public function preview(SaveInterviewRequest $request, ApplicationForm $applicationForm): JsonResponse
@@ -89,50 +89,36 @@ class OrganizationInterviewController extends Controller
         ))->header('Cache-Control', 'no-store, private');
     }
 
-    public function retry(Request $request, CandidateMessage $candidateMessage, CandidateMessageService $messages): RedirectResponse
+    public function complete(CompleteInterviewRequest $request, Interview $interview): RedirectResponse|JsonResponse
+    {
+        $this->interviews->complete($interview, $request->user(), $request->validated());
+
+        $message = 'Interview marked completed. An authorized team member can now explicitly confirm the candidate as Selected.';
+
+        return LiveTables::mutation($request, $message, $this->backToWorkspace($interview->application_form_id)->with('success', $message), ['interviews', 'candidates']);
+    }
+
+    public function retry(Request $request, CandidateMessage $candidateMessage, CandidateMessageService $messages): RedirectResponse|JsonResponse
     {
         Gate::authorize('retry', $candidateMessage);
         $messages->retry($candidateMessage, $request->user());
 
-        return to_route('organisations.candidates.show', $candidateMessage->application_form_id)
-            ->with('success', 'Delivery retry requested. Check the email status below.');
+        $message = 'Delivery retry requested. Check the email status below.';
+
+        return LiveTables::mutation($request, $message, $this->backToWorkspace($candidateMessage->application_form_id)->with('success', $message), ['interviews', 'candidates']);
+    }
+
+    private function backToWorkspace(int $applicationId): RedirectResponse
+    {
+        return redirect()->to(route('organisations.candidates.show', ['applicationForm' => $applicationId, 'tab' => 'interviews']).'#candidate-interviews');
     }
 
     private function form(ApplicationForm $application, ?Interview $interview = null): View
     {
-        $organizationDefaults = $this->organizationSettings->forOrganization($application->organization_id);
-        $user = auth()->user();
-        $userTimezone = $this->userPreferences->forUser($user)->timezone;
-        $defaultTimezone = $organizationDefaults->default_interview_timezone ?? $userTimezone;
-        $selectedMode = old('mode', $interview?->mode?->value ?? 'online');
-        $selectedTimezone = old('timezone', $interview?->timezone ?? $defaultTimezone ?? config('app.timezone', 'UTC'));
-        $localStart = $interview?->start_at?->setTimezone($interview->timezone);
-        $localEnd = $interview?->end_at?->setTimezone($interview->timezone);
-        $templateDefaults = $this->templates->forSending($application->organization_id)
-            ->mapWithKeys(fn ($template): array => [$template->type->value => ['subject' => $template->subject, 'body' => $template->body]])->all();
-        $templateType = $interview
-            ? InterviewTemplateType::InterviewReschedule
-            : ($selectedMode === 'onsite' ? InterviewTemplateType::InterviewOnsite : InterviewTemplateType::InterviewOnline);
-        $emailDefaults = $templateDefaults[$templateType->value] ?? ['subject' => '', 'body' => ''];
-
         return view('organisations.interviews.form', [
             'application' => $application->load('job'),
             'interview' => $interview,
-            'timezones' => DateTimeZone::listIdentifiers(),
-            'templateDefaults' => $templateDefaults,
-            'selectedMode' => $selectedMode,
-            'selectedTimezone' => $selectedTimezone,
-            'detectTimezone' => ! $interview && ! session()->hasOldInput('timezone') && ! $defaultTimezone,
-            'contactName' => old('contact_name', $interview ? $interview->contact_name : ($organizationDefaults->default_interview_contact_name ?? trim($user->first_name.' '.$user->last_name))),
-            'contactPhone' => old('contact_phone', $interview ? $interview->contact_phone : ($organizationDefaults->default_interview_contact_phone ?? $user->phone)),
-            'interviewDate' => old('interview_date', $localStart?->format('Y-m-d')),
-            'startTime' => old('start_time', $localStart?->format('H:i')),
-            'endTime' => old('end_time', $localEnd?->format('H:i')),
-            'emailSubject' => old('subject', $emailDefaults['subject']),
-            'emailBody' => old('body', $emailDefaults['body']),
-            'formAction' => $interview ? route('organisations.interviews.update', $interview) : route('organisations.interviews.store', $application),
-            'formMethod' => $interview ? 'PATCH' : 'POST',
-            'previewUrl' => route('organisations.interviews.preview', $application),
+            'interviewWorkspace' => $this->workspace->forApplication($application, auth()->user()),
         ]);
     }
 }

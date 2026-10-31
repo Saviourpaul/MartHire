@@ -27,7 +27,7 @@ class SaveInterviewRequest extends FormRequest
             return false;
         }
 
-        if ($this->routeIs('employer.interviews.preview') && $this->filled('interview_id')) {
+        if ($this->routeIs('organisations.interviews.preview') && $this->filled('interview_id')) {
             return $this->user()?->can('send_candidate_email', $application) ?? false;
         }
 

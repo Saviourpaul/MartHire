@@ -74,7 +74,7 @@ class CandidateMessageService
                     'to_email' => $recipient, 'from_email' => config('mail.from.address'), 'from_name' => $interview->organization->name.' via Marthire',
                     'reply_to_email' => $actor->email, 'reply_to_name' => $replyToName,
                     'rendered_subject' => $rendered['subject'], 'rendered_body' => $rendered['body'],
-                    'rendered_html' => view('emails.interview-mesaage', [
+                    'rendered_html' => view('emails.interview-message', [
                         'subject' => $rendered['subject'], 'body' => $rendered['body'],
                         'organizationName' => $interview->organization->name, ...$urls,
                     ])->render(),

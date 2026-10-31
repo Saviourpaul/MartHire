@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CandidatePipelineStage;
 use App\Enums\InterviewCandidateResponse;
 use App\Enums\InterviewMode;
 use App\Enums\InterviewPlatform;
@@ -50,6 +51,16 @@ class Interview extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(CandidateMessage::class);
+    }
+
+    public function canBeCompleted(): bool
+    {
+        return $this->applicationForm?->status === CandidatePipelineStage::Interview
+            && $this->status->isActive()
+            && $this->candidate_response !== InterviewCandidateResponse::Declined
+            && $this->start_at !== null && $this->end_at !== null
+            && $this->end_at->greaterThan($this->start_at)
+            && $this->end_at->lessThanOrEqualTo(now());
     }
 
     protected function parentOrganizationId(): ?int

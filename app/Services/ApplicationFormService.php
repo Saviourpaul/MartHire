@@ -46,6 +46,12 @@ class ApplicationFormService
                     throw ValidationException::withMessages(['job' => 'This job is not accepting applications.']);
                 }
 
+                // The job lock serializes submissions. Repeat this check here
+                // so concurrent attempts cannot race into the unique index.
+                if ($currentJob->applications()->where('user_id', $applicant->id)->exists()) {
+                    throw ValidationException::withMessages(['job' => 'You have already applied for this job.']);
+                }
+
                 $profileImagePath = $applicant->profile_image_path;
 
                 if (($data['profile_image'] ?? null) instanceof UploadedFile) {
@@ -61,6 +67,9 @@ class ApplicationFormService
                         'last_name',
                         'email',
                         'phone',
+                        'phone_country',
+                        'phone_dial_code',
+                        'phone_national_number',
                         'date_of_birth',
                         'gender',
                         'marital_status',
@@ -136,9 +145,9 @@ class ApplicationFormService
         return $application;
     }
 
-    public function moveCandidate(ApplicationForm $application, User $employer, CandidatePipelineStage $stage, ?string $remarks = null): ApplicationForm
+    public function moveCandidate(ApplicationForm $application, User $employer, CandidatePipelineStage $stage, ?string $remarks = null, bool $selectionConfirmed = false): ApplicationForm
     {
-        return $this->pipelineTransitions->moveCandidate($application, $employer, $stage, $remarks);
+        return $this->pipelineTransitions->moveCandidate($application, $employer, $stage, $remarks, $selectionConfirmed);
     }
 
     /**
@@ -151,6 +160,9 @@ class ApplicationFormService
             'last_name',
             'date_of_birth',
             'phone',
+            'phone_country',
+            'phone_dial_code',
+            'phone_national_number',
             'address',
             'country_code',
             'country',

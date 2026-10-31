@@ -15,7 +15,7 @@ class MoveCandidatePipelineRequest extends FormRequest
 
         return $application instanceof ApplicationForm
             && $this->user()?->can('managePipeline', $application)
-            && ($this->input('stage') !== CandidatePipelineStage::Selected->value || $this->user()?->can('select', $application));
+            && ($this->input('stage') !== CandidatePipelineStage::Selected->value || $this->user()?->can('selectCandidates', $application));
     }
 
     /**
@@ -26,6 +26,12 @@ class MoveCandidatePipelineRequest extends FormRequest
         return [
             'stage' => ['required', Rule::enum(CandidatePipelineStage::class)],
             'remarks' => ['nullable', 'string', 'max:2000'],
+            'selection_confirmed' => ['exclude_unless:stage,selected', 'required', 'accepted'],
         ];
+    }
+
+    public function messages(): array
+    {
+        return ['selection_confirmed.accepted' => 'Explicitly confirm this candidate as Selected to continue.'];
     }
 }

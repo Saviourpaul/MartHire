@@ -8,12 +8,12 @@ use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Services\ApplicationFormService;
 use App\Services\LocationService;
-use App\Support\ExpirationResponse;
+use App\Services\PublicJobService;
+use App\Support\OrganizationContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Throwable;
 
@@ -35,9 +35,9 @@ class JobApplicationController extends Controller
         ]);
     }
 
-    public function create(Request $request, Job $job): View|RedirectResponse|Response|JsonResponse
+    public function create(Request $request, Job $job): View|RedirectResponse
     {
-        abort_if($job->isSuspended(), 404);
+        abort_unless($job->isAcceptingApplications(), 404);
 
         $user = $request->user();
 
@@ -51,8 +51,10 @@ class JobApplicationController extends Controller
 
         abort_unless($user->isApplicant(), 403);
 
-        if (! $job->isAcceptingApplications()) {
-            return app(ExpirationResponse::class)->gone($request, 'application_closed');
+        if (! $user->hasVerifiedEmail()) {
+            $request->session()->put('url.intended', route('applications.create', $job));
+
+            return redirect()->route('verification.notice');
         }
 
         $existingApplication = $user
@@ -66,19 +68,41 @@ class JobApplicationController extends Controller
                 ->with('info', 'You have already applied for this job.');
         }
 
-        return view('client.Application', [
+        $locations = app(LocationService::class);
+        $countryCode = $request->old('country_code', $user->country_code ?? '');
+        $state = $request->old('state', $user->state ?? '');
+
+        return view('client.job-application', [
             'job' => $job,
+            'publicJob' => app(PublicJobService::class)->native($job),
             'user' => $user,
-            'countries' => app(LocationService::class)->countries(),
+            'countries' => $locations->countries(),
+            'states' => is_string($countryCode) ? $locations->states($countryCode) : [],
+            'cities' => is_string($countryCode) && is_string($state) ? $locations->cities($countryCode, $state) : [],
         ]);
     }
 
     /**
      * @throws Throwable
      */
-    public function store(StoreApplicationFormRequest $request, Job $job, ApplicationFormService $service): RedirectResponse
+    public function store(StoreApplicationFormRequest $request, Job $job, ApplicationFormService $service): RedirectResponse|JsonResponse
     {
-        $application = $service->submit($job, $request->user(), $request->validated());
+        // Applicants have no active organization. Bind every submission and its
+        // documents to the job's organization while the service writes them.
+        $application = app(OrganizationContext::class)->runInOrganization(
+            $job->organization,
+            fn () => $service->submit($job, $request->user(), $request->validated())
+        );
+
+        if ($request->expectsJson()) {
+            $request->session()->flash('success', 'Your application has been submitted successfully.');
+
+            return response()->json([
+                'submitted' => true,
+                'message' => 'Your application has been submitted successfully.',
+                'redirect' => route('client.applications.show', $application),
+            ], 201);
+        }
 
         return redirect()
             ->route('client.applications.show', $application)
@@ -91,6 +115,7 @@ class JobApplicationController extends Controller
 
         return view('client.application-show', [
             'application' => $applicationForm->load(['job', 'applicant', 'documents', 'statusHistories.changedBy', 'interviews']),
+            'publicJob' => $applicationForm->job ? app(PublicJobService::class)->native($applicationForm->job) : null,
         ]);
     }
 

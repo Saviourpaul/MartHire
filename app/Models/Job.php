@@ -7,6 +7,7 @@ use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Scopes\OrganizationScope;
 use Database\Factories\JobFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,7 @@ class Job extends Model
         'company',
         'category',
         'location',
+        'country_code',
         'employment_type',
         'logo',
         'start_date',
@@ -62,6 +64,13 @@ class Job extends Model
         ];
     }
 
+    protected function countryCode(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value): ?string => filled($value) ? strtoupper(trim($value)) : null,
+        );
+    }
+
     protected static function booted(): void
     {
         static::creating(fn (Job $job) => $job->slug ??= static::generateUniqueSlug($job->title));
@@ -72,7 +81,7 @@ class Job extends Model
         $slug = $base = Str::slug($title);
         $i = 1;
 
-        while (static::where('slug', $slug)->exists()) {
+        while (static::withoutGlobalScope(OrganizationScope::class)->where('slug', $slug)->exists()) {
             $slug = "{$base}-".$i++;
         }
 
@@ -148,7 +157,7 @@ class Job extends Model
 
     public function isAcceptingApplications(): bool
     {
-        return $this->isOpen() && ! $this->due_date?->isBefore(today());
+        return $this->isOpen() && $this->due_date !== null && ! $this->due_date->isBefore(today());
     }
 
     public function isSuspended(): bool
@@ -166,22 +175,24 @@ class Job extends Model
         return self::EMPLOYMENT_TYPES[$this->employment_type] ?? 'Not specified';
     }
 
-    public function logoUrl(): string
+    public function logoUrl(): ?string
     {
-        $defaultLogo = 'assets/images/brands/company-logo-1.png';
-
         if (! $this->logo) {
-            return asset($defaultLogo);
+            return null;
         }
 
-        $path = ltrim($this->logo, '/');
+        $path = trim($this->logo);
+        if ($path === '') {
+            return null;
+        }
 
         if (filter_var($path, FILTER_VALIDATE_URL)) {
-            return $path;
+            return in_array(strtolower(parse_url($path, PHP_URL_SCHEME) ?? ''), ['http', 'https'], true) ? $path : null;
         }
 
+        $path = ltrim($path, '/');
         if (str_starts_with($path, 'storage/')) {
-            return asset($path);
+            $path = substr($path, strlen('storage/'));
         }
 
         if (str_starts_with($path, 'public/')) {
@@ -192,11 +203,11 @@ class Job extends Model
             return asset('storage/'.$path);
         }
 
-        if (file_exists(public_path($path))) {
+        if (is_file(public_path($path))) {
             return asset($path);
         }
 
-        return asset($defaultLogo);
+        return null;
     }
 
     public function storedLogoPath(): ?string

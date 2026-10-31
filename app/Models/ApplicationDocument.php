@@ -66,6 +66,18 @@ class ApplicationDocument extends Model
         return route('application-documents.preview', $this);
     }
 
+    /** Organization-facing names come from the submitted type, never its filename. */
+    public function displayLabel(): string
+    {
+        $type = ApplicationDocumentType::tryFrom((string) ($this->getAttributes()['document_type'] ?? ''));
+
+        return match ($type) {
+            ApplicationDocumentType::Education => __('Education certificate'),
+            ApplicationDocumentType::LegacyIdentity => __('Identity document'),
+            default => $type ? __($type->label()) : __('Document'),
+        };
+    }
+
     public function canPreviewInline(): bool
     {
         return self::mimeTypeCanPreview($this->mime_type);

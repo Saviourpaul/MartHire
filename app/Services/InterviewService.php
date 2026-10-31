@@ -182,6 +182,32 @@ class InterviewService
     }
 
     /** @param array<string, mixed> $data */
+    public function complete(Interview $interview, User $actor, array $data): Interview
+    {
+        return DB::transaction(function () use ($interview, $actor, $data): Interview {
+            $interview = $this->lockInterview($interview);
+            Gate::forUser($actor)->authorize('manageCompletion', $interview);
+            if (! isset($data['version']) || (int) $data['version'] !== $interview->version) {
+                throw ValidationException::withMessages(['version' => 'This interview was changed by another team member. Reload before completing it.']);
+            }
+            if (! in_array($data['completion_confirmed'] ?? null, [true, 1, '1', 'yes', 'on', 'true'], true)) {
+                throw ValidationException::withMessages(['completion_confirmed' => 'Confirm that this interview took place before marking it completed.']);
+            }
+            if (! $interview->canBeCompleted()) {
+                throw ValidationException::withMessages(['interview' => 'Only an ended, scheduled interview that was not declined or cancelled can be marked completed while the candidate is in Interview.']);
+            }
+
+            $previous = $this->snapshot($interview);
+            $interview->forceFill(['status' => InterviewStatus::Completed, 'version' => $interview->version + 1])->save();
+            $this->recordActivity($interview, $actor, 'interview_completed', ['previous' => $previous]);
+
+            // Completion records the employer's review action; selection and
+            // candidate communication remain separate explicit actions.
+            return $interview->load('applicationForm.job');
+        });
+    }
+
+    /** @param array<string, mixed> $data */
     private function parseDateTime(array $data, string $field, string $timezone): CarbonImmutable
     {
         if (empty($data['interview_date']) || empty($data[$field])) {

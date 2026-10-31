@@ -23,7 +23,7 @@ class AdminDashboardService
     /**
      * @return array<string, mixed>
      */
-    public function getOverview(Request $request): array
+    public function getOverview(Request $request, bool $fresh = false): array
     {
         $dateRange = $this->analyticsDateRange($request->input('period', '12_months'));
         $analytics = $this->analytics($request->input('period', '12_months'));
@@ -31,7 +31,7 @@ class AdminDashboardService
         return [
             'dateRange' => $dateRange,
             'filterValues' => ['period' => $request->input('period', '12_months')],
-            'metrics' => $this->metrics(),
+            'metrics' => $this->metrics($fresh),
             'jobStatusCounts' => Job::query()->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status'),
             'charts' => [
                 'jobsOverTime' => [
@@ -115,9 +115,9 @@ class AdminDashboardService
     /**
      * @return array<string, int>
      */
-    private function metrics(): array
+    private function metrics(bool $fresh = false): array
     {
-        return Cache::remember('admin_dashboard.metrics', now()->addMinutes(5), function (): array {
+        $load = function (): array {
             $applicationCounts = ApplicationForm::query()
                 ->selectRaw('status, COUNT(*) as total')
                 ->groupBy('status')
@@ -132,7 +132,10 @@ class AdminDashboardService
                 'rejected_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Rejected->value] ?? 0),
                 'submitted_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Submitted->value] ?? 0),
             ];
-        });
+        };
+
+        // Live refreshes must not report cached counts beside newly queried rows.
+        return $fresh ? $load() : Cache::remember('admin_dashboard.metrics', now()->addMinutes(5), $load);
     }
 
     private function countUsersByRole(UserRole $role): int

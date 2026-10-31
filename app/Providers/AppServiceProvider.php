@@ -8,7 +8,10 @@ use App\Models\OrganizationMember;
 use App\Models\PlatformSetting;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\CountryDisplayService;
+use App\Services\JobCountryService;
 use App\Services\NotificationInboxService;
+use App\Services\PhoneNumberService;
 use App\Services\PlatformSettingsService;
 use App\Services\UserPreferencesService;
 use App\Support\OrganizationContext;
@@ -30,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(OrganizationContext::class);
+        $this->app->scoped(JobCountryService::class);
+        $this->app->scoped(CountryDisplayService::class);
+        $this->app->scoped(PhoneNumberService::class);
         $this->app->scoped(PlatformSettingsService::class);
         $this->app->scoped(UserPreferencesService::class);
     }

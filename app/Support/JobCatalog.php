@@ -2,8 +2,10 @@
 
 namespace App\Support;
 
+use App\Services\JobCountryService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Nnjeim\World\CountryFlag;
 
 /**
  * Prepares job listings for the public pages (home, jobs, job detail).
@@ -99,6 +101,8 @@ class JobCatalog
             ])),
             'where' => mb_strtolower(implode(' ', array_filter([
                 $job['location'] ?? '',
+                $job['country'] ?? '',
+                $job['country_code'] ?? '',
                 $job['workplace'] ?? '',
                 $this->placeOf($job)['country'] ?? '',
             ]))),
@@ -132,6 +136,8 @@ class JobCatalog
                     'lon' => $anchor['lon'],
                     'count' => $group->count(),
                     'cities' => $cityCounts->keys()->take(3)->values()->all(),
+                    'flag_url' => $anchor['flag_url'],
+                    'flag_emoji' => $anchor['flag_emoji'],
                 ];
             })
             ->sortBy([['count', 'desc'], ['country', 'asc']])
@@ -148,6 +154,10 @@ class JobCatalog
     public function placeOf(array $job): ?array
     {
         $places = $this->places();
+        $selected = $job['country_code'] ?? $job['country'] ?? null;
+        $country = app(JobCountryService::class)->find($selected);
+        $selectedCode = $country['code']
+            ?? (is_string($selected) ? ($this->countryLookup()[$this->normalise($selected)] ?? null) : null);
         $parts = collect(explode(',', ($job['city'] ?? '').','.($job['location'] ?? '')))
             ->map(fn (string $part) => trim($part))
             ->filter()
@@ -156,11 +166,22 @@ class JobCatalog
         foreach ($parts as $part) {
             $city = $places['cities'][$this->normalise($part)] ?? null;
 
-            if ($city) {
+            if ($city && ($selectedCode === null || $city[0] === $selectedCode)) {
                 [$code, $lat, $lon] = $city;
 
-                return ['code' => $code, 'country' => $places['countries'][$code][0] ?? $code, 'city' => $part, 'lat' => $lat, 'lon' => $lon];
+                return $this->mapPlace($code, $part, $lat, $lon);
             }
+        }
+
+        // An explicit selected country wins over a free-text location. World
+        // coordinates also allow countries outside the original static map list.
+        if ($country !== null && $country['latitude'] !== null && $country['longitude'] !== null) {
+            return $this->mapPlace($country['code'], null, $country['latitude'], $country['longitude']);
+        }
+        if ($selectedCode !== null && isset($places['countries'][$selectedCode])) {
+            [, $lat, $lon] = $places['countries'][$selectedCode];
+
+            return $this->mapPlace($selectedCode, null, $lat, $lon);
         }
 
         $candidates = $parts->reverse()->prepend($job['country_code'] ?? $job['country'] ?? null)->filter();
@@ -168,14 +189,30 @@ class JobCatalog
         foreach ($candidates as $candidate) {
             $code = $this->countryLookup()[$this->normalise((string) $candidate)] ?? null;
 
-            if ($code) {
-                [$name, $lat, $lon] = $places['countries'][$code];
+            if ($code && ($selectedCode === null || $code === $selectedCode)) {
+                [, $lat, $lon] = $places['countries'][$code];
 
-                return ['code' => $code, 'country' => $name, 'city' => null, 'lat' => $lat, 'lon' => $lon];
+                return $this->mapPlace($code, null, $lat, $lon);
             }
         }
 
         return null;
+    }
+
+    /** @return array<string, mixed> */
+    private function mapPlace(string $code, ?string $city, float $lat, float $lon): array
+    {
+        $country = app(JobCountryService::class)->find($code);
+
+        return [
+            'code' => $code,
+            'country' => $country['name'] ?? $this->places()['countries'][$code][0] ?? $code,
+            'city' => $city,
+            'lat' => $lat,
+            'lon' => $lon,
+            'flag_url' => $country['flag_url'] ?? app(JobCountryService::class)->flagUrl($code),
+            'flag_emoji' => $country['flag_emoji'] ?? CountryFlag::emoji($code) ?? '',
+        ];
     }
 
     private function normalise(string $value): string

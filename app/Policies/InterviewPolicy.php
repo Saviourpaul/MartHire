@@ -60,6 +60,17 @@ class InterviewPolicy
         return $this->send($user, $interview);
     }
 
+    public function complete(User $user, Interview $interview): bool
+    {
+        return $this->manageCompletion($user, $interview) && $interview->canBeCompleted();
+    }
+
+    public function manageCompletion(User $user, Interview $interview): bool
+    {
+        return $interview->applicationForm !== null
+            && $this->permissions->can($user, 'move_candidates', application: $interview->applicationForm);
+    }
+
     public function send(User $user, Interview $interview): bool
     {
         return $interview->applicationForm !== null

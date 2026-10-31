@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\OrganizationDashboardService;
+use App\Support\LiveTables;
 use App\Support\OrganizationContext;
 use App\Support\OrganizationPermissions;
 use Illuminate\Contracts\View\View;
@@ -17,19 +18,19 @@ class OrganizationDashboardController extends Controller
         private readonly OrganizationContext $context,
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $user = $request->user();
         $membership = $this->permissions->membership($user);
 
         abort_unless($membership, 403, 'You are not an active member of an organization.');
 
-        return view('organisations.dashboard', [
+        return LiveTables::view($request, view('organisations.dashboard', [
             ...$this->dashboardService->getOverview($request, $user),
             'organization' => $this->context->organization(),
             'membership' => $membership,
             'permissions' => OrganizationPermissions::ROLE_PERMISSIONS[$membership->role->value] ?? [],
-        ]);
+        ]), ['organization-dashboard']);
     }
 
     public function analytics(Request $request): JsonResponse

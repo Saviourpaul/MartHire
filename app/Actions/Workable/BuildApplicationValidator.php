@@ -18,7 +18,7 @@ class BuildApplicationValidator
     /** @return array<string, array<int, string>> */
     public function rules(ApplicationSchema $schema): array
     {
-        $maxKb = (int) config('workable.application.max_file_mb', 5) * 1024;
+        $resumeLimit = null;
 
         // Always-collected candidate basics.
         $rules = [
@@ -34,29 +34,32 @@ class BuildApplicationValidator
         foreach ($schema->formFields as $field) {
             if (($field['key'] ?? null) === 'resume') {
                 $resumeRequired = (bool) ($field['required'] ?? true);
+                $resumeLimit = isset($field['max_file_size']) ? (int) $field['max_file_size'] : null;
             }
             if (($field['key'] ?? null) === 'summary') {
                 $rules['summary'] = ['nullable', 'string'];
             }
         }
+        $maxKb = $this->maxFileSizeKilobytes($resumeLimit);
         $rules['resume'] = [$resumeRequired ? 'required' : 'nullable', 'file', 'mimes:'.self::RESUME_MIMES, "max:$maxKb"];
 
         // Custom questions.
         foreach ($schema->questions as $question) {
             /** @var QuestionData $question */
-            $rules += $this->questionRules($question, $maxKb);
+            $rules += $this->questionRules($question);
         }
 
         return $rules;
     }
 
     /** @return array<string, array<int, string>> */
-    private function questionRules(QuestionData $question, int $maxKb): array
+    private function questionRules(QuestionData $question): array
     {
         $key = 'question_'.$question->id;
         $required = $question->required ? 'required' : 'nullable';
         $choiceIds = array_map(fn ($c) => (string) ($c['id'] ?? ''), $question->choices);
         $in = 'in:'.implode(',', $choiceIds);
+        $maxKb = $this->maxFileSizeKilobytes($question->maxFileSize);
 
         return match ($question->type) {
             'boolean' => [$key => [$question->required ? 'accepted' : 'nullable', 'boolean']],
@@ -69,5 +72,18 @@ class BuildApplicationValidator
             'file' => [$key => [$required, 'file', "max:$maxKb"]],
             default => [$key => [$required, 'string']], // free_text, short_text
         };
+    }
+
+    /** Use one effective limit for the server and the wizard's file picker. */
+    public function maxFileSizeBytes(?int $schemaLimit = null): int
+    {
+        $configured = max(1, (int) config('workable.application.max_file_mb', 5)) * 1024 * 1024;
+
+        return $schemaLimit !== null && $schemaLimit > 0 ? min($configured, $schemaLimit) : $configured;
+    }
+
+    private function maxFileSizeKilobytes(?int $schemaLimit): float
+    {
+        return $this->maxFileSizeBytes($schemaLimit) / 1024;
     }
 }

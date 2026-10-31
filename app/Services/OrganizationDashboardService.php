@@ -97,6 +97,7 @@ class OrganizationDashboardService
 
         return [
             'total_jobs' => Job::query()->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $employer))->count(),
+            'open_jobs' => Job::query()->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $employer))->acceptingApplications()->count(),
             'total_applicants' => ApplicationForm::query()->forEmployer($employer)->distinct('user_id')->count('user_id'),
             'total_applications' => (int) $applicationCounts->sum(),
             'selected_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Selected->value] ?? 0),

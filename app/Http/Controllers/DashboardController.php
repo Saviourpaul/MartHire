@@ -22,6 +22,9 @@ class DashboardController extends Controller
             return $this->logoutSuspendedUser($request);
         }
 
+        // This extra redirect must not consume feedback from login or verification.
+        $request->session()->keep(['success', 'error', 'warning', 'info', 'status']);
+
         return redirect()->route(match ($user->role) {
             UserRole::Admin => 'admin.dashboard',
             UserRole::Organization => 'organisations.dashboard',

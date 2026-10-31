@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\FilesystemException;
 
 class ApplicationDocumentFileService
 {
@@ -51,6 +52,35 @@ class ApplicationDocumentFileService
         ]);
     }
 
+    /**
+     * Describe an already-authorized document without failing the whole workspace
+     * when an individual private file has been removed or cannot be read.
+     *
+     * @return array{available: bool, previewable: bool, mime_type: ?string}
+     */
+    public function metadataFor(ApplicationDocument $document): array
+    {
+        $unavailable = ['available' => false, 'previewable' => false, 'mime_type' => null];
+        $path = trim((string) $document->file_path);
+        if ($path === '') {
+            return $unavailable;
+        }
+        $disk = Storage::disk(config('filesystems.application_documents_disk', 'local'));
+        try {
+            if (! $disk->exists($path)) {
+                return $unavailable;
+            }
+            $mimeType = $this->mimeTypeFor($document, $disk);
+            if ($mimeType === null) {
+                return $unavailable;
+            }
+
+            return ['available' => true, 'previewable' => ApplicationDocument::mimeTypeCanPreview($mimeType), 'mime_type' => $mimeType];
+        } catch (FilesystemException) {
+            return $unavailable;
+        }
+    }
+
     public function assertPreviewable(ApplicationDocument $document, FilesystemAdapter $disk): void
     {
         abort_unless(
@@ -69,15 +99,39 @@ class ApplicationDocumentFileService
             'Content-Type' => $this->mimeTypeFor($document, $disk) ?: 'application/octet-stream',
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Content-Security-Policy' => "frame-ancestors 'self'",
         ];
     }
 
     private function mimeTypeFor(ApplicationDocument $document, FilesystemAdapter $disk): ?string
     {
-        if ($document->mime_type) {
-            return $document->mime_type;
+        // MIME detectors may fall back to a filename extension. Confirm the
+        // stored bytes before allowing one of the browser's inline formats.
+        $stream = $disk->readStream($document->file_path);
+        if (! is_resource($stream)) {
+            return null;
         }
+        try {
+            $signature = fread($stream, 8);
+        } finally {
+            fclose($stream);
+        }
+        if ($signature === false) {
+            return null;
+        }
+        if (str_starts_with($signature, '%PDF-')) {
+            return 'application/pdf';
+        }
+        if (str_starts_with($signature, "\x89PNG\r\n\x1a\n")) {
+            return 'image/png';
+        }
+        if (str_starts_with($signature, "\xff\xd8\xff")) {
+            return 'image/jpeg';
+        }
+        $mimeType = $disk->mimeType($document->file_path);
+        $mimeType = $mimeType ? strtolower(trim(explode(';', $mimeType, 2)[0])) : null;
 
-        return $disk->mimeType($document->file_path) ?: null;
+        return ApplicationDocument::mimeTypeCanPreview($mimeType) ? 'application/octet-stream' : ($mimeType ?: 'application/octet-stream');
     }
 }
