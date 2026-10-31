@@ -15,6 +15,7 @@ use App\Http\Controllers\OrganizationDashboardController;
 use App\Http\Controllers\OrganizationInterviewController;
 use App\Http\Controllers\OrganizationTeamController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicMediaController;
 use App\Http\Controllers\PublicJobController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\WorkableJobController;
@@ -64,6 +65,11 @@ Route::get('ContactUs', function () {
 })->name('contact');
 
 Route::view('how-it-works', 'HowItWorks')->name('how-it-works');
+
+// Shared-hosting-safe delivery for explicitly public images. Private applicant
+// documents retain their authenticated preview/download routes below.
+Route::get('media/{path}', PublicMediaController::class)
+    ->where('path', '.*')->name('public-media.show');
 
 // One public board includes published organization jobs and imported postings.
 // Preserve Workable URLs while native jobs use their own slug-based destinations.

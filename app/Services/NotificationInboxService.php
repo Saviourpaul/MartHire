@@ -79,9 +79,7 @@ class NotificationInboxService
 
     public function actionUrl(WorkflowNotification $notification, User $user): ?string
     {
-        if ($notification->subject_type === 'application' && $notification->subject_id) {
-            return route($user->isApplicant() ? 'client.applications.show' : 'employer.applications.show', $notification->subject_id);
-        }
+       
 
         return route('dashboard');
     }

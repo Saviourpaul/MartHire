@@ -49,7 +49,7 @@ test('candidate workspace reviews the submission snapshot instead of a later pro
                 ->and($review['profile']['email'])->toBe('submitted-candidate@example.test')
                 ->and($review['profile']['phone'])->toBe('+442079460018')
                 ->and($review['profile']['date_of_birth'])->toBe('3 Feb 1995')
-                ->and($review['profile']['avatar_url'])->toBe(Storage::disk('public')->url('profile-images/submitted.jpg'))
+                ->and($review['profile']['avatar_url'])->toBe(route('public-media.show', ['path' => 'profile-images/submitted.jpg']))
                 ->and($review['profile'])->not->toHaveKey('profile_image_path');
 
             return true;

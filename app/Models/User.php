@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -175,18 +174,15 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         if (str_starts_with($path, 'storage/')) {
-            return asset($path);
+            $path = substr($path, strlen('storage/'));
         }
 
         if (str_starts_with($path, 'public/')) {
             $path = substr($path, strlen('public/'));
         }
 
-        if (! Storage::disk('public')->exists($path)) {
-            return asset('admin/assets/images/Avatar.png');
-        }
-
-        return asset('storage/'.$path);
+        return app(\App\Services\PublicMediaUrl::class)->url($path)
+            ?? asset('admin/assets/images/Avatar.png');
     }
 
     /**

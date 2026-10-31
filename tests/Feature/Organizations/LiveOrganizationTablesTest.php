@@ -76,7 +76,12 @@ test('candidate filters and a JSON stage action stay synchronized with the same 
     [$organization, $owner] = organizationWithOwner();
     $application = liveTableApplication($organization, $owner);
     $this->actingAs($owner)->withHeader('X-Live-Action', '1')->patchJson(route('organisations.candidates.move', $application), ['stage' => 'shortlisted'])
-        ->assertOk()->assertJsonPath('message', 'Candidate moved to Shortlisted.')->assertSessionMissing('success');
+        ->assertOk()
+        ->assertJsonPath('message', 'Candidate moved to Shortlisted.')
+        ->assertJsonPath('type', 'success')
+        ->assertJsonPath('refresh', true)
+        ->assertJsonPath('topics', ['candidates', 'applications'])
+        ->assertSessionMissing('success');
     $response = $this->withHeader('X-Live-Tables', 'organization-candidates')->getJson(route('organisations.candidates.index', [
         'stage' => 'shortlisted', 'search' => 'Live', 'job_id' => $application->job_id,
     ]))->assertOk();

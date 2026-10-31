@@ -252,7 +252,7 @@ test('an uploaded job logo appears on public cards and details and the edit form
 
     $job = Job::withoutGlobalScope(OrganizationScope::class)->where('organization_id', $organization->id)->firstOrFail();
     Storage::disk('public')->assertExists($job->logo);
-    $logoUrl = asset('storage/'.$job->logo);
+    $logoUrl = route('public-media.show', ['path' => $job->logo]);
 
     $this->get(route('organisations.jobs.edit', $job))->assertOk()->assertSee('preview: '.Js::from($logoUrl), false);
     $this->post(route('logout'))->assertRedirect();
@@ -277,7 +277,7 @@ test('replacing a job logo updates the public image and removes the old upload',
     $job->refresh();
     Storage::disk('public')->assertMissing('job-logos/previous.png');
     Storage::disk('public')->assertExists($job->logo);
-    $logoUrl = asset('storage/'.$job->logo);
+    $logoUrl = route('public-media.show', ['path' => $job->logo]);
     $this->post(route('logout'))->assertRedirect();
     $this->get(route('jobs.show', $job))->assertOk()->assertSee('src="'.$logoUrl.'"', false)->assertDontSee('storage/job-logos/previous.png', false);
 });

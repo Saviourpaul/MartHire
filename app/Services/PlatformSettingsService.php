@@ -185,7 +185,7 @@ class PlatformSettingsService
 
     private function assetUrl(?string $path, string $fallback): string
     {
-        return $path ? Storage::disk('public')->url($path) : asset($fallback);
+        return $path ? (app(PublicMediaUrl::class)->url($path) ?? asset($fallback)) : asset($fallback);
     }
 
     /** @param list<string> $paths */

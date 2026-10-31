@@ -200,7 +200,7 @@ class Job extends Model
         }
 
         if (Storage::disk('public')->exists($path)) {
-            return asset('storage/'.$path);
+            return app(\App\Services\PublicMediaUrl::class)->url($path);
         }
 
         if (is_file(public_path($path))) {

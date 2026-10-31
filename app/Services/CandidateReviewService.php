@@ -13,7 +13,6 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /** Presentation data for an authorized employer; never exposes raw audit payloads. */
@@ -79,13 +78,13 @@ class CandidateReviewService
 
     private function avatarUrl(?string $path): ?string
     {
-        // Only a relative storage key may reach Storage::url(), never a supplied URL.
+        // Only a relative, allow-listed public image key may reach the URL service.
         if ($path === null || preg_match('/[\x00-\x1f\x7f:%\\\\?#]/', $path) || str_starts_with($path, '/')
             || in_array('..', explode('/', $path), true) || in_array('.', explode('/', $path), true)) {
             return null;
         }
 
-        return Storage::disk('public')->url($path);
+        return app(PublicMediaUrl::class)->url($path);
     }
 
     private function pipeline(ApplicationForm $application, Collection $histories): array
