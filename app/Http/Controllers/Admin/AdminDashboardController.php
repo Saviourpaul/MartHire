@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AccountGreetingService;
 use App\Services\AdminDashboardService;
 use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
@@ -13,9 +14,15 @@ class AdminDashboardController extends Controller
 {
     public function __construct(private readonly AdminDashboardService $dashboardService) {}
 
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request, AccountGreetingService $greetings): View|JsonResponse
     {
-        return LiveTables::view($request, view('admin.dashboard', $this->dashboardService->getOverview($request, LiveTables::requested($request))), ['admin-dashboard']);
+        $greeting = $greetings->forUser($request->user());
+
+        return LiveTables::view($request, view('admin.dashboard', [
+            ...$this->dashboardService->getOverview($request, LiveTables::requested($request)),
+            'greeting' => $greeting['message'],
+            'greetingEmoji' => $greeting['emoji'],
+        ]), ['admin-dashboard']);
     }
 
     public function analytics(Request $request): JsonResponse

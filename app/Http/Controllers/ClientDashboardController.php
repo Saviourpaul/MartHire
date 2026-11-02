@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Job;
+use App\Services\AccountGreetingService;
 use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -10,9 +11,10 @@ use Illuminate\Http\Request;
 
 class ClientDashboardController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request, AccountGreetingService $greetings): View|JsonResponse
     {
         $user = $request->user();
+        $greeting = $greetings->forUser($user);
 
         $applicationsQuery = $user->applications()
             ->getQuery()
@@ -34,6 +36,8 @@ class ClientDashboardController extends Controller
             'suggestedJobs' => $suggestedJobs,
             'profileCompletion' => $user->applicantProfileCompletionPercentage(),
             'missingProfileFields' => $user->missingApplicantProfileFields(),
+            'greeting' => $greeting['message'],
+            'greetingEmoji' => $greeting['emoji'],
         ]), ['client-dashboard']);
     }
 }

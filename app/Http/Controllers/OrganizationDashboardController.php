@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\OrganizationDashboardService;
+use App\Services\AccountGreetingService;
 use App\Support\LiveTables;
 use App\Support\OrganizationContext;
 use App\Support\OrganizationPermissions;
@@ -18,18 +19,21 @@ class OrganizationDashboardController extends Controller
         private readonly OrganizationContext $context,
     ) {}
 
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request, AccountGreetingService $greetings): View|JsonResponse
     {
         $user = $request->user();
         $membership = $this->permissions->membership($user);
 
         abort_unless($membership, 403, 'You are not an active member of an organization.');
+        $greeting = $greetings->forUser($user);
 
         return LiveTables::view($request, view('organisations.dashboard', [
             ...$this->dashboardService->getOverview($request, $user),
             'organization' => $this->context->organization(),
             'membership' => $membership,
             'permissions' => OrganizationPermissions::ROLE_PERMISSIONS[$membership->role->value] ?? [],
+            'greeting' => $greeting['message'],
+            'greetingEmoji' => $greeting['emoji'],
         ]), ['organization-dashboard']);
     }
 

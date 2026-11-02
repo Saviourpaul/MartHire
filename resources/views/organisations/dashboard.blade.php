@@ -1,7 +1,7 @@
 <x-app-layout>
-    <x-slot name="title">{{ __('Organization dashboard') }}</x-slot>
+    <x-slot name="title">{{ $greeting }}</x-slot>
     <x-slot name="header">
-        <h1 class="nw-heading">{{ $organization?->name ?? __('Your organization') }}</h1>
+        <h1 class="nw-heading">{{ $greeting }} <span aria-hidden="true">{{ $greetingEmoji }}</span></h1>
         <p>{{ __('Recruitment activity for your organization.') }}</p>
     </x-slot>
 

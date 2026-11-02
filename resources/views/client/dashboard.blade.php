@@ -1,7 +1,7 @@
 <x-app-layout>
-    <x-slot name="title">{{ __('Your dashboard') }}</x-slot>
+    <x-slot name="title">{{ $greeting }}</x-slot>
     <x-slot name="header">
-        <h1 class="nw-heading">{{ __('Welcome back') }}</h1>
+        <h1 class="nw-heading">{{ $greeting }} <span aria-hidden="true">{{ $greetingEmoji }}</span></h1>
         <p>{{ __('Track your applications and find your next role.') }}</p>
     </x-slot>
 
