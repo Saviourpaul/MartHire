@@ -56,4 +56,50 @@
             {!! app(\App\Support\JobDescription::class)->toHtml($job->description) !!}
         </div>
     </section>
+
+    @can('manageTeam', $job)
+        <section class="nw-panel nw-job-team" aria-labelledby="job-team-heading">
+            <header class="nw-panel__head">
+                <div>
+                    <h2 id="job-team-heading">{{ __('Hiring team') }}</h2>
+                    <p>{{ __('Choose which active organization members can access this job.') }}</p>
+                </div>
+                <a class="nw-link nw-link--small" href="{{ route('organisations.team.index') }}">{{ __('Manage organization team') }}</a>
+            </header>
+
+            @if ($availableTeamMembers->isEmpty())
+                <div class="nw-empty nw-job-team__empty">
+                    <p>{{ __('There are no active teammates to assign yet.') }}</p>
+                    <a class="nw-button nw-button--outline nw-button--small" href="{{ route('organisations.team.index') }}">{{ __('Invite a teammate') }}</a>
+                </div>
+            @else
+                <form method="POST" action="{{ route('organisations.jobs.team.update', $job) }}" class="nw-job-team__form">
+                    @csrf
+                    @method('PATCH')
+
+                    <fieldset class="nw-job-team__list">
+                        <legend class="nw-sr-only">{{ __('Assign organization members to this job') }}</legend>
+                        @foreach ($availableTeamMembers as $member)
+                            <label class="nw-job-team__member">
+                                <input class="nw-checkbox" type="checkbox" name="user_ids[]" value="{{ $member->user_id }}" @checked(in_array($member->user_id, $assignedUserIds, true))>
+                                <span class="nw-job-team__identity">
+                                    <strong>{{ trim($member->user->first_name.' '.$member->user->last_name) ?: $member->user->email }}</strong>
+                                    <small>{{ $member->user->email }}</small>
+                                </span>
+                                <span class="nw-job-team__role">{{ $member->role->label() }}</span>
+                            </label>
+                        @endforeach
+                    </fieldset>
+
+                    @error('user_ids') <p class="nw-field__error" role="alert">{{ $message }}</p> @enderror
+                    @error('user_ids.*') <p class="nw-field__error" role="alert">{{ $message }}</p> @enderror
+
+                    <div class="nw-job-team__actions">
+                        <span class="nw-hint">{{ __('Unselected teammates will lose access to this job.') }}</span>
+                        <button type="submit" class="nw-button nw-button--primary">{{ __('Save hiring team') }}</button>
+                    </div>
+                </form>
+            @endif
+        </section>
+    @endcan
 </x-app-layout>

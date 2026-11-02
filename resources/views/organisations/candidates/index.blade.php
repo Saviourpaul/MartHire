@@ -1,5 +1,7 @@
+@use('App\Enums\CandidatePipelineStage')
+
 @php
-    $stages = \App\Enums\CandidatePipelineStage::cases();
+    $stages = CandidatePipelineStage::cases();
 @endphp
 <x-app-layout>
     <x-slot name="title">{{ $title }}</x-slot>

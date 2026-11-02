@@ -79,7 +79,7 @@
                         <div class="nw-user-menu__panel" x-show="open" x-cloak>
                             <div class="nw-user-menu__who"><strong>{{ $shellName }}</strong><small>{{ $shellUser->email }}</small></div>
                             <a href="{{ route('dashboard') }}"><x-icon name="grid" /> {{ __('Dashboard') }}</a>
-                            <a href="{{ route('profile.edit') }}"><x-icon name="user" /> {{ __('Profile & settings') }}</a>
+                            <a href="{{ route('profile.edit') }}"><x-icon name="user" /> {{ __('Profile') }}</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"><x-icon name="logout" /> {{ __('Log out') }}</button>

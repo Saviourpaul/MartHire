@@ -125,6 +125,7 @@ class OrganizationApplicationController extends Controller
                 fn (CandidatePipelineStage $stage): bool => Gate::allows('managePipeline', $applicationForm)
                     && ($stage !== CandidatePipelineStage::Selected || Gate::allows('select', $applicationForm)))),
             'application' => $applicationForm,
+            'isInterviewStage' => $applicationForm->status === CandidatePipelineStage::Interview,
             'review' => app(CandidateReviewService::class)->build($applicationForm, $request->user()),
             'reviewDocuments' => $documents,
             'interviewWorkspace' => $canSendEmail ? app(InterviewWorkspaceData::class)->forApplication($applicationForm, $request->user()) : [],

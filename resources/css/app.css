@@ -3114,6 +3114,64 @@ a.nw-chip {
     min-width: 0;
 }
 
+.nw-settings-page {
+    width: min(900px, 100%);
+    margin: 0 auto;
+    padding-bottom: 56px;
+}
+
+.nw-settings-card__head {
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--nw-line);
+}
+
+.nw-settings-card__head p {
+    max-width: 620px;
+    color: var(--nw-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.nw-settings-form {
+    display: grid;
+    gap: 20px;
+}
+
+.nw-settings-form .nw-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+}
+
+.nw-settings-form .nw-field {
+    min-width: 0;
+}
+
+.nw-settings-form .nw-hint {
+    margin: 6px 0 0;
+}
+
+.nw-settings-visibility {
+    width: fit-content;
+    max-width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--nw-line);
+    border-radius: 6px;
+    background: var(--nw-soft);
+    color: var(--nw-ink);
+}
+
+.nw-settings-visibility span {
+    font-size: 13px;
+}
+
+.nw-settings-form__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+}
+
 .nw-panel {
     background: var(--nw-paper);
     border: 1px solid var(--nw-line);
@@ -3978,6 +4036,81 @@ a.nw-chip {
 .nw-panel__head .nw-link {
     flex-shrink: 0;
     margin-top: 3px;
+}
+
+.nw-job-team {
+    margin-top: 24px;
+}
+
+.nw-job-team__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.nw-job-team__member {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--nw-line);
+    cursor: pointer;
+}
+
+.nw-job-team__member:first-of-type {
+    border-top: 1px solid var(--nw-line);
+}
+
+.nw-job-team__identity {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.45;
+}
+
+.nw-job-team__identity strong {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 550;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nw-job-team__identity small {
+    overflow: hidden;
+    color: var(--nw-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nw-job-team__role {
+    flex: 0 0 auto;
+    padding: 4px 9px;
+    border: 1px solid var(--nw-line);
+    border-radius: 99px;
+    color: var(--nw-muted);
+    font-size: 11px;
+}
+
+.nw-job-team__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.nw-job-team__actions .nw-hint {
+    margin: 0;
+}
+
+.nw-job-team__empty {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
 }
 
 .nw-segmented {
@@ -6848,5 +6981,39 @@ a.nw-chip {
         animation-duration: .01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: .01ms !important;
+    }
+}
+
+@media (max-width: 639px) {
+    .nw-job-team__actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .nw-job-team__actions .nw-button {
+        width: 100%;
+    }
+
+    .nw-job-team__member {
+        gap: 10px;
+    }
+
+    .nw-job-team__role {
+        padding-inline: 7px;
+        font-size: 10px;
+    }
+
+    .nw-settings-card {
+        padding: 22px 18px;
+    }
+
+    .nw-settings-form .nw-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .nw-settings-form__actions,
+    .nw-settings-form__actions .nw-button {
+        width: 100%;
     }
 }

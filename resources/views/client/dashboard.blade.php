@@ -6,7 +6,6 @@
     </x-slot>
 
     @fragment('client-dashboard')
-    <div data-live-table="client-dashboard" data-live-topics="users,jobs,candidates,applications,team,interviews" data-live-pages="applications_page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     @if ($profileCompletion < 100)
         <div class="nw-notice" role="status">
             {{ __('Your profile is :percent% complete.', ['percent' => $profileCompletion]) }}

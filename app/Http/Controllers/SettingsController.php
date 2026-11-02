@@ -24,7 +24,7 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        return view('settings.edit', [
+        return view('settings.settings', [
             'userPreferences' => $this->preferences->forUser($user),
             'timezones' => DateTimeZone::listIdentifiers(),
             'organization' => $this->context->organization(),

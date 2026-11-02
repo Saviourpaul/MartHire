@@ -5,10 +5,13 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ApplicationDocumentDownloadController;
 use App\Http\Controllers\ApplicationDocumentPreviewController;
 use App\Http\Controllers\ClientDashboardController;
+use App\Http\Controllers\CandidateJobPreferenceController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InterviewResponseController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobTeamController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrganizationApplicationController;
 use App\Http\Controllers\OrganizationDashboardController;
@@ -124,14 +127,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     // User management: one shared table view (admin/users/index.blade.php) reused
     // across every category; AccountLifecycleService owns the actual guard rules
     // (last-admin protection, self-demotion, organization-owner protection).
-    Route::get('users/organizations', [UserManagementController::class, 'organizations'])->name('users.organizations');
-    Route::get('users/applicants', [UserManagementController::class, 'applicants'])->name('users.applicants');
-    Route::get('users/administrators', [UserManagementController::class, 'administrators'])->name('users.administrators');
-    Route::get('users/suspended', [UserManagementController::class, 'suspended'])->name('users.suspended');
-    Route::get('users/organizations/export', [UserManagementController::class, 'exportOrganizations'])->name('users.organizations.export');
-    Route::get('users/applicants/export', [UserManagementController::class, 'exportApplicants'])->name('users.applicants.export');
-    Route::get('users/administrators/export', [UserManagementController::class, 'exportAdministrators'])->name('users.administrators.export');
-    Route::get('users/suspended/export', [UserManagementController::class, 'exportSuspended'])->name('users.suspended.export');
+    Route::get('/organizations', [UserManagementController::class, 'organizations'])->name('users.organizations');
+    Route::get('/applicants', [UserManagementController::class, 'applicants'])->name('users.applicants');
+    Route::get('/administrators', [UserManagementController::class, 'administrators'])->name('users.administrators');
+    Route::get('/suspended', [UserManagementController::class, 'suspended'])->name('users.suspended');
+    Route::get('/organizations/export', [UserManagementController::class, 'exportOrganizations'])->name('users.organizations.export');
+    Route::get('/applicants/export', [UserManagementController::class, 'exportApplicants'])->name('users.applicants.export');
+    Route::get('/administrators/export', [UserManagementController::class, 'exportAdministrators'])->name('users.administrators.export');
+    Route::get('/suspended/export', [UserManagementController::class, 'exportSuspended'])->name('users.suspended.export');
     Route::post('users', [UserManagementController::class, 'store'])->name('users.store');
     Route::patch('users/{user}', [UserManagementController::class, 'update'])->name('users.update');
     Route::post('users/{user}/suspend', [UserManagementController::class, 'suspend'])->name('users.suspend');
@@ -178,6 +181,7 @@ Route::middleware(['auth', 'verified', 'role:organization'])->prefix('organisati
     Route::get('jobs/create', [JobController::class, 'create'])->name('jobs.create');
     Route::post('jobs', [JobController::class, 'store'])->name('jobs.store');
     Route::get('jobs/{job}', [JobController::class, 'employerShow'])->name('jobs.show');
+    Route::patch('jobs/{job}/team', [JobTeamController::class, 'update'])->middleware('active.account')->name('jobs.team.update');
     Route::get('jobs/{job}/edit', [JobController::class, 'edit'])->name('jobs.edit');
     Route::patch('jobs/{job}', [JobController::class, 'update'])->name('jobs.update');
     Route::post('jobs/{job}/close', [JobController::class, 'close'])->name('jobs.close');
@@ -191,6 +195,12 @@ Route::middleware(['auth', 'verified', 'role:applicant'])->prefix('client')->nam
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/settings', [SettingsController::class, 'edit'])->middleware(['verified', 'active.account'])->name('settings.edit');
+    Route::patch('/settings/appearance', [SettingsController::class, 'updateAppearance'])->middleware(['verified', 'active.account'])->name('settings.appearance.update');
+    Route::middleware(['verified', 'active.account', 'role:applicant'])->group(function () {
+        Route::patch('/settings/job-preferences', [CandidateJobPreferenceController::class, 'update'])->name('settings.job-preferences.update');
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

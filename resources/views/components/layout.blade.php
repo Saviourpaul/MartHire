@@ -9,7 +9,6 @@
         @include('partials.site-head', ['title' => $title, 'description' => $description])
     </head>
     <body>
-        <a class="nw-skip-link" href="#main-content">{{ __('Skip to content') }}</a>
         <x-site-header />
 
         <main id="main-content">

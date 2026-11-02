@@ -51,7 +51,6 @@
         <div>
             <x-input-label for="email" :value="__('Email address')" />
             <x-text-input id="email" name="email" type="email" :value="$user->email" readonly autocomplete="username" />
-            <p class="nw-form-hint">{{ __('Your email address cannot be changed from your profile.') }}</p>
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div class="nw-notice">

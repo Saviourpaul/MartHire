@@ -1,12 +1,16 @@
+@use('App\Enums\CandidatePipelineStage')
+@use('App\Enums\InterviewMode')
+@use('App\Models\Interview')
+
 <section aria-labelledby="candidate-interviews-heading" id="candidate-interviews">
     <header class="nw-panel__head"><div><h2 id="candidate-interviews-heading">{{ __('Interviews') }}</h2><p>{{ __('Schedule conversations and follow candidate responses.') }}</p></div></header>
-    @can('create', [\App\Models\Interview::class, $application])
+    @can('create', [Interview::class, $application])
         <details class="nw-review-disclosure" id="schedule-interview" x-ref="scheduleInterview" @if(old('_interview_form') === 'schedule') open @endif>
             <summary>{{ __('Schedule interview') }}</summary>
             @include('organisations.interviews._form', ['interview' => null])
         </details>
     @else
-        @if ($canSendCandidateEmail && $application->status !== \App\Enums\CandidatePipelineStage::Interview)
+        @if ($canSendCandidateEmail && $application->status !== CandidatePipelineStage::Interview)
             <p class="nw-hint">{{ __('Move this candidate to the Interview stage to schedule an interview.') }}</p>
         @endif
     @endcan
@@ -15,7 +19,7 @@
             <header class="nw-panel__head"><div><h3 id="interview-heading-{{ $interview->id }}">{{ $interview->mode->label() }} {{ __('interview') }}</h3><p>{{ $interview->start_at->setTimezone($interview->timezone)->format('D, j M Y · g:i A') }} – {{ $interview->end_at->setTimezone($interview->timezone)->format('g:i A') }} ({{ $interview->timezone }})</p></div><x-status-badge :status="$interview->status" /></header>
             <dl class="nw-detail-list">
                 <div><dt>{{ __('Candidate response') }}</dt><dd>{{ $interview->candidate_response->label() }}</dd></div>
-                @if ($interview->mode === \App\Enums\InterviewMode::Online)
+                @if ($interview->mode === InterviewMode::Online)
                     <div><dt>{{ __('Platform') }}</dt><dd>{{ $interview->platform?->label() }}</dd></div>
                     <div><dt>{{ __('Meeting') }}</dt><dd><a class="nw-link" href="{{ $interview->meeting_link }}" target="_blank" rel="noopener noreferrer">{{ __('Join meeting') }}</a></dd></div>
                 @else

@@ -13,7 +13,8 @@
                 ['label' => __('Suspended'), 'href' => route('admin.users.suspended'), 'icon' => 'close', 'active' => request()->routeIs('admin.users.suspended')],
             ],
             __('Account') => [
-                ['label' => __('Profile & settings'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Profile'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Settings'), 'href' => route('settings.edit'), 'icon' => 'settings', 'active' => request()->routeIs('settings.*')],
                 ['label' => __('Help & support'), 'href' => url('/ContactUs'), 'icon' => 'help'],
             ],
         ],
@@ -27,7 +28,8 @@
                 ['label' => __('Team'), 'href' => route('organisations.team.index'), 'icon' => 'users', 'active' => request()->routeIs('organisations.team.*')],
             ],
             __('Account') => [
-                ['label' => __('Profile & settings'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Profile'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Settings'), 'href' => route('settings.edit'), 'icon' => 'settings', 'active' => request()->routeIs('settings.*')],
                 ['label' => __('Help & support'), 'href' => url('/ContactUs'), 'icon' => 'help'],
             ],
         ],
@@ -42,7 +44,8 @@
                 ['label' => __('Job categories'), 'href' => url('/').'#categories', 'icon' => 'globe'],
             ],
             __('Account') => [
-                ['label' => __('Profile & settings'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Profile'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Settings'), 'href' => route('settings.edit'), 'icon' => 'settings', 'active' => request()->routeIs('settings.*')],
                 ['label' => __('Help & support'), 'href' => url('/ContactUs'), 'icon' => 'help'],
             ],
         ],

@@ -6,7 +6,6 @@
     </x-slot>
 
     @fragment('organization-dashboard')
-    <div data-live-table="organization-dashboard" data-live-topics="users,jobs,candidates,applications,team,interviews" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-notice" role="status">
         {{ __('Signed in as :role', ['role' => $membership->role->value]) }}
     </div>

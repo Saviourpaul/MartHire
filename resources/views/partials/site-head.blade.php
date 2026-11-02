@@ -14,9 +14,9 @@
 <meta property="og:title" content="{{ $pageTitle }} | Marthire">
 <meta property="og:description" content="{{ $pageDescription }}">
 <meta property="og:url" content="{{ url()->current() }}">
-<meta property="og:image" content="{{ asset('asset/images/marthire-logo.png') }}">
+<meta property="og:image" content="{{ asset('asset/images/favicon.ico') }}">
 <link rel="canonical" href="{{ url()->current() }}">
-<link rel="icon" type="image/png" href="{{ asset('asset/images/marthire-logo.png') }}">
+<link rel="icon" type="image" href="{{ asset('asset/images/favicon.ico') }}">
 <title>{{ $pageTitle }} | Marthire</title>
 
 <script>

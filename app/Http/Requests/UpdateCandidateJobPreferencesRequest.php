@@ -25,7 +25,7 @@ class UpdateCandidateJobPreferencesRequest extends FormRequest
         return [
             'version' => ['nullable', 'integer', 'min:1'],
             'job_alert_frequency' => ['required', Rule::in(JobAlertFrequency::values())],
-            'profile_visible_to_employers' => ['required', 'boolean'],
+           
             'preferred_roles' => ['nullable', 'array', 'max:20'],
             'preferred_roles.*' => ['string', 'max:100'],
             'preferred_locations' => ['nullable', 'array', 'max:20'],

@@ -36,8 +36,11 @@ class CandidateJobPreferenceService
             User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
             $preference = CandidateJobPreference::query()->firstOrNew(['user_id' => $user->id]);
 
-            abort_if($preference->exists && (int) ($data['version'] ?? 0) !== (int) $preference->version, 409,
-                'These preferences were updated elsewhere. Reload and try again.');
+            abort_if(
+                $preference->exists && (int) ($data['version'] ?? 0) !== (int) $preference->version,
+                409,
+                'These preferences were updated elsewhere. Reload and try again.'
+            );
 
             $fields = [
                 'job_alert_frequency',
