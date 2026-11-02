@@ -1,15 +1,12 @@
 <x-app-layout>
-    <x-slot name="title">{{ $greeting }}</x-slot>
+    <x-slot name="title">Account </x-slot>
     <x-slot name="header">
         <h1 class="nw-heading">{{ $greeting }} <span aria-hidden="true">{{ $greetingEmoji }}</span></h1>
-        <p>{{ __('Recruitment activity for your organization.') }}</p>
+       
     </x-slot>
 
     @fragment('organization-dashboard')
-    <div class="nw-notice" role="status">
-        {{ __('Signed in as :role', ['role' => $membership->role->value]) }}
-    </div>
-
+  
     <div class="nw-stats">
         <div class="nw-stat">
             <div class="nw-stat__top">

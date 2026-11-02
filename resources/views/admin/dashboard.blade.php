@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="title">{{ $greeting }}</x-slot>
+    <x-slot name="title">Account</x-slot>
     <x-slot name="header">
         <h1 class="nw-heading">{{ $greeting }} <span aria-hidden="true">{{ $greetingEmoji }}</span></h1>
     </x-slot>
