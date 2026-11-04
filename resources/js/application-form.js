@@ -8,7 +8,7 @@ const readableSize = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed
 // Laravel reports errors as "answers.q-why"; the form names them "answers[q-why]".
 const errorKey = (name) => name.replace(/\[\]$/, '').replace(/\[([^\]]+)\]/g, '.$1');
 
-export function createApplicationForm({ preview = true, errors = {}, mode = 'workable', location = {}, documents = [{ key: 0, name: '' }] } = {}) {
+export function createApplicationForm({ preview = true, errors = {}, mode = 'workable', location = {}, documents = [{ key: 0, name: '' },], profileDisabilityStatus = '', profileEmploymentCurrent = false } = {}) {
     return {
         ...createFormWizard(),
         ...(mode === 'native' ? createLocationSelector(location) : {}),
@@ -18,6 +18,8 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
         serverErrors: {},
         fileProblems: {},
         documents,
+        profileDisabilityStatus,
+        profileEmploymentCurrent,
         nextDocument: documents.length,
         unmappedErrors: [],
         summary: [],
@@ -56,6 +58,14 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
                 ['state', 'city', 'local_government_area'].forEach((name) => this.clear(name));
             } else if (this.mode === 'native' && field.dataset.field === 'state') {
                 ['city', 'local_government_area'].forEach((name) => this.clear(name));
+            } else if (this.mode === 'native' && field.dataset.field === 'profile_contact.disability_status' && event.target.value === 'no') {
+                this.clear('profile_contact.disability_details');
+                const disabilityDetails = this.$refs.form.querySelector('[data-field="profile_contact.disability_details"] input');
+                if (disabilityDetails) disabilityDetails.value = '';
+            } else if (this.mode === 'native' && field.dataset.field === 'profile_employment.is_current' && event.target.checked) {
+                const endDate = this.$refs.form.querySelector('[data-field="profile_employment.end_date"] input');
+                if (endDate) endDate.value = '';
+                this.clear('profile_employment.end_date');
             }
         },
         addDocument() {

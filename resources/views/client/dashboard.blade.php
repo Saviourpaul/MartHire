@@ -5,13 +5,11 @@
         <p>{{ __('Track your applications and find your next role.') }}</p>
     </x-slot>
 
+    <div class="nw-applicant-dashboard" x-data="applicantProfileChecklistEditor" x-on:open-applicant-profile-editor.window="open($event.detail)" x-on:submit="submitForm($event)" x-on:input="clearFieldError($event)" x-on:change="clearFieldError($event)">
     @fragment('client-dashboard')
-    @if ($profileCompletion < 100)
-        <div class="nw-notice" role="status">
-            {{ __('Your profile is :percent% complete.', ['percent' => $profileCompletion]) }}
-            <a class="nw-link" href="{{ route('profile.edit') }}">{{ __('Finish your profile') }}</a>
-        </div>
-    @endif
+    <div data-live-table="client-dashboard" data-live-topics="applications,jobs" data-live-pages="applications_page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
+    <div class="nw-applicant-dashboard-grid">
+        <main class="nw-applicant-dashboard-main">
 
     <section id="applications" class="nw-panel" aria-labelledby="applications-heading">
         <header class="nw-panel__head">
@@ -97,6 +95,18 @@
             </div>
         @endif
     </section>
+        </main>
+
+        <aside class="nw-dashboard-profile-sidebar" aria-label="{{ __('Applicant profile progress') }}">
+            <x-applicant-profile-checklist :checklist="$profileChecklist" />
+        </aside>
+    </div>
     </div>
     @endfragment
+    @unless ($isLiveTableRequest)
+    <x-modal name="applicant-profile-checklist-editor" maxWidth="2xl">
+        @include('profile.partials.applicant-profile-checklist-editor')
+    </x-modal>
+    @endunless
+    </div>
 </x-app-layout>

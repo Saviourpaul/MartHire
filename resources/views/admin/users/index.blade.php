@@ -140,10 +140,23 @@
                 </div>
 
                 <dl class="nw-detail-list">
-                    <div><dt>{{ __('Phone') }}</dt><dd>{{ $managedUser->phone ?: '—' }}</dd></div>
+                    <div><dt>{{ __('Phone') }}</dt><dd>{{ $managedUser->phone ?: (collect([$managedUser->phone_dial_code, $managedUser->phone_national_number])->filter()->implode(' ') ?: '—') }}</dd></div>
                     <div><dt>{{ __('Location') }}</dt><dd>{{ collect([$managedUser->city, $managedUser->state])->filter()->implode(', ') }} @if($managedUser->country_code || $managedUser->country)<x-country-display :code="$managedUser->country_code" :name="$managedUser->country" />@elseif(!$managedUser->city && !$managedUser->state) — @endif</dd></div>
+                    @if ($managedUser->isApplicant())
+                        <div><dt>{{ __('Nationality') }}</dt><dd>{{ $managedUser->nationality ?: '—' }}</dd></div>
+                        <div><dt>{{ __('State of origin') }}</dt><dd>{{ $managedUser->state_of_origin ?: '—' }}</dd></div>
+                        <div><dt>{{ __('Local government area') }}</dt><dd>{{ $managedUser->local_government_area ?: '—' }}</dd></div>
+                    @endif
                     <div><dt>{{ __('Joined') }}</dt><dd>{{ $managedUser->created_at->format('j M Y') }}</dd></div>
                 </dl>
+
+                @if ($managedUser->isApplicant())
+                    @include('admin.users.partials.applicant-profile-details', [
+                        'managedUser' => $managedUser,
+                        'employmentTypes' => $employmentTypes,
+                        'workplaceLabels' => $workplaceLabels,
+                    ])
+                @endif
 
                 <form method="POST" action="{{ route('admin.users.update', $managedUser) }}">
                     @csrf
@@ -176,27 +189,12 @@
 
                 <div class="nw-modal-actions nw-modal-actions--secondary">
                     @if ($managedUser->status->value === 'suspended')
-                        <form method="POST" action="{{ route('admin.users.activate', $managedUser) }}" data-confirm="{{ __('Reactivate this account?') }}" data-confirm-label="{{ __('Reactivate account') }}" data-confirm-type="info">
-                            @csrf
-                            <button type="submit" class="nw-button nw-button--outline nw-button--small">
-                                <x-icon name="check" /> {{ __('Activate') }}
-                            </button>
-                        </form>
+
                     @elseif (! $managedUser->is(auth()->user()))
-                        <form method="POST" action="{{ route('admin.users.suspend', $managedUser) }}" data-confirm="{{ __('Suspend this account?') }}" data-confirm-label="{{ __('Suspend account') }}" data-confirm-type="warning">
-                            @csrf
-                            <button type="submit" class="nw-button nw-button--outline nw-button--small">
-                                <x-icon name="pause" /> {{ __('Suspend') }}
-                            </button>
-                        </form>
+
                     @endif
 
-                    <form method="POST" action="{{ route('admin.users.password-reset', $managedUser) }}">
-                        @csrf
-                        <button type="submit" class="nw-button nw-button--outline nw-button--small">
-                            <x-icon name="key" /> {{ __('Send password reset') }}
-                        </button>
-                    </form>
+
 
                     @unless ($managedUser->is(auth()->user()))
                         <form method="POST" action="{{ route('admin.users.destroy', $managedUser) }}" data-confirm="{{ __('Permanently delete this account? This cannot be undone.') }}" data-confirm-label="{{ __('Delete account') }}" data-confirm-type="error">

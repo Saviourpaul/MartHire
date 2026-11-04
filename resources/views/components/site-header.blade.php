@@ -19,8 +19,7 @@
             @auth
                 <a class="nw-button nw-button--primary nw-button--small" href="{{ route('dashboard') }}">{{ __('Your workspace') }} <x-icon name="arrow-up-right" /></a>
             @else
-                <a class="nw-header__login" href="{{ route('login') }}">{{ __('Log in') }}</a>
-                <a class="nw-button nw-button--primary nw-button--small nw-header__cta" href="{{ route('register') }}">{{ __('Get started') }} <x-icon name="arrow-up-right" /></a>
+                <a class="nw-button nw-button--primary nw-button--small nw-header__cta" href="{{ route('register') }}">{{ __('Start Your Journey') }} <x-icon name="arrow-up-right" /></a>
             @endauth
         </div>
 
@@ -42,7 +41,7 @@
                 <a class="nw-button nw-button--primary" href="{{ route('dashboard') }}">{{ __('Your workspace') }} <x-icon name="arrow-up-right" /></a>
             @else
                 <a href="{{ route('login') }}">{{ __('Log in') }}</a>
-                <a class="nw-button nw-button--primary" href="{{ route('register') }}">{{ __('Get started') }} <x-icon name="arrow-up-right" /></a>
+                <a class="nw-button nw-button--primary" href="{{ route('register') }}">{{ __('Start Your Journey') }} <x-icon name="arrow-up-right" /></a>
             @endauth
         </div>
     </nav>

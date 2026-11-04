@@ -6,7 +6,21 @@
             <div class="nw-footer__top">
                 <div class="nw-footer__brand">
                     <a class="nw-brand" href="{{ url('/') }}" aria-label="{{ __('Marthire home') }}"><x-application-logo /></a>
-                    <p>{{ __('Good people. Great possibilities.') }}</p>
+                    <p>One platform to manageRecruitment across African businesses, and international organisations.</p>
+                    @if (! empty($platformBrand['social_links']))
+                        <nav class="nw-footer__socials" aria-label="{{ __('Follow us on social media') }}">
+                            @foreach ($platformBrand['social_links'] as $socialLink)
+                                <a href="{{ $socialLink['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('Follow :brand on :platform', ['brand' => $platformBrand['display_name'] ?? 'Marthire', 'platform' => $socialLink['label']]) }}" title="{{ $socialLink['label'] }}">
+                                    @if ($socialLink['key'] === 'x_url')
+                                        <svg class="nw-footer__social-x" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.48l8.6-9.83L0 1.15h7.6l5.24 6.93 6.06-6.93Zm-1.29 19.49h2.04L6.49 3.24H4.3l13.31 17.4Z" /></svg>
+                                    @else
+                                        <span class="nw-footer__social-icon fa-brands {{ $socialLink['icon'] }}" aria-hidden="true"></span>
+                                    @endif
+                                    <span class="nw-sr-only">{{ $socialLink['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </nav>
+                    @endif
                 </div>
 
                 <div class="nw-footer__group">

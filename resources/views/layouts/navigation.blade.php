@@ -1,5 +1,6 @@
 @php
     $navUser = auth()->user();
+    $navOrganization = $navUser?->isOrganization() ? app(\App\Support\OrganizationContext::class)->organization() : null;
 
     $groups = match (true) {
         $navUser->isAdmin() => [
@@ -26,6 +27,9 @@
                 ['label' => __('Jobs'), 'href' => route('organisations.jobs.index'), 'icon' => 'briefcase', 'active' => request()->routeIs('organisations.jobs.*')],
                 ['label' => __('Candidates'), 'href' => route('organisations.candidates.index'), 'icon' => 'file', 'active' => request()->routeIs('organisations.candidates.*')],
                 ['label' => __('Team'), 'href' => route('organisations.team.index'), 'icon' => 'users', 'active' => request()->routeIs('organisations.team.*')],
+                ...($navOrganization && $navUser->can('manage_email_templates', $navOrganization) ? [[
+                    'label' => __('Email templates'), 'href' => route('organisations.email-templates.index'), 'icon' => 'mail', 'active' => request()->routeIs('organisations.email-templates.*'),
+                ]] : []),
             ],
             __('Account') => [
                 ['label' => __('Profile'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],

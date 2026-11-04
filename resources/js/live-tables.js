@@ -52,7 +52,7 @@ export function initializeLiveTables({ document: doc = document, window: win = w
             if (modal && !visible(modal)) { form.reset(); clearErrors(form); dirty.delete(form); }
         }
         return [...dirty].some((form) => state.root.contains(form))
-            || [...state.root.querySelectorAll('[role="dialog"]')].some(visible)
+            || [...doc.querySelectorAll('[role="dialog"]')].some(visible)
             || Boolean(doc.querySelector('dialog[open]'));
     }
 
