@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\PlatformSettingsController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ApplicationDocumentDownloadController;
 use App\Http\Controllers\ApplicationDocumentPreviewController;
+use App\Http\Controllers\ApplicantProfileController;
 use App\Http\Controllers\ClientDashboardController;
 use App\Http\Controllers\CandidateJobPreferenceController;
 use App\Http\Controllers\SettingsController;
@@ -15,7 +17,9 @@ use App\Http\Controllers\JobTeamController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrganizationApplicationController;
 use App\Http\Controllers\OrganizationDashboardController;
+use App\Http\Controllers\OrganizationEmailTemplateController;
 use App\Http\Controllers\OrganizationInterviewController;
+use App\Http\Controllers\OrganizationSettingsController;
 use App\Http\Controllers\OrganizationTeamController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicMediaController;
@@ -137,6 +141,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/suspended/export', [UserManagementController::class, 'exportSuspended'])->name('users.suspended.export');
     Route::post('users', [UserManagementController::class, 'store'])->name('users.store');
     Route::patch('users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+    Route::get('users/{user}/applicant-resume/preview', [UserManagementController::class, 'previewApplicantResume'])
+        ->whereNumber('user')->middleware(['active.account', 'throttle:downloads'])->name('users.applicant-resume.preview');
+    Route::get('users/{user}/applicant-resume', [UserManagementController::class, 'downloadApplicantResume'])
+        ->whereNumber('user')->middleware(['active.account', 'throttle:downloads'])->name('users.applicant-resume.download');
+    Route::get('users/{user}/identification-document/preview', [UserManagementController::class, 'previewIdentificationDocument'])
+        ->whereNumber('user')->middleware(['active.account', 'throttle:downloads'])->name('users.identification-document.preview');
+    Route::get('users/{user}/identification-document', [UserManagementController::class, 'downloadIdentificationDocument'])
+        ->whereNumber('user')->middleware(['active.account', 'throttle:downloads'])->name('users.identification-document.download');
     Route::post('users/{user}/suspend', [UserManagementController::class, 'suspend'])->name('users.suspend');
     Route::post('users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
     Route::delete('users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
@@ -154,6 +166,11 @@ Route::middleware(['auth', 'verified', 'role:organization'])->prefix('organisati
     Route::get('candidates/export', [OrganizationApplicationController::class, 'export'])->name('candidates.export');
     Route::get('candidates/{applicationForm}', [OrganizationApplicationController::class, 'show'])->name('candidates.show');
     Route::patch('candidates/{applicationForm}/move', [OrganizationApplicationController::class, 'movePipeline'])->name('candidates.move');
+
+    // Organization-scoped interview messages. The controller and request both
+    // re-authorize against the active organization context.
+    Route::get('email-templates', [OrganizationEmailTemplateController::class, 'index'])->name('email-templates.index');
+    Route::put('email-templates/{type}', [OrganizationEmailTemplateController::class, 'update'])->name('email-templates.update');
 
     Route::middleware('active.account')->group(function () {
         Route::get('candidates/{applicationForm}/interviews/create', [OrganizationInterviewController::class, 'create'])->name('interviews.create');
@@ -197,6 +214,10 @@ Route::middleware(['auth', 'verified', 'role:applicant'])->prefix('client')->nam
 Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'edit'])->middleware(['verified', 'active.account'])->name('settings.edit');
     Route::patch('/settings/appearance', [SettingsController::class, 'updateAppearance'])->middleware(['verified', 'active.account'])->name('settings.appearance.update');
+    Route::patch('/settings/organization', [OrganizationSettingsController::class, 'update'])
+        ->middleware(['verified', 'active.account', 'role:organization'])->name('settings.organization.update');
+    Route::patch('/settings/social-links', [PlatformSettingsController::class, 'updateSocialLinks'])
+        ->middleware(['verified', 'active.account', 'role:admin'])->name('settings.social-links.update');
     Route::middleware(['verified', 'active.account', 'role:applicant'])->group(function () {
         Route::patch('/settings/job-preferences', [CandidateJobPreferenceController::class, 'update'])->name('settings.job-preferences.update');
     });
@@ -204,6 +225,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::middleware(['verified', 'active.account', 'role:applicant'])->prefix('profile')->name('profile.')->group(function () {
+        Route::patch('details', [ApplicantProfileController::class, 'updateDetails'])->name('details.update');
+        Route::patch('skills', [ApplicantProfileController::class, 'updateSkills'])->name('skills.update');
+        Route::post('resume', [ApplicantProfileController::class, 'storeResume'])->name('resume.store');
+        Route::get('resume', [ApplicantProfileController::class, 'downloadResume'])->name('resume.download');
+        Route::delete('resume', [ApplicantProfileController::class, 'removeResume'])->name('resume.destroy');
+        Route::post('employments', [ApplicantProfileController::class, 'storeEmployment'])->name('employments.store');
+        Route::patch('employments/{employment}', [ApplicantProfileController::class, 'updateEmployment'])->whereNumber('employment')->name('employments.update');
+        Route::delete('employments/{employment}', [ApplicantProfileController::class, 'destroyEmployment'])->whereNumber('employment')->name('employments.destroy');
+        Route::post('education', [ApplicantProfileController::class, 'storeEducation'])->name('education.store');
+        Route::patch('education/{education}', [ApplicantProfileController::class, 'updateEducation'])->whereNumber('education')->name('education.update');
+        Route::delete('education/{education}', [ApplicantProfileController::class, 'destroyEducation'])->whereNumber('education')->name('education.destroy');
+    });
 
     // Cascading country -> state -> city lookups for the profile form's
     // location picker (and anywhere else that needs them).
