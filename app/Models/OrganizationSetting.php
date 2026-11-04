@@ -38,4 +38,9 @@ class OrganizationSetting extends Model
     {
         return $this->belongsTo(Organization::class);
     }
+
+    public function companyLogoUrl(): ?string
+    {
+        return app(\App\Services\PublicMediaUrl::class)->url($this->company_logo_path);
+    }
 }

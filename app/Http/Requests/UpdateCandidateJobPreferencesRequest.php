@@ -23,7 +23,7 @@ class UpdateCandidateJobPreferencesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'version' => ['nullable', 'integer', 'min:1'],
+            'version' => ['nullable', 'integer', 'min:0'],
             'job_alert_frequency' => ['required', Rule::in(JobAlertFrequency::values())],
            
             'preferred_roles' => ['nullable', 'array', 'max:20'],
@@ -31,8 +31,11 @@ class UpdateCandidateJobPreferencesRequest extends FormRequest
             'preferred_locations' => ['nullable', 'array', 'max:20'],
             'preferred_locations.*' => ['string', 'max:100'],
             'preferred_job_type' => ['nullable', Rule::in(array_keys(Job::EMPLOYMENT_TYPES))],
+            'preferred_workplace' => ['nullable', Rule::in(['on_site', 'hybrid', 'remote'])],
             'salary_min' => ['nullable', 'integer', 'min:0', 'max:100000000'],
             'salary_max' => ['nullable', 'integer', 'min:0', 'max:100000000', 'gte:salary_min'],
+            'profile_visible_to_employers' => ['required', 'boolean'],
+            'return_to' => ['nullable', Rule::in(['profile', 'settings'])],
         ];
     }
 

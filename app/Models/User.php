@@ -127,6 +127,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(CandidateJobPreference::class);
     }
 
+    public function applicantProfile(): HasOne
+    {
+        return $this->hasOne(ApplicantProfile::class);
+    }
+
     public function notificationPreferences(): HasMany
     {
         return $this->hasMany(NotificationPreference::class);

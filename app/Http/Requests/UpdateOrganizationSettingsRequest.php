@@ -17,13 +17,13 @@ class UpdateOrganizationSettingsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $organization = $this->route('organization');
-        if (! $organization instanceof Organization || ! $this->user()?->isOrganization()) {
+        $user = $this->user();
+        $organization = app(OrganizationContext::class)->organization();
+        if (! $organization instanceof Organization || ! $user?->isOrganization()) {
             return false;
         }
-        abort_unless(app(OrganizationContext::class)->organizationId() === $organization->id, 409, 'Your active organization changed. Reload Settings before saving.');
 
-        return $this->user()->can('update', $organization);
+        return $user->can('update', $organization);
     }
 
     /**

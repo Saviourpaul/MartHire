@@ -3,13 +3,16 @@
 namespace App\Http\Requests;
 
 use App\Models\Organization;
+use App\Support\OrganizationContext;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SaveInterviewEmailTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $organization = $this->attributes->get('organization');
+        // Email-template routes are organization-context routes, rather than
+        // exposing an organization ID in the URL or request body.
+        $organization = app(OrganizationContext::class)->organization();
 
         return $organization instanceof Organization
             && ($this->user()?->can('manage_email_templates', $organization) ?? false);

@@ -20,6 +20,7 @@ class CandidateJobPreference extends Model
         'preferred_roles',
         'preferred_locations',
         'preferred_job_type',
+        'preferred_workplace',
         'salary_min',
         'salary_max',
     ];
@@ -34,6 +35,7 @@ class CandidateJobPreference extends Model
             'profile_visible_to_employers' => 'boolean',
             'preferred_roles' => 'array',
             'preferred_locations' => 'array',
+            'preferred_workplace' => 'string',
             'salary_min' => 'integer',
             'salary_max' => 'integer',
             'version' => 'integer',

@@ -6,6 +6,7 @@ use App\Enums\SocialPlatform;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePlatformSettingsRequest;
+use App\Http\Requests\UpdatePlatformSocialLinksRequest;
 use App\Http\Requests\UpdateSystemEmailTemplateRequest;
 use App\Models\EmailTemplate;
 use App\Models\NotificationEmailOutbox;
@@ -38,6 +39,13 @@ class PlatformSettingsController extends Controller
         }
 
         return to_route('admin.settings.edit')->with('success', 'Platform settings saved.');
+    }
+
+    public function updateSocialLinks(UpdatePlatformSocialLinksRequest $request): RedirectResponse
+    {
+        $this->settings->updateSocialLinks($request->user(), $request->validated());
+
+        return to_route('settings.edit')->with('success', 'Social links saved.');
     }
 
     public function mail(Request $request): View

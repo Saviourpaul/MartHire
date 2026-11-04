@@ -48,6 +48,7 @@ class CandidateJobPreferenceService
                 'preferred_roles',
                 'preferred_locations',
                 'preferred_job_type',
+                'preferred_workplace',
                 'salary_min',
                 'salary_max',
             ];

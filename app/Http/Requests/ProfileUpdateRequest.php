@@ -25,6 +25,7 @@ class ProfileUpdateRequest extends FormRequest
         $dateOfBirthRule = $this->user()->isApplicant() ? ['required', 'date', 'before:today'] : ['nullable', 'date', 'before:today'];
         $imageRule = $this->user()->isApplicant() && ! $this->user()->profile_image_path ? ['required'] : ['nullable'];
         $presence = $this->user()->isApplicant() ? ['required'] : ['nullable'];
+        $applicantRule = $this->user()->isApplicant();
 
         return [
             'first_name' => ['required', 'string', 'max:255'],
@@ -41,6 +42,14 @@ class ProfileUpdateRequest extends FormRequest
             'phone' => [$this->user()->isApplicant() ? 'required' : 'nullable', 'bail', 'string', 'max:80', new InternationalPhoneNumber($this->input('phone_country'))],
             ...$this->phonePartRules(),
             'address' => $profileFieldRule,
+
+            'gender_identity' => $applicantRule ? ['nullable', 'in:male,female'] : ['prohibited'],
+            'disability_status' => $applicantRule ? ['nullable', 'in:yes,no'] : ['prohibited'],
+            'disability_details' => $applicantRule
+                ? ['exclude_unless:disability_status,yes', 'required', 'string', 'max:1000']
+                : ['prohibited'],
+            'professional_headline' => $applicantRule ? ['nullable', 'string', 'max:160'] : ['prohibited'],
+            'about' => $applicantRule ? ['nullable', 'string', 'max:3000'] : ['prohibited'],
 
             ...$this->locationSelectionRules($presence),
         ];
@@ -62,6 +71,11 @@ class ProfileUpdateRequest extends FormRequest
             'country_code' => 'country',
             'state' => 'state',
             'city' => 'city',
+            'gender_identity' => 'gender identity',
+            'disability_status' => 'disability status',
+            'disability_details' => 'disability details',
+            'professional_headline' => 'professional headline',
+            'about' => 'about you',
         ];
     }
 

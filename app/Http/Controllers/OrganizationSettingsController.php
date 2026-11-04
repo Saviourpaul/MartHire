@@ -3,34 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateOrganizationSettingsRequest;
-use App\Models\Job;
-use App\Models\Organization;
 use App\Services\OrganizationSettingsService;
-use DateTimeZone;
+use App\Support\OrganizationContext;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\View\View;
 
 class OrganizationSettingsController extends Controller
 {
-    public function __construct(private OrganizationSettingsService $settings) {}
+    public function __construct(private OrganizationSettingsService $settings, private OrganizationContext $context) {}
 
-    public function edit(Organization $organization): View
+    public function update(UpdateOrganizationSettingsRequest $request): RedirectResponse
     {
-        Gate::authorize('update', $organization);
+        $organization = $this->context->organization();
+        abort_unless($organization, 404);
 
-        return view('settings.organization', [
-            'organization' => $organization,
-            'organizationSettings' => $this->settings->forOrganization($organization),
-            'timezones' => DateTimeZone::listIdentifiers(),
-            'jobTypes' => Job::EMPLOYMENT_TYPES,
-        ]);
-    }
-
-    public function update(UpdateOrganizationSettingsRequest $request, Organization $organization): RedirectResponse
-    {
         $this->settings->update($organization, $request->user(), $request->validated());
 
-        return to_route('employer.organization-settings.edit', $organization)->with('success', 'Organization settings saved.');
+        return to_route('settings.edit')->with('success', 'Organization settings saved.');
     }
 }

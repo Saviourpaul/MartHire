@@ -6,6 +6,7 @@ use App\Enums\ApplicationDocumentType;
 use App\Enums\CandidatePipelineStage;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
+use App\Models\ApplicantProfile;
 use App\Models\Job;
 use App\Models\User;
 use App\Models\UserIdentificationDocument;
@@ -19,7 +20,16 @@ use Throwable;
 
 class ApplicationFormService
 {
-    public function __construct(private PipelineTransitionService $pipelineTransitions, private WorkflowNotificationService $notifications) {}
+    private const RESUME_TYPES = ['pdf', 'doc', 'docx'];
+
+    private const DOCUMENT_MAX_KB = 5120;
+
+    public function __construct(
+        private PipelineTransitionService $pipelineTransitions,
+        private WorkflowNotificationService $notifications,
+        private ApplicantProfileService $profiles,
+        private ApplicantProfileChecklistService $profileChecklist
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -89,25 +99,41 @@ class ApplicationFormService
                     'profile_image_path' => $profileImagePath,
                 ]);
 
-                $identification = $this->storeIdentificationDocument(
-                    $applicant,
-                    ApplicationDocumentType::from($data['identification_type']),
-                    $data['identification_document'],
-                    $storedFiles
-                );
+                if (($data['identification_document'] ?? null) instanceof UploadedFile) {
+                    $identificationType = ApplicationDocumentType::from($data['identification_type']);
+                    $identification = $this->storeIdentificationDocument(
+                        $applicant,
+                        $identificationType,
+                        $data['identification_document'],
+                        $storedFiles
+                    );
+                } else {
+                    $identification = $this->profiles->availableIdentificationDocument($applicant);
+
+                    if (! $identification) {
+                        throw ValidationException::withMessages([
+                            'identification_document' => 'Your saved identification document is no longer available. Upload it again to continue.',
+                        ]);
+                    }
+                }
 
                 $this->createIdentityDocument(
                     $application,
                     $identification
                 );
 
-                $this->createDocument(
-                    $application,
-                    $data['resume'],
-                    ApplicationDocumentType::Resume,
-                    $data['resume']->getClientOriginalName(),
-                    $storedFiles
-                );
+                if (($data['resume'] ?? null) instanceof UploadedFile) {
+                    $this->createDocument(
+                        $application,
+                        $data['resume'],
+                        ApplicationDocumentType::Resume,
+                        $data['resume']->getClientOriginalName(),
+                        $storedFiles
+                    );
+                } else {
+                    $profile = $this->profiles->forUser($applicant);
+                    $this->createDocumentFromProfileResume($application, $profile, $storedFiles);
+                }
 
                 foreach ($data['education_documents'] as $document) {
                     $this->createDocument(
@@ -127,7 +153,7 @@ class ApplicationFormService
                     'created_at' => now(),
                 ]);
 
-                $this->syncApplicantProfile($applicant, $data, $profileImagePath);
+                $this->syncApplicantProfile($applicant, $data, $profileImagePath, $storedFiles);
                 $this->notifications->applicationSubmitted($application);
 
                 return $application->load(['job', 'documents']);
@@ -153,7 +179,7 @@ class ApplicationFormService
     /**
      * @param  array<string, mixed>  $data
      */
-    private function syncApplicantProfile(User $applicant, array $data, ?string $profileImagePath): void
+    private function syncApplicantProfile(User $applicant, array $data, ?string $profileImagePath, array &$storedFiles): void
     {
         $profileData = Arr::only($data, [
             'first_name',
@@ -180,6 +206,78 @@ class ApplicationFormService
         }
 
         $applicant->fill($profileData)->save();
+
+        if (($data['resume'] ?? null) instanceof UploadedFile) {
+            $profile = $this->profiles->uploadResume($applicant, $data['resume']);
+            $storedFiles[] = ['disk' => 'local', 'path' => $profile->resume_path];
+        }
+
+        $profileChecklistData = $data;
+        $profileChecklistData['profile_contact'] = [
+            ...($profileChecklistData['profile_contact'] ?? []),
+            'gender_identity' => $data['gender'],
+        ];
+        $this->profiles->syncChecklistDetails($applicant, $profileChecklistData);
+
+        $checklist = $this->profileChecklist->forUser($applicant->fresh());
+        if ($checklist['completed'] < $checklist['total']) {
+            throw ValidationException::withMessages([
+                'profile' => 'Complete the required profile details before submitting your application.',
+            ]);
+        }
+    }
+
+    /**
+     * Copy a private saved résumé into this application's private document
+     * snapshot. Later profile edits must not change a submitted application.
+     *
+     * @param array<int, array{disk: string, path: string}> $storedFiles
+     */
+    private function createDocumentFromProfileResume(ApplicationForm $application, ApplicantProfile $profile, array &$storedFiles): ApplicationDocument
+    {
+        $sourcePath = trim((string) $profile->resume_path);
+        $sourceDisk = Storage::disk('local');
+        $extension = strtolower(pathinfo((string) $profile->resume_original_name, PATHINFO_EXTENSION));
+
+        if (! $this->profiles->hasAvailableResume($profile)
+            || ! in_array($extension, self::RESUME_TYPES, true)) {
+            throw ValidationException::withMessages([
+                'resume' => 'Your saved résumé is no longer available or supported. Upload it again to continue.',
+            ]);
+        }
+
+        if ($sourceDisk->size($sourcePath) > self::DOCUMENT_MAX_KB * 1024) {
+            throw ValidationException::withMessages(['resume' => 'Your saved résumé is larger than the 5 MB application limit. Upload a smaller file to continue.']);
+        }
+
+        $diskName = config('filesystems.application_documents_disk', 'local');
+        $destination = 'application-documents/'.$application->id.'/resume-'.Str::uuid().'.'.$extension;
+        $stream = $sourceDisk->readStream($sourcePath);
+
+        if (! is_resource($stream)) {
+            throw ValidationException::withMessages(['resume' => 'Your saved résumé could not be read. Upload it again to continue.']);
+        }
+
+        try {
+            $written = Storage::disk($diskName)->writeStream($destination, $stream);
+        } finally {
+            fclose($stream);
+        }
+
+        if (! $written) {
+            throw ValidationException::withMessages(['resume' => 'Your saved résumé could not be copied. Upload it again to continue.']);
+        }
+
+        $storedFiles[] = ['disk' => $diskName, 'path' => $destination];
+
+        return $application->documents()->create([
+            'document_type' => ApplicationDocumentType::Resume,
+            'document_name' => $profile->resume_original_name,
+            'file_path' => $destination,
+            'original_name' => $profile->resume_original_name,
+            'mime_type' => $profile->resume_mime_type ?: Storage::disk($diskName)->mimeType($destination),
+            'size' => Storage::disk($diskName)->size($destination),
+        ]);
     }
 
     /**

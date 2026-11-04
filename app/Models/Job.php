@@ -98,6 +98,11 @@ class Job extends Model
         return $this->belongsTo(User::class, 'employer_id')->withTrashed();
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
     public function members(): HasMany
     {
         return $this->hasMany(JobPostMember::class);

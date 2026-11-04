@@ -3,14 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Enums\SecurityActionPurpose;
+use App\Http\Controllers\Concerns\RespondsWithApplicantProfileChecklist;
 use App\Http\Requests\CloseAccountRequest;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\ApplicationForm;
+use App\Models\Job;
 use App\Models\User;
 use App\Services\AccountLifecycleService;
+use App\Services\ApplicantProfileService;
+use App\Services\CandidateJobPreferenceService;
+use App\Enums\JobAlertFrequency;
 use App\Services\LocationService;
 use App\Services\SecurityChallengeService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -19,14 +25,22 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    use RespondsWithApplicantProfileChecklist;
+
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function edit(Request $request, ApplicantProfileService $profiles, CandidateJobPreferenceService $jobPreferences): View
     {
+        $user = $request->user();
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
             'countries' => app(LocationService::class)->countries(),
+            'applicantProfile' => $user->isApplicant() ? $profiles->forUser($user) : null,
+            'jobPreferences' => $user->isApplicant() ? $jobPreferences->forUser($user) : null,
+            'jobTypes' => Job::EMPLOYMENT_TYPES,
+            'jobAlertFrequencies' => JobAlertFrequency::cases(),
         ]);
     }
 
@@ -50,10 +64,18 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, ApplicantProfileService $profiles): RedirectResponse|JsonResponse
     {
         $user = $request->user();
-        $data = $request->safe()->except('profile_image', 'email');
+        $data = $request->safe()->except(
+            'profile_image',
+            'email',
+            'gender_identity',
+            'disability_status',
+            'disability_details',
+            'professional_headline',
+            'about',
+        );
 
         if ($request->hasFile('profile_image')) {
             $uploadedImagePath = $request->file('profile_image')->store('profile-images', 'public');
@@ -74,6 +96,19 @@ class ProfileController extends Controller
         }
 
         $user->save();
+
+        if ($user->isApplicant()) {
+            $profiles->updateDetails($user, $request->safe()->only(['professional_headline', 'about']));
+            $profiles->updateContactIdentification($user, $request->safe()->only([
+                'gender_identity',
+                'disability_status',
+                'disability_details',
+            ]));
+        }
+
+        if ($user->isApplicant() && $request->expectsJson()) {
+            return $this->applicantProfileChecklistResponse($user, 'Profile updated successfully.');
+        }
 
         return Redirect::route('profile.edit')->with('success', 'Profile updated successfully.');
     }

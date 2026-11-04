@@ -5,15 +5,23 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Models\ApplicationDocument;
+use App\Models\ApplicationForm;
+use App\Models\Job;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\AccountLifecycleService;
+use App\Services\ApplicationDocumentFileService;
 use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -22,22 +30,22 @@ class UserManagementController extends Controller
 {
     public function __construct(private AccountLifecycleService $accounts) {}
 
-    public function organizations(Request $request): View|JsonResponse
+    public function organizations(Request $request): View|JsonResponse|Response
     {
         return $this->index($request, 'admin.users.index', 'Organizations', UserRole::Organization, exportRoute: 'admin.users.organizations.export');
     }
 
-    public function administrators(Request $request): View|JsonResponse
+    public function administrators(Request $request): View|JsonResponse|Response
     {
         return $this->index($request, 'admin.users.index', 'Administrators', UserRole::Admin, exportRoute: 'admin.users.administrators.export');
     }
 
-    public function applicants(Request $request): View|JsonResponse
+    public function applicants(Request $request): View|JsonResponse|Response
     {
         return $this->index($request, 'admin.users.index', 'Applicants', UserRole::Applicant, exportRoute: 'admin.users.applicants.export');
     }
 
-    public function suspended(Request $request): View|JsonResponse
+    public function suspended(Request $request): View|JsonResponse|Response
     {
         return $this->index(
             request: $request,
@@ -140,6 +148,68 @@ class UserManagementController extends Controller
         return LiveTables::mutation($request, 'Password reset link sent.', back()->with('success', 'Password reset link sent.'), ['users']);
     }
 
+    public function downloadApplicantResume(Request $request, User $user): StreamedResponse
+    {
+        $this->authorizeAdminApplicant($request, $user);
+        $profile = $user->applicantProfile()->firstOrFail();
+        $path = trim((string) $profile->resume_path);
+        $disk = $this->adminApplicantFileDisk($request, $user, $path, 'candidate-resumes', 'local');
+
+        return $disk->download($path, $this->safeApplicantFilename($profile->resume_original_name, 'resume'), [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function previewApplicantResume(Request $request, User $user): StreamedResponse
+    {
+        $this->authorizeAdminApplicant($request, $user);
+        $profile = $user->applicantProfile()->firstOrFail();
+        $path = trim((string) $profile->resume_path);
+        $disk = $this->adminApplicantFileDisk($request, $user, $path, 'candidate-resumes', 'local');
+
+        return $this->inlineApplicantDocument($disk, $path, $this->safeApplicantFilename($profile->resume_original_name, 'resume'));
+    }
+
+    public function downloadIdentificationDocument(Request $request, User $user): StreamedResponse
+    {
+        $this->authorizeAdminApplicant($request, $user);
+        $document = $user->identificationDocument()->firstOrFail();
+        $path = trim((string) $document->file_path);
+        $documentDirectory = 'user-identification-documents/'.$user->id;
+        $disk = $this->adminApplicantFileDisk(
+            $request,
+            $user,
+            $path,
+            $documentDirectory,
+            config('filesystems.application_documents_disk', 'local')
+        );
+
+        $filename = $this->safeApplicantFilename($document->original_name, 'identity-document');
+
+        return $disk->download($path, $filename, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function previewIdentificationDocument(Request $request, User $user): StreamedResponse
+    {
+        $this->authorizeAdminApplicant($request, $user);
+        $document = $user->identificationDocument()->firstOrFail();
+        $path = trim((string) $document->file_path);
+        $documentDirectory = 'user-identification-documents/'.$user->id;
+        $disk = $this->adminApplicantFileDisk(
+            $request,
+            $user,
+            $path,
+            $documentDirectory,
+            config('filesystems.application_documents_disk', 'local')
+        );
+
+        return $this->inlineApplicantDocument($disk, $path, $this->safeApplicantFilename($document->original_name, 'identity-document'));
+    }
+
     /**
      * The same filtered-and-sorted query behind both the table view (paginated)
      * and the CSV export (streamed in full) — the filters stay in one place.
@@ -157,6 +227,9 @@ class UserManagementController extends Controller
                 'role',
                 'status',
                 'phone',
+                'phone_country',
+                'phone_dial_code',
+                'phone_national_number',
                 'date_of_birth',
                 'address',
                 'profile_image_path',
@@ -228,7 +301,7 @@ class UserManagementController extends Controller
         ?UserStatus $status = null,
         bool $showCreate = true,
         ?string $exportRoute = null,
-    ): View|JsonResponse {
+    ): View|JsonResponse|Response {
         $this->validateFilters($request);
         $sortableColumns = ['first_name', 'last_name', 'email', 'phone', 'created_at'];
         $sortColumn = $request->input('sort') && in_array($request->input('sort'), $sortableColumns, true)
@@ -241,7 +314,58 @@ class UserManagementController extends Controller
 
         $users = LiveTables::paginate($this->filteredQuery($request, $role, $status, $sortColumn, $sortDirection, $search), $perPage);
 
-        return LiveTables::view($request, view($view, [
+        $applicantUsers = $users->getCollection()->filter(fn (User $user): bool => $user->isApplicant());
+
+        if ($applicantUsers->isNotEmpty()) {
+            $applicantUsers->load([
+                'applicantProfile.employments',
+                'applicantProfile.educations',
+                'applicantProfile.skills',
+                'applicantProfile.links',
+                'applicantProfile.selfIdentification',
+                'jobPreferences',
+                'identificationDocument',
+            ]);
+
+            $applications = ApplicationForm::withoutGlobalScope(OrganizationScope::class)
+                ->whereIn('user_id', $applicantUsers->modelKeys())
+                ->with([
+                    'job' => fn ($query) => $query->withoutGlobalScope(OrganizationScope::class)->select(['id', 'title']),
+                    'documents' => fn ($query) => $query->withoutGlobalScope(OrganizationScope::class)->select([
+                        'id',
+                        'application_form_id',
+                        'organization_id',
+                        'user_identification_document_id',
+                        'document_type',
+                        'document_name',
+                        'file_path',
+                        'original_name',
+                        'mime_type',
+                        'size',
+                        'created_at',
+                    ]),
+                ])
+                ->get(['id', 'user_id', 'job_id', 'reference', 'submitted_at']);
+
+            $documentsByApplicant = [];
+
+            foreach ($applications as $application) {
+                foreach ($application->documents as $document) {
+                    $document->setAttribute('application_reference', $application->reference);
+                    $document->setAttribute('application_job_title', $application->job?->title);
+                    $documentsByApplicant[$application->user_id][] = $document;
+                }
+            }
+
+            foreach ($applicantUsers as $applicant) {
+                $applicant->setRelation(
+                    'adminApplicantDocuments',
+                    collect($this->applicantDocumentItems($applicant, $documentsByApplicant[$applicant->id] ?? []))
+                );
+            }
+        }
+
+        $indexView = view($view, [
             'users' => $users,
             'title' => $title,
             'roleConstraint' => $role,
@@ -265,7 +389,188 @@ class UserManagementController extends Controller
                 'created_to' => $request->input('created_to'),
                 'per_page' => $perPage,
             ],
-        ]), ['admin-users']);
+            'employmentTypes' => Job::employmentTypeOptions(),
+            'workplaceLabels' => ['on_site' => __('On-site'), 'hybrid' => __('Hybrid'), 'remote' => __('Remote')],
+        ]);
+
+        $response = LiveTables::view($request, $indexView, ['admin-users']);
+
+        if ($response instanceof JsonResponse) {
+            return $response;
+        }
+
+        return response()->view($response->name(), $response->getData())
+            ->header('Cache-Control', 'private, no-store')
+            ->header('X-Content-Type-Options', 'nosniff');
+    }
+
+    /** @param list<ApplicationDocument> $applicationDocuments
+     *  @return list<array{id: string, label: string, filename: string, size: ?string, contexts: list<string>, available: bool, previewable: bool, preview_url: string, download_url: string}>
+     */
+    private function applicantDocumentItems(User $applicant, array $applicationDocuments): array
+    {
+        $items = [];
+        $indexesByStoredFile = [];
+        $append = function (string $diskName, string $path, array $item) use (&$items, &$indexesByStoredFile): void {
+            $key = $diskName.'|'.$path;
+
+            if (isset($indexesByStoredFile[$key])) {
+                $index = $indexesByStoredFile[$key];
+                $items[$index]['contexts'] = array_values(array_unique([
+                    ...$items[$index]['contexts'],
+                    ...$item['contexts'],
+                ]));
+
+                return;
+            }
+
+            $indexesByStoredFile[$key] = count($items);
+            $items[] = $item;
+        };
+
+        $profile = $applicant->applicantProfile;
+
+        if (filled($profile?->resume_path)) {
+            $path = trim((string) $profile->resume_path);
+            $diskName = 'local';
+            $safePath = $this->pathIsInsideDirectory($path, 'candidate-resumes');
+            $disk = Storage::disk($diskName);
+            $available = $safePath && $disk->exists($path);
+            $previewable = $available && $this->detectedInlineMimeType($disk, $path) !== null;
+
+            $append($diskName, $path, [
+                'id' => 'profile-resume',
+                'label' => __('Profile résumé'),
+                'filename' => $this->safeApplicantFilename($profile->resume_original_name, 'resume'),
+                'size' => $profile->resume_size ? number_format($profile->resume_size / 1024).' KB' : null,
+                'contexts' => [__('Profile')],
+                'available' => $available,
+                'previewable' => $previewable,
+                'preview_url' => route('admin.users.applicant-resume.preview', $applicant),
+                'download_url' => route('admin.users.applicant-resume.download', $applicant),
+            ]);
+        }
+
+        $identity = $applicant->identificationDocument;
+
+        if (filled($identity?->file_path)) {
+            $path = trim((string) $identity->file_path);
+            $diskName = config('filesystems.application_documents_disk', 'local');
+            $directory = 'user-identification-documents/'.$applicant->id;
+            $safePath = $this->pathIsInsideDirectory($path, $directory);
+            $disk = Storage::disk($diskName);
+            $available = $safePath && $disk->exists($path);
+            $previewable = $available && $this->detectedInlineMimeType($disk, $path) !== null;
+
+            $append($diskName, $path, [
+                'id' => 'identity-document',
+                'label' => $identity->document_type?->label() ?? __('Identity document'),
+                'filename' => $this->safeApplicantFilename($identity->original_name, 'identity-document'),
+                'size' => $identity->size ? number_format($identity->size / 1024).' KB' : null,
+                'contexts' => [__('Applicant profile')],
+                'available' => $available,
+                'previewable' => $previewable,
+                'preview_url' => route('admin.users.identification-document.preview', $applicant),
+                'download_url' => route('admin.users.identification-document.download', $applicant),
+            ]);
+        }
+
+        $documentFiles = app(ApplicationDocumentFileService::class);
+
+        foreach ($applicationDocuments as $document) {
+            $path = trim((string) $document->file_path);
+
+            if ($path === '') {
+                continue;
+            }
+
+            $metadata = $documentFiles->metadataFor($document);
+            $context = collect([$document->application_job_title, $document->application_reference])
+                ->filter()
+                ->implode(' · ');
+
+            $append(config('filesystems.application_documents_disk', 'local'), $path, [
+                'id' => 'application-document-'.$document->id,
+                'label' => $document->displayLabel(),
+                'filename' => $this->safeApplicantFilename($document->original_name ?: $document->document_name, 'document'),
+                'size' => $document->size ? number_format($document->size / 1024).' KB' : null,
+                'contexts' => [$context ?: __('Application document')],
+                'available' => $metadata['available'],
+                'previewable' => $metadata['available'] && $metadata['previewable'],
+                'preview_url' => $document->previewUrl(),
+                'download_url' => $document->downloadUrl(),
+            ]);
+        }
+
+        return $items;
+    }
+
+    private function adminApplicantFileDisk(Request $request, User $user, string $path, string $directory, string $diskName): FilesystemAdapter
+    {
+        $this->authorizeAdminApplicant($request, $user);
+        abort_unless($this->pathIsInsideDirectory($path, $directory), 404);
+
+        $disk = Storage::disk($diskName);
+        abort_unless($disk->exists($path), 404);
+
+        return $disk;
+    }
+
+    private function authorizeAdminApplicant(Request $request, User $user): void
+    {
+        abort_unless($request->user()?->isAdmin(), 403);
+        abort_unless($user->isApplicant(), 404);
+    }
+
+    private function safeApplicantFilename(?string $filename, string $fallback): string
+    {
+        $filename = basename(str_replace('\\', '/', trim((string) $filename)));
+
+        return $filename !== '' ? $filename : $fallback;
+    }
+
+    private function pathIsInsideDirectory(string $path, string $directory): bool
+    {
+        return str_starts_with($path, $directory.'/')
+            && dirname($path) === $directory
+            && ! str_contains($path, '\\');
+    }
+
+    private function inlineApplicantDocument(FilesystemAdapter $disk, string $path, string $filename): StreamedResponse
+    {
+        $mimeType = $this->detectedInlineMimeType($disk, $path);
+        abort_unless($mimeType !== null, 415, 'This file type cannot be previewed. Download it instead.');
+
+        return $disk->response($path, $filename, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Content-Security-Policy' => "frame-ancestors 'self'",
+        ], 'inline');
+    }
+
+    private function detectedInlineMimeType(FilesystemAdapter $disk, string $path): ?string
+    {
+        $stream = $disk->readStream($path);
+        if (! is_resource($stream)) {
+            return null;
+        }
+
+        try {
+            $signature = fread($stream, 8);
+        } finally {
+            fclose($stream);
+        }
+
+        $mimeType = match (true) {
+            is_string($signature) && str_starts_with($signature, '%PDF-') => 'application/pdf',
+            is_string($signature) && str_starts_with($signature, "\x89PNG\r\n\x1a\n") => 'image/png',
+            is_string($signature) && str_starts_with($signature, "\xff\xd8\xff") => 'image/jpeg',
+            default => null,
+        };
+
+        return $mimeType;
     }
 
     private function export(Request $request, string $filenameSlug, ?UserRole $role, ?UserStatus $status = null): StreamedResponse

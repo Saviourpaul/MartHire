@@ -19,7 +19,7 @@ use Throwable;
 
 class PlatformSettingsService
 {
-    private const PRODUCT_FIELDS = ['display_name', 'mail_from_name', 'mail_from_address', 'support_email', 'support_phone', 'support_address', 'support_url', 'privacy_url', 'terms_url', 'facebook_url', 'x_url', 'instagram_url', 'linkedin_url', 'youtube_url', 'tiktok_url', 'public_registration_enabled'];
+    private const PRODUCT_FIELDS = ['display_name', 'mail_from_name', 'mail_from_address', 'support_email', 'support_phone', 'support_address', 'support_url', 'privacy_url', 'terms_url', 'facebook_url', 'x_url', 'instagram_url', 'linkedin_url', 'public_registration_enabled'];
 
     private ?PlatformSetting $resolved = null;
 
@@ -141,6 +141,37 @@ class PlatformSettingsService
             $this->pendingUploads = array_values(array_diff($this->pendingUploads, $newPaths));
             throw $exception;
         }
+    }
+
+    /** @param array<string, mixed> $data */
+    public function updateSocialLinks(User $actor, array $data): PlatformSetting
+    {
+        return DB::transaction(function () use ($actor, $data): PlatformSetting {
+            $freshActor = User::query()->whereKey($actor->id)->lockForUpdate()->firstOrFail();
+            abort_unless($freshActor->isAdmin() && $freshActor->isActive() && $freshActor->hasVerifiedEmail(), 403);
+
+            $settings = PlatformSetting::query()->whereKey(1)->lockForUpdate()->firstOrFail();
+            abort_if((int) $data['version'] !== $settings->version, 409, 'These settings were changed by another administrator. Reload before saving.');
+
+            $fields = array_map(fn (SocialPlatform $platform): string => $platform->value, SocialPlatform::cases());
+            $before = $settings->only($fields);
+            $settings->fill(Arr::only($data, $fields));
+            $settings->version = (int) $settings->version + 1;
+            $settings->updated_by = $actor->id;
+            $settings->save();
+
+            SettingsAuditEvent::create([
+                'actor_id' => $actor->id,
+                'scope' => 'platform',
+                'action' => 'platform_social_links_updated',
+                'changes' => ['before' => $before, 'after' => $settings->only($fields), 'version' => $settings->version],
+                'created_at' => now(),
+            ]);
+
+            $this->resolved = null;
+
+            return $settings;
+        });
     }
 
     /**

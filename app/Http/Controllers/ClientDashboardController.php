@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Job;
+use App\Enums\JobAlertFrequency;
 use App\Services\AccountGreetingService;
+use App\Services\ApplicantProfileChecklistService;
+use App\Services\ApplicantProfileService;
+use App\Services\CandidateJobPreferenceService;
+use App\Services\LocationService;
 use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +16,7 @@ use Illuminate\Http\Request;
 
 class ClientDashboardController extends Controller
 {
-    public function index(Request $request, AccountGreetingService $greetings): View|JsonResponse
+    public function index(Request $request, AccountGreetingService $greetings, ApplicantProfileChecklistService $profileChecklist, ApplicantProfileService $profiles, CandidateJobPreferenceService $jobPreferences): View|JsonResponse
     {
         $user = $request->user();
         $greeting = $greetings->forUser($user);
@@ -32,10 +37,16 @@ class ClientDashboardController extends Controller
             ->get(['id', 'title', 'company', 'location', 'employment_type', 'category']);
 
         return LiveTables::view($request, view('client.dashboard', [
+            'user' => $user,
             'applications' => $applications,
             'suggestedJobs' => $suggestedJobs,
-            'profileCompletion' => $user->applicantProfileCompletionPercentage(),
-            'missingProfileFields' => $user->missingApplicantProfileFields(),
+            'profileChecklist' => $profileChecklist->forUser($user),
+            'applicantProfile' => $profiles->forUser($user),
+            'jobPreferences' => $jobPreferences->forUser($user),
+            'countries' => app(LocationService::class)->countries(),
+            'jobTypes' => Job::EMPLOYMENT_TYPES,
+            'jobAlertFrequencies' => JobAlertFrequency::cases(),
+            'isLiveTableRequest' => LiveTables::requested($request),
             'greeting' => $greeting['message'],
             'greetingEmoji' => $greeting['emoji'],
         ]), ['client-dashboard']);

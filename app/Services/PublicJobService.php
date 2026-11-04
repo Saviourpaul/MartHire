@@ -23,6 +23,7 @@ class PublicJobService
         // Public discovery intentionally crosses organizations, but only exposes
         // published jobs whose application deadline has not passed.
         $native = Job::withoutGlobalScope(OrganizationScope::class)
+            ->with('organization.settings')
             ->acceptingApplications()
             ->latest('created_at')
             ->get()
@@ -39,6 +40,7 @@ class PublicJobService
     /** @return array<string, mixed> */
     public function native(Job $job): array
     {
+        $organizationSettings = $job->organization?->settings;
         $content = app(JobDescription::class)->toHtml($job->description);
         // Country is the native job's only location. Retain legacy text in the
         // database, using it only to recognize countries on older records.
@@ -50,8 +52,9 @@ class PublicJobService
             'id' => 'native:'.$job->id,
             'source' => 'native',
             'title' => $job->title,
-            'company' => $job->company,
-            'logo_url' => $job->logoUrl(),
+            'company' => $job->organization?->name ?? $job->company,
+            'logo_url' => $job->logoUrl() ?: $organizationSettings?->companyLogoUrl(),
+            'company_about' => $organizationSettings?->about,
             'location' => $legacyLocation,
             'type' => $job->employmentTypeLabel(),
             'workplace' => null,

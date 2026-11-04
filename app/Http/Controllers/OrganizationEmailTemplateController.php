@@ -23,7 +23,14 @@ class OrganizationEmailTemplateController extends Controller
 
         return view('organisations.interviews.templates', [
             'templates' => $this->templates->forOrganization($organization->id),
-            'placeholders' => InterviewTemplateRenderer::PLACEHOLDERS,
+            'placeholderTokens' => array_map(
+                static fn (string $placeholder): string => '{{ '.$placeholder.' }}',
+                InterviewTemplateRenderer::PLACEHOLDERS,
+            ),
+            'requiredPlaceholderTokens' => [
+                InterviewTemplateType::InterviewOnline->value => '{{ meeting_link }}',
+                InterviewTemplateType::InterviewOnsite->value => '{{ address }}',
+            ],
         ]);
     }
 

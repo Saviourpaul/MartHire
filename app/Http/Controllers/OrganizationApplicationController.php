@@ -30,7 +30,7 @@ class OrganizationApplicationController extends Controller
         $this->validateTableFilters($request);
         $stage = $request->filled('stage') ? CandidatePipelineStage::tryFrom($request->string('stage')->toString()) : null;
 
-        abort_if($request->filled('stage') && ! $stage, 404);
+        abort_if($request->filled('stage') && !$stage, 404);
 
         return $this->candidateTable($request, $stage, 'Candidate Pipeline', 'organisations.candidates.index', 'organisations.candidates.index');
     }
@@ -40,14 +40,14 @@ class OrganizationApplicationController extends Controller
         $this->validateTableFilters($request);
         $stage = $request->filled('stage') ? CandidatePipelineStage::tryFrom($request->string('stage')->toString()) : null;
 
-        abort_if($request->filled('stage') && ! $stage, 404);
+        abort_if($request->filled('stage') && !$stage, 404);
 
         $applications = $this->filteredCandidates($request, $stage)
             ->with(['job:id,title,company', 'applicant:id,first_name,last_name,email'])
             ->latest('submitted_at')
             ->get();
 
-        $filename = 'marthire-candidates-'.now()->toDateString().'.csv';
+        $filename = 'marthire-candidates-' . now()->toDateString() . '.csv';
 
         return response()->streamDownload(function () use ($applications): void {
             $handle = fopen('php://output', 'w');
@@ -55,7 +55,7 @@ class OrganizationApplicationController extends Controller
 
             foreach ($applications as $application) {
                 fputcsv($handle, [
-                    trim(($application->applicant?->first_name ?? '').' '.($application->applicant?->last_name ?? '')),
+                    trim(($application->applicant?->first_name ?? '') . ' ' . ($application->applicant?->last_name ?? '')),
                     $application->applicant?->email ?? '',
                     $application->job?->title ?? '',
                     $application->status->label(),
@@ -74,17 +74,31 @@ class OrganizationApplicationController extends Controller
     {
         $this->ensureOrganizationOwnsApplication($request, $applicationForm);
         $canSendEmail = Gate::allows('send_candidate_email', $applicationForm);
-        $relations = ['applicant', 'job',
-            'interviews' => fn (HasMany $query): HasMany => $query->latest('start_at')];
+        $relations = [
+            'applicant',
+            'job',
+            'interviews' => fn(HasMany $query): HasMany => $query->latest('start_at')
+        ];
 
         if (Gate::allows('viewDocuments', $applicationForm)) {
             $relations[] = 'documents';
         }
 
         if ($canSendEmail) {
-            $relations['interviews.messages'] = fn (HasMany $query): HasMany => $query->select([
-                'id', 'organization_id', 'application_form_id', 'interview_id', 'interview_version', 'type',
-                'sent_by', 'rendered_subject', 'status', 'queued_at', 'sent_at', 'created_at', 'error_message',
+            $relations['interviews.messages'] = fn(HasMany $query): HasMany => $query->select([
+                'id',
+                'organization_id',
+                'application_form_id',
+                'interview_id',
+                'interview_version',
+                'type',
+                'sent_by',
+                'rendered_subject',
+                'status',
+                'queued_at',
+                'sent_at',
+                'created_at',
+                'error_message',
             ])->latest('id');
             $relations[] = 'interviews.messages.sentBy';
         }
@@ -101,13 +115,15 @@ class OrganizationApplicationController extends Controller
             }
         }
 
-        $templateDefaults = $canSendEmail
+        $effectiveEmailTemplates = $canSendEmail
             ? app(EmailTemplateService::class)->forSending($applicationForm->organization_id)
-                ->mapWithKeys(fn ($template): array => [$template->type->value => ['subject' => $template->subject, 'body' => $template->body]])->all()
-            : [];
+            : null;
+        $templateDefaults = $effectiveEmailTemplates?->mapWithKeys(fn($template): array => [
+            $template->type->value => ['subject' => $template->subject, 'body' => $template->body],
+        ])->all() ?? [];
 
         $documents = Gate::allows('viewDocuments', $applicationForm)
-            ? $applicationForm->documents->sortBy(fn ($document): int => $document->document_type?->value === 'resume' ? 0 : 1)
+            ? $applicationForm->documents->sortBy(fn($document): int => $document->document_type?->value === 'resume' ? 0 : 1)
                 ->map(function ($document): array {
                     return [
                         'id' => (string) $document->id,
@@ -121,14 +137,18 @@ class OrganizationApplicationController extends Controller
             : [];
 
         $response = LiveTables::view($request, view('organisations.candidates.show', [
-            'allowedStages' => array_values(array_filter($applicationForm->status->allowedNextStages(),
-                fn (CandidatePipelineStage $stage): bool => Gate::allows('managePipeline', $applicationForm)
-                    && ($stage !== CandidatePipelineStage::Selected || Gate::allows('select', $applicationForm)))),
+            'allowedStages' => array_values(array_filter(
+                $applicationForm->status->allowedNextStages(),
+                fn(CandidatePipelineStage $stage): bool => Gate::allows('managePipeline', $applicationForm)
+                    && ($stage !== CandidatePipelineStage::Selected || Gate::allows('select', $applicationForm))
+            )),
             'application' => $applicationForm,
             'isInterviewStage' => $applicationForm->status === CandidatePipelineStage::Interview,
             'review' => app(CandidateReviewService::class)->build($applicationForm, $request->user()),
             'reviewDocuments' => $documents,
-            'interviewWorkspace' => $canSendEmail ? app(InterviewWorkspaceData::class)->forApplication($applicationForm, $request->user()) : [],
+            'interviewWorkspace' => $canSendEmail
+                ? app(InterviewWorkspaceData::class)->forApplication($applicationForm, $request->user(), $effectiveEmailTemplates)
+                : [],
             'canSendCandidateEmail' => $canSendEmail,
             'cancelEmailSubject' => $templateDefaults['interview_cancel']['subject'] ?? '',
             'cancelEmailBody' => $templateDefaults['interview_cancel']['body'] ?? '',
@@ -162,16 +182,20 @@ class OrganizationApplicationController extends Controller
      */
     private function validateTableFilters(Request $request): void
     {
-        $request->validate(['stage' => ['sometimes', 'nullable', 'string', 'max:40'], 'search' => ['sometimes', 'nullable', 'string', 'max:200'],
-            'job_id' => ['sometimes', 'nullable', 'integer', 'min:1'], 'page' => ['sometimes', 'integer', 'min:1']]);
+        $request->validate([
+            'stage' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'search' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'job_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'page' => ['sometimes', 'integer', 'min:1']
+        ]);
     }
 
     private function filteredCandidates(Request $request, ?CandidatePipelineStage $status): Builder
     {
         return ApplicationForm::query()
             ->forEmployer($request->user())
-            ->when($status, fn ($query) => $query->status($status))
-            ->when($request->filled('job_id'), fn ($query) => $query->where('job_id', $request->integer('job_id')))
+            ->when($status, fn($query) => $query->status($status))
+            ->when($request->filled('job_id'), fn($query) => $query->where('job_id', $request->integer('job_id')))
             ->search($request->string('search')->toString());
     }
 
@@ -183,7 +207,7 @@ class OrganizationApplicationController extends Controller
             ->latest('submitted_at')->latest('id'), 10);
 
         $jobs = Job::query()
-            ->tap(fn ($query) => app(OrganizationPermissions::class)->scopeJobs($query, $request->user()))
+            ->tap(fn($query) => app(OrganizationPermissions::class)->scopeJobs($query, $request->user()))
             ->whereHas('applications')
             ->orderBy('title')
             ->get(['id', 'title']);
