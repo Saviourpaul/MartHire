@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Job;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,10 @@ class SuspendJobRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('suspend', $this->route('job')) ?? false;
+        $job = $this->route('job');
+
+        return $job instanceof Job
+            && ($this->user()?->can('suspend', $job) ?? false);
     }
 
     /**
@@ -25,8 +29,9 @@ class SuspendJobRequest extends FormRequest
         return [
             'suspension_reason' => ['required', 'string', 'max:2000'],
         ] + array_fill_keys([
+            'organization_id', 'employer_id', 'slug', 'country_code',
             'status', 'title', 'description', 'company', 'category', 'location',
-            'employment_type', 'logo', 'start_date', 'due_date', 'employer_id',
+            'employment_type', 'logo', 'start_date', 'due_date',
             'suspended_at', 'suspended_by',
         ], ['prohibited']);
     }

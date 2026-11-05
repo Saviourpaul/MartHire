@@ -270,17 +270,26 @@ class JobController extends Controller
         $this->ensureEmployerOwnsJob($request, $job);
         Gate::authorize('delete', $job);
 
-        DB::transaction(function () use ($job): void {
+        $logoPath = DB::transaction(function () use ($job): ?string {
             Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
-            Gate::authorize('delete', $job);
+            $lockedJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+            Gate::authorize('delete', $lockedJob);
 
-            if ($job->applications()->whereHas('candidateMessages')->exists()) {
-                throw ValidationException::withMessages(['job' => 'Jobs with candidate email history must be closed instead of deleted.']);
+            if ($lockedJob->applications()->exists()) {
+                throw ValidationException::withMessages([
+                    'job' => 'This job has applications and cannot be permanently deleted. Keep it closed or suspended to preserve candidate records.',
+                ]);
             }
 
-            $job->delete();
+            $logoPath = $lockedJob->storedLogoPath();
+            $lockedJob->delete();
+
+            return $logoPath;
         });
-        $this->deleteStoredLogo($job);
+
+        if ($logoPath !== null) {
+            Storage::disk('public')->delete($logoPath);
+        }
 
         if (! LiveTables::actionRequested($request)) {
             LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
@@ -375,13 +384,6 @@ class JobController extends Controller
             'start_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:start_date', ...($request->routeIs('jobs.store') ? ['after_or_equal:today'] : [])],
         ];
-    }
-
-    private function deleteStoredLogo(Job $job): void
-    {
-        if ($path = $job->storedLogoPath()) {
-            Storage::disk('public')->delete($path);
-        }
     }
 
     private function ensureEmployerOwnsJob(Request $request, Job $job): void

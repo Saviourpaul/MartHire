@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\JobStatus;
 use App\Models\Job;
 use App\Models\User;
 use App\Support\OrganizationPermissions;
@@ -42,16 +43,16 @@ class JobPolicy
 
     public function viewModeration(User $user, Job $job): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() && $job->status !== JobStatus::Draft;
     }
 
     public function suspend(User $user, Job $job): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() && $job->status !== JobStatus::Draft;
     }
 
     public function deleteAsModerator(User $user, Job $job): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() && $job->status !== JobStatus::Draft;
     }
 }

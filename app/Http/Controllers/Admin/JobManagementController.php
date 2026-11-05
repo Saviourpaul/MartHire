@@ -8,6 +8,9 @@ use App\Http\Requests\DeleteModeratedJobRequest;
 use App\Http\Requests\SuspendJobRequest;
 use App\Models\Job;
 use App\Models\Organization;
+use App\Services\JobCountryService;
+use App\Support\JobDescription;
+use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,82 +22,118 @@ use Illuminate\Validation\ValidationException;
 
 class JobManagementController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         return $this->listing($request, null, 'All Jobs');
     }
 
-    public function open(Request $request): View
+    public function open(Request $request): View|JsonResponse
     {
         return $this->listing($request, JobStatus::Open, 'Open Jobs');
     }
 
-    public function closed(Request $request): View
+    public function closed(Request $request): View|JsonResponse
     {
         return $this->listing($request, JobStatus::Closed, 'Closed Jobs');
     }
 
-    public function suspended(Request $request): View
+    public function suspended(Request $request): View|JsonResponse
     {
         return $this->listing($request, JobStatus::Suspended, 'Suspended Jobs');
     }
 
-    public function show(Job $job): View
+    public function show(Request $request, Job $job, JobCountryService $countries): View|JsonResponse
     {
-        return view('admin.jobs.show', [
-            'job' => $job->load(['employer', 'suspendedBy:id,first_name,last_name'])->loadCount('applications'),
+        Gate::authorize('viewModeration', $job);
+
+        $job->load(['employer:id,first_name,last_name,email', 'organization:id,name', 'suspendedBy:id,first_name,last_name'])
+            ->loadCount('applications');
+
+        $view = view('admin.jobs.show', [
+            'job' => $job,
+            'country' => $countries->find($job->country_code),
+            'employmentTypeLabel' => $job->employmentTypeLabel(),
+            'descriptionHtml' => app(JobDescription::class)->toHtml($job->description),
         ]);
+
+        return LiveTables::view($request, $view, ['admin-job-detail']);
     }
 
     public function suspend(SuspendJobRequest $request, Job $job): RedirectResponse|JsonResponse
     {
-        $updated = Job::query()->whereKey($job->id)->where('status', '<>', JobStatus::Suspended->value)->update([
-            'status' => JobStatus::Suspended,
-            'suspended_at' => now(),
-            'suspension_reason' => $request->validated('suspension_reason'),
-            'suspended_by' => $request->user()->id,
-        ]);
+        DB::transaction(function () use ($job, $request): void {
+            $lockedJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+            Gate::authorize('suspend', $lockedJob);
 
-        if ($updated === 0) {
-            throw ValidationException::withMessages(['suspension_reason' => 'This job has already been suspended.']);
-        }
+            // Closed jobs are already removed from public discovery. Restricting
+            // suspension to open jobs preserves the original state and avoids
+            // needing an untracked restore status.
+            if ($lockedJob->status !== JobStatus::Open) {
+                throw ValidationException::withMessages([
+                    'suspension_reason' => 'Only open jobs can be suspended. Closed and already suspended jobs keep their current status.',
+                ]);
+            }
 
-        if ($request->expectsJson()) {
+            $lockedJob->forceFill([
+                'status' => JobStatus::Suspended,
+                'suspended_at' => now(),
+                'suspension_reason' => $request->validated('suspension_reason'),
+                'suspended_by' => $request->user()->id,
+            ])->save();
+        });
+
+        $message = 'Job suspended successfully.';
+
+        if ($request->expectsJson() && $request->header('X-Live-Action') !== '1') {
             return response()->json([
                 'ok' => true,
-                'message' => 'Job suspended.',
+                'message' => $message,
                 'status' => JobStatus::Suspended->value,
                 'redirect' => route('admin.jobs.show', $job),
-            ]);
+            ])->header('Cache-Control', 'private, no-store');
         }
 
-        return back()->with('success', 'Job suspended.');
+        return LiveTables::mutation(
+            $request,
+            $message,
+            back()->with('success', $message),
+            ['jobs', 'applications', 'candidates'],
+        );
     }
 
     public function destroy(DeleteModeratedJobRequest $request, Job $job): RedirectResponse|JsonResponse
     {
-        $logoPath = $job->storedLogoPath();
-        DB::transaction(function () use ($job): void {
+        $logoPath = DB::transaction(function () use ($job): ?string {
             Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
-            Gate::authorize('deleteAsModerator', $job);
+            $lockedJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+            Gate::authorize('deleteAsModerator', $lockedJob);
 
-            if ($job->applications()->whereHas('candidateMessages')->exists()) {
-                throw ValidationException::withMessages(['job' => 'Jobs with candidate email history must be closed instead of deleted.']);
+            // job_posts.job_id cascades into application records and their
+            // documents/history. Never let moderator deletion erase candidates.
+            if ($lockedJob->applications()->exists()) {
+                throw ValidationException::withMessages([
+                    'job' => 'This job has applications and cannot be permanently deleted. Close or suspend it so candidate records remain available.',
+                ]);
             }
 
-            $job->delete();
+            $logoPath = $lockedJob->storedLogoPath();
+            $lockedJob->delete();
+
+            return $logoPath;
         });
 
         if ($logoPath !== null) {
             Storage::disk('public')->delete($logoPath);
         }
 
+        LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
+
         if ($request->expectsJson()) {
             return response()->json([
                 'ok' => true,
                 'message' => 'Job deleted successfully.',
                 'redirect' => route('admin.jobs.index'),
-            ]);
+            ])->header('Cache-Control', 'private, no-store');
         }
 
         return redirect()
@@ -102,7 +141,7 @@ class JobManagementController extends Controller
             ->with('success', 'Job deleted successfully.');
     }
 
-    private function listing(Request $request, ?JobStatus $statusConstraint, string $title): View
+    private function listing(Request $request, ?JobStatus $statusConstraint, string $title): View|JsonResponse
     {
         $sortableColumns = ['created_at', 'status', 'title', 'company', 'category', 'employer'];
         $sortColumn = $request->input('sort') && in_array($request->input('sort'), $sortableColumns, true)
@@ -118,7 +157,7 @@ class JobManagementController extends Controller
 
         $query = Job::query()
             ->select('job_posts.*')
-            ->with(['employer:id,first_name,last_name,email'])
+            ->with(['employer:id,first_name,last_name,email', 'organization:id,name'])
             ->withCount('applications')
             ->where('status', '<>', JobStatus::Draft->value) // Draft is org-private; admins never moderate it
             ->when($statusConstraint, fn ($query) => $query->status($statusConstraint))
@@ -155,11 +194,9 @@ class JobManagementController extends Controller
             $query->orderBy('job_posts.'.$sortColumn, $sortDirection);
         }
 
-        $jobs = $query
-            ->paginate($perPage)
-            ->withQueryString();
+        $jobs = LiveTables::paginate($query, $perPage);
 
-        return view('admin.jobs.index', [
+        return LiveTables::view($request, view('admin.jobs.index', [
             'jobs' => $jobs,
             'title' => $title,
             'statusConstraint' => $statusConstraint,
@@ -173,7 +210,7 @@ class JobManagementController extends Controller
                 'category' => $category,
                 'per_page' => $perPage,
             ],
-        ]);
+        ]), ['admin-jobs']);
     }
 
     private function statusFilter(Request $request, ?JobStatus $statusConstraint): ?JobStatus
@@ -197,6 +234,7 @@ class JobManagementController extends Controller
     private function categories(): array
     {
         return Job::query()
+            ->where('status', '<>', JobStatus::Draft->value)
             ->whereNotNull('category')
             ->where('category', '<>', '')
             ->distinct()
