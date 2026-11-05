@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\JobManagementController;
 use App\Http\Controllers\Admin\PlatformSettingsController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ApplicationDocumentDownloadController;
@@ -127,6 +128,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/analytics', [AdminDashboardController::class, 'analytics'])->name('dashboard.analytics');
     Route::get('dashboard/active-users', [AdminDashboardController::class, 'activeUsers'])->name('dashboard.active-users');
+
+    // Job moderation is restricted to verified administrators. Keep the
+    // status routes ahead of the slug-bound detail route.
+    Route::get('jobs', [JobManagementController::class, 'index'])->name('jobs.index');
+    Route::get('jobs/open', [JobManagementController::class, 'open'])->name('jobs.open');
+    Route::get('jobs/closed', [JobManagementController::class, 'closed'])->name('jobs.closed');
+    Route::get('jobs/suspended', [JobManagementController::class, 'suspended'])->name('jobs.suspended');
+    Route::post('jobs/{job}/suspend', [JobManagementController::class, 'suspend'])->name('jobs.suspend');
+    Route::get('jobs/{job}', [JobManagementController::class, 'show'])->name('jobs.show');
+    Route::delete('jobs/{job}', [JobManagementController::class, 'destroy'])->name('jobs.destroy');
 
     // User management: one shared table view (admin/users/index.blade.php) reused
     // across every category; AccountLifecycleService owns the actual guard rules
