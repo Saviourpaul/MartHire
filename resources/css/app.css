@@ -3669,9 +3669,15 @@ a.nw-chip {
     flex-direction: column;
     width: var(--nw-side);
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     background: var(--nw-forest);
     color: var(--nw-on-forest);
     border-right: 1px solid rgb(245 246 255 / 8%);
+}
+
+.nw-sidebar::-webkit-scrollbar {
+    display: none;
 }
 
 .nw-sidebar__brand {

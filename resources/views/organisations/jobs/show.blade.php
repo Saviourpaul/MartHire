@@ -28,11 +28,15 @@
             @endunless
         @endcan
         @can('delete', $job)
-            <form method="POST" action="{{ route('organisations.jobs.destroy', $job) }}" data-confirm="{{ __('Delete this job? This cannot be undone.') }}" data-confirm-label="{{ __('Delete job') }}" data-confirm-type="error">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="nw-button nw-button--danger nw-button--small">{{ __('Delete') }}</button>
-            </form>
+            @if ((int) ($job->applications_count ?? 0) === 0)
+                <form method="POST" action="{{ route('organisations.jobs.destroy', $job) }}" data-confirm="{{ __('Delete this job? This cannot be undone.') }}" data-confirm-label="{{ __('Delete job') }}" data-confirm-type="error">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="nw-button nw-button--danger nw-button--small">{{ __('Delete') }}</button>
+                </form>
+            @else
+                <span class="nw-form-hint">{{ __('This job has applications. Keep it closed or suspended to preserve candidate history.') }}</span>
+            @endif
         @endcan
     </div>
 
