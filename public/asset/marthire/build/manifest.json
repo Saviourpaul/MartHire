@@ -23,7 +23,7 @@
     "src": "public/asset/marthire/how-it-works/cta-bg.png"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DhdKy7TI.css",
+    "file": "assets/app-l8MgdirT.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -32,14 +32,14 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DIgVUqzv.js",
+    "file": "assets/app-DTzwqo_4.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
       "resources/js/candidate-pdf.js",
-      "resources/js/candidate-resume-autofill.js",
-      "resources/js/international-phone.js"
+      "resources/js/international-phone.js",
+      "resources/js/candidate-resume-autofill.js"
     ],
     "css": [
       "assets/app-CQ7DNbul.css"
