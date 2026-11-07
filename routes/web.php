@@ -16,6 +16,7 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\JobTeamController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationApplicationController;
 use App\Http\Controllers\OrganizationDashboardController;
 use App\Http\Controllers\OrganizationEmailTemplateController;
@@ -225,6 +226,17 @@ Route::middleware(['auth', 'verified', 'role:applicant'])->prefix('client')->nam
 Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'edit'])->middleware(['verified', 'active.account'])->name('settings.edit');
     Route::patch('/settings/appearance', [SettingsController::class, 'updateAppearance'])->middleware(['verified', 'active.account'])->name('settings.appearance.update');
+    Route::patch('/settings/notifications', [SettingsController::class, 'updateNotificationPreferences'])
+        ->middleware(['verified', 'active.account'])->name('settings.notifications.update');
+    Route::patch('/settings/notifications/sound', [SettingsController::class, 'updateNotificationSound'])
+        ->middleware(['verified', 'active.account'])->name('settings.notifications.sound.update');
+    Route::middleware(['verified', 'active.account'])->prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/preview', [NotificationController::class, 'preview'])->name('preview');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::patch('/read-all', [NotificationController::class, 'readAll'])->name('read-all');
+        Route::patch('/{notification}/read', [NotificationController::class, 'read'])->name('read');
+    });
     Route::patch('/settings/organization', [OrganizationSettingsController::class, 'update'])
         ->middleware(['verified', 'active.account', 'role:organization'])->name('settings.organization.update');
     Route::patch('/settings/social-links', [PlatformSettingsController::class, 'updateSocialLinks'])
