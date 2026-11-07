@@ -6,7 +6,7 @@
     </x-slot>
 
     @fragment('organization-dashboard')
-  
+    <div data-live-table="organization-dashboard" data-live-topics="applications,candidates,interviews,notifications,jobs,team" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-stats">
         <div class="nw-stat">
             <div class="nw-stat__top">

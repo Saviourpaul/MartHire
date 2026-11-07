@@ -16,6 +16,7 @@
             ],
             __('Account') => [
                 ['label' => __('Profile'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Notifications'), 'href' => route('notifications.index'), 'icon' => 'bell', 'active' => request()->routeIs('notifications.*')],
                 ['label' => __('Settings'), 'href' => route('settings.edit'), 'icon' => 'settings', 'active' => request()->routeIs('settings.*')],
                 ['label' => __('Help & support'), 'href' => url('/ContactUs'), 'icon' => 'help'],
             ],
@@ -34,6 +35,7 @@
             ],
             __('Account') => [
                 ['label' => __('Profile'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Notifications'), 'href' => route('notifications.index'), 'icon' => 'bell', 'active' => request()->routeIs('notifications.*')],
                 ['label' => __('Settings'), 'href' => route('settings.edit'), 'icon' => 'settings', 'active' => request()->routeIs('settings.*')],
                 ['label' => __('Help & support'), 'href' => url('/ContactUs'), 'icon' => 'help'],
             ],
@@ -50,6 +52,7 @@
             ],
             __('Account') => [
                 ['label' => __('Profile'), 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
+                ['label' => __('Notifications'), 'href' => route('notifications.index'), 'icon' => 'bell', 'active' => request()->routeIs('notifications.*')],
                 ['label' => __('Settings'), 'href' => route('settings.edit'), 'icon' => 'settings', 'active' => request()->routeIs('settings.*')],
                 ['label' => __('Help & support'), 'href' => url('/ContactUs'), 'icon' => 'help'],
             ],

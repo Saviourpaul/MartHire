@@ -5,6 +5,7 @@
     </x-slot>
 
     @fragment('admin-dashboard')
+    <div data-live-table="admin-dashboard" data-live-topics="users,notifications" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-stats">
         <div class="nw-stat">
             <div class="nw-stat__top">

@@ -2,7 +2,8 @@
     <x-slot name="title">{{ __('Application :reference', ['reference' => $application->reference]) }}</x-slot>
     <x-slot name="header"><h1 class="nw-heading">{{ __('Your application') }}</h1><p>{{ $application->job?->title }} · {{ $application->job?->company }}</p></x-slot>
 
-    <section class="nw-panel nw-form-stack">
+    @fragment('client-application')
+    <section class="nw-panel nw-form-stack" data-live-table="client-application" data-live-topics="applications,interviews,notifications" data-live-interval="0" data-live-url="{{ request()->fullUrl() }}">
         <header class="nw-panel-heading"><span class="nw-eyebrow">{{ $application->reference }}</span><h2 class="nw-heading">{{ $application->status->label() }}</h2><p>{{ __('Submitted :date', ['date' => $application->submitted_at?->format('j F Y, H:i')]) }}</p></header>
         @if ($publicJob)<div><span class="nw-label">{{ __('Job country') }}</span><x-job-country :job="$publicJob" /></div>@endif
         <dl class="nw-form-stack">
@@ -16,4 +17,5 @@
             <a class="nw-button nw-button--primary" href="{{ route('workable-jobs.index') }}">{{ __('Browse jobs') }}</a>
         </div>
     </section>
+    @endfragment
 </x-app-layout>

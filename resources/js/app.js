@@ -1,5 +1,7 @@
 import './bootstrap';
 import './hero-map';
+import { initializeRealtimeWorkspaces } from './realtime-workspaces';
+import { initializeNotificationSound } from './notification-sound';
 
 import Alpine from 'alpinejs';
 import { registerDashboardCharts } from './dashboard-charts';
@@ -13,8 +15,30 @@ import { registerInterviewEmailTemplatePicker } from './interview-email-template
 import { registerAdminUserDocumentViewer } from './admin-user-document-viewer';
 import { initializeAlerts } from './alerts';
 import { initializeLiveTables } from './live-tables';
+import { createDeferredPhoneInitializer } from './deferred-phone';
 
 window.Alpine = Alpine;
+Alpine.data('notificationMenu', () => ({
+    open: false,
+    toggle() {
+        this.open = ! this.open;
+
+        if (this.open) {
+            window.dispatchEvent(new CustomEvent('nw:data-changed', {
+                detail: { topics: ['notifications'], source: 'notification-menu-open' },
+            }));
+        }
+    },
+    close() {
+        this.open = false;
+    },
+    closeAndFocus() {
+        if (! this.open) return;
+
+        this.close();
+        this.$refs.notificationToggle?.focus();
+    },
+}));
 registerDashboardCharts(Alpine);
 registerApplicationForm(Alpine);
 registerJobForm(Alpine);
@@ -25,6 +49,23 @@ registerCandidateReview(Alpine);
 registerInterviewEmailTemplatePicker(Alpine);
 registerAdminUserDocumentViewer(Alpine);
 initializeAlerts();
+initializeRealtimeWorkspaces({ notificationSound: initializeNotificationSound() });
+
+let phoneSupportPromise;
+function loadPhoneSupport() {
+    if (!phoneSupportPromise) {
+        phoneSupportPromise = import('./international-phone')
+            .then(({ registerInternationalPhone }) => registerInternationalPhone(Alpine))
+            .catch((error) => { phoneSupportPromise = undefined; throw error; });
+    }
+    return phoneSupportPromise;
+}
+
+const deferredPhoneInitializer = createDeferredPhoneInitializer({
+    Alpine,
+    loadPhoneSupport,
+    onError: (error) => console.error('Unable to load phone formatting.', error),
+});
 
 Alpine.data('resumeAutofill', (messages = {}) => ({
     dragging: false,
@@ -118,10 +159,11 @@ Alpine.data('resumeAutofill', (messages = {}) => ({
 Alpine.data('applicantProfileChecklistEditor', () => ({
     activeSection: null,
     successMessage: '',
-    open(section) {
+    async open(section) {
         this.activeSection = section;
         this.successMessage = '';
         this.$dispatch('open-modal', 'applicant-profile-checklist-editor');
+        if (section === 'contact') await deferredPhoneInitializer.initialize(this.$root);
     },
     clearFieldError(event) {
         const field = event.target;
@@ -352,13 +394,12 @@ Alpine.data('jobSearch', ({ jobs, categories, pageSize = 9 }) => ({
 // Keep full phone metadata off pages without a phone field. Register before
 // Alpine walks the form so nested phone components initialize in the right order.
 async function startApplication() {
-    if (document.querySelector('[data-phone-field]')) {
+    if (document.querySelector('[data-phone-field]:not([data-phone-deferred])')) {
         try {
-            const { registerInternationalPhone } = await import('./international-phone');
-            registerInternationalPhone(Alpine);
+            await loadPhoneSupport();
         } catch (error) {
             // A failed chunk request retains the native country select and input.
-            document.querySelectorAll('[data-phone-field]').forEach((field) => field.setAttribute('x-ignore', ''));
+            document.querySelectorAll('[data-phone-field]:not([data-phone-deferred])').forEach((field) => field.setAttribute('x-ignore', ''));
             console.error('Unable to load phone formatting.', error);
         }
     }

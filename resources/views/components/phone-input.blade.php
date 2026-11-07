@@ -1,4 +1,4 @@
-@props(['id' => 'phone', 'name' => 'phone', 'value' => null, 'required' => false, 'country' => null, 'wizard' => false, 'describedBy' => null])
+@props(['id' => 'phone', 'name' => 'phone', 'value' => null, 'required' => false, 'country' => null, 'wizard' => false, 'describedBy' => null, 'deferred' => false])
 
 @php
     $phoneService = app(\App\Services\PhoneNumberService::class);
@@ -12,7 +12,7 @@
     $descriptionIds = trim(($describedBy ?? '').' '.$id.'-phone-error');
 @endphp
 
-<div class="nw-phone-field" data-phone-field x-data="internationalPhone({ countries: @js($phoneCountries), country: @js($selectedCountry), value: @js(is_scalar($value) ? (string) $value : ''), required: @js((bool) $required), name: @js($name), explicitCountry: @js($explicitCountry), wizard: @js((bool) $wizard), serverError: @js($serverError) })"
+<div class="nw-phone-field" data-phone-field @if ($deferred) data-phone-deferred x-ignore @endif x-data="internationalPhone({ countries: @js($phoneCountries), country: @js($selectedCountry), value: @js(is_scalar($value) ? (string) $value : ''), required: @js((bool) $required), name: @js($name), explicitCountry: @js($explicitCountry), wizard: @js((bool) $wizard), serverError: @js($serverError) })"
      x-on:click.outside="closePhoneCountries()" x-on:keydown.escape.stop="if (countryMenuOpen) closePhoneCountries(true)"
      x-on:focusout="if (!$el.contains($event.relatedTarget)) closePhoneCountries()" x-on:resize.window="if (countryMenuOpen) positionPhoneMenu()">
     <div class="nw-phone" x-bind:class="{ 'has-error': phoneMessage() }">

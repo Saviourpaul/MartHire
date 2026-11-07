@@ -21,7 +21,7 @@
                 name="arrow-left" />{{ __('All candidates') }}</a></x-slot>
 
     @fragment('candidate-review')
-        <div class="nw-review" data-live-table="candidate-review" data-live-topics="candidates,interviews,team,jobs"
+        <div class="nw-review" data-live-table="candidate-review" data-live-topics="candidates,applications,interviews,notifications,team,jobs"
             data-live-pages="" data-live-interval="0" data-live-url="{{ request()->fullUrl() }}" x-data="candidateReview({ documents: @js($reviewDocuments), tab: @js($initialTab) })"
             x-bind:data-current-review-tab="reviewTab" x-bind:data-current-document="documentId">
             @if ($errors->any())

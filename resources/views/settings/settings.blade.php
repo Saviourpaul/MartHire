@@ -32,6 +32,63 @@
             </form>
         </section>
 
+        <section id="notification-sound" class="nw-panel nw-settings-card">
+            <header class="nw-settings-card__head">
+                <h2>{{ __('In-app notification sound') }}</h2>
+                <p>{{ __('Choose whether Marthire plays a short sound when new notifications arrive. This setting is saved to your account.') }}</p>
+            </header>
+            <div class="nw-notification-sound-setting">
+                <div class="nw-notification-sound-setting__copy">
+                    <h3 id="notification-sound-label">{{ __('Play a sound for new notifications') }}</h3>
+                    <p id="notification-sound-description">{{ __('When enabled, a short preview plays after you switch it on.') }}</p>
+                </div>
+                <button type="button" class="nw-toggle-switch" role="switch"
+                    aria-checked="{{ $userPreferences->notification_sound_enabled ? 'true' : 'false' }}"
+                    aria-labelledby="notification-sound-label" aria-describedby="notification-sound-description"
+                    data-notification-sound-toggle>
+                    <span class="nw-toggle-switch__track" aria-hidden="true"><span></span></span>
+                </button>
+            </div>
+            <p class="nw-sr-only" role="status" aria-live="polite" data-notification-sound-status></p>
+        </section>
+
+        @if (! empty($categories))
+            <section id="notification-preferences" class="nw-panel nw-settings-card">
+                <header class="nw-settings-card__head">
+                    <h2>{{ __('Email notifications') }}</h2>
+                    <p>{{ __('Choose which workflow updates may also be sent by email. In-app notifications remain available in your notification inbox.') }}</p>
+                </header>
+                <form method="POST" action="{{ route('settings.notifications.update') }}" class="nw-settings-form">
+                    @csrf
+                    @method('PATCH')
+                    @foreach ($categories as $category)
+                        <fieldset class="nw-fieldset">
+                            <legend class="nw-label">{{ $category['label'] }}</legend>
+                            <p class="nw-hint">{{ $category['description'] }}</p>
+                            <label class="nw-checkbox-label">
+                                <input type="hidden" name="email_preferences[{{ $category['value'] }}]" value="0">
+                                <input class="nw-checkbox" type="checkbox" name="email_preferences[{{ $category['value'] }}]" value="1" @checked(old('email_preferences.'.$category['value'], $emailPreferences[$category['value']] ?? false))>
+                                <span>{{ __('Send this update to my account email') }}</span>
+                            </label>
+                            @if ($notificationOrganization)
+                                <label class="nw-field" for="membership-email-{{ $category['value'] }}">
+                                    <span class="nw-label">{{ __('For :organization', ['organization' => $notificationOrganization->name]) }}</span>
+                                    <select class="nw-input" id="membership-email-{{ $category['value'] }}" name="membership_email_preferences[{{ $category['value'] }}]">
+                                        <option value="" @selected(old('membership_email_preferences.'.$category['value'], $membershipEmailPreferences[$category['value']] ?? '') === '')>{{ __('Use my account preference') }}</option>
+                                        <option value="on" @selected(old('membership_email_preferences.'.$category['value'], $membershipEmailPreferences[$category['value']] ?? '') === true || old('membership_email_preferences.'.$category['value'], $membershipEmailPreferences[$category['value']] ?? '') === 'on')>{{ __('Always email me for this organization') }}</option>
+                                        <option value="off" @selected(old('membership_email_preferences.'.$category['value'], $membershipEmailPreferences[$category['value']] ?? '') === false || old('membership_email_preferences.'.$category['value'], $membershipEmailPreferences[$category['value']] ?? '') === 'off')>{{ __('Never email me for this organization') }}</option>
+                                    </select>
+                                </label>
+                            @endif
+                        </fieldset>
+                    @endforeach
+                    <div class="nw-settings-form__actions">
+                        <button class="nw-button nw-button--primary" type="submit">{{ __('Save notification preferences') }}</button>
+                    </div>
+                </form>
+            </section>
+        @endif
+
         @if ($organizationSettings)
             @php($companyLogoUrl = $organizationSettings->companyLogoUrl())
             <section id="organization-profile" class="nw-panel nw-settings-card">

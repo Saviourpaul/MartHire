@@ -12,6 +12,14 @@
         @include('partials.site-head', ['title' => isset($title) ? (string) $title : 'Your account'])
     </head>
     <body class="nw-app"
+        data-workspace-role="{{ $shellUser->isAdmin() ? 'admin' : ($shellUser->isOrganization() ? 'organization' : ($shellUser->isApplicant() ? 'applicant' : '')) }}"
+        data-organization-id="{{ $shellUser->isOrganization() ? (int) (request()->attributes->get('organization')?->id ?? 0) : '' }}"
+        data-workspace-user-id="{{ $shellUser->isApplicant() ? (int) $shellUser->id : '' }}"
+        data-notification-count-url="{{ route('notifications.unread-count') }}"
+        data-notification-sound-url="{{ asset('asset/marthire/sounds/notification.mp3') }}"
+        data-notification-sound-update-url="{{ route('settings.notifications.sound.update') }}"
+        data-notification-sound-enabled="{{ $notificationSoundEnabled ? 'true' : 'false' }}"
+        data-notification-sound-preference-configured="{{ $notificationSoundPreferenceConfigured ? 'true' : 'false' }}"
         x-data="{
             sidebar: false,
             mobile: window.matchMedia('(max-width: 1023px)').matches,
@@ -69,6 +77,25 @@
                         <x-icon name="sun" class="nw-icon--to-light" />
                         <span class="nw-sr-only">{{ __('Switch between light and dark') }}</span>
                     </button>
+
+                    <div class="nw-notification-menu" x-data="notificationMenu" x-on:keydown.escape.window="closeAndFocus()" x-on:click.outside="close()">
+                        <button type="button" class="nw-icon-button nw-topbar__notification{{ request()->routeIs('notifications.*') ? ' is-active' : '' }}"
+                            aria-label="{{ $unreadNotificationCount > 0 ? trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) : __('Notifications') }}"
+                            aria-controls="header-notifications" x-bind:aria-expanded="open.toString()"
+                            x-ref="notificationToggle"
+                            data-notification-link data-notification-label="{{ __('Notifications') }}"
+                            x-on:click.stop="toggle()"
+                            @if (request()->routeIs('notifications.*')) aria-current="page" @endif>
+                            <x-icon name="bell" />
+                            <span class="nw-notification-count" data-notification-count
+                                data-notification-count-value="{{ $unreadNotificationCount }}"
+                                aria-label="{{ trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) }}"
+                                @if ($unreadNotificationCount < 1) hidden @endif>{{ $unreadNotificationCount > 99 ? '99+' : ($unreadNotificationCount ?: '') }}</span>
+                        </button>
+                        <div id="header-notifications" class="nw-notification-dropdown" x-show="open" x-transition.opacity.duration.150ms x-cloak>
+                            @include('notifications.dropdown-content')
+                        </div>
+                    </div>
 
                     <div class="nw-user-menu" x-data="{ open: false }" x-on:keydown.escape="open = false" x-on:click.outside="open = false">
                         <button type="button" class="nw-user-menu__button" aria-haspopup="true" x-bind:aria-expanded="open.toString()" x-on:click="open = ! open">

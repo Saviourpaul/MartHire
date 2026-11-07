@@ -7,7 +7,7 @@
 
     <div class="nw-applicant-dashboard" x-data="applicantProfileChecklistEditor" x-on:open-applicant-profile-editor.window="open($event.detail)" x-on:submit="submitForm($event)" x-on:input="clearFieldError($event)" x-on:change="clearFieldError($event)">
     @fragment('client-dashboard')
-    <div data-live-table="client-dashboard" data-live-topics="applications,jobs" data-live-pages="applications_page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
+    <div data-live-table="client-dashboard" data-live-topics="applications,interviews,notifications,jobs" data-live-pages="applications_page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-applicant-dashboard-grid">
         <main class="nw-applicant-dashboard-main">
 
@@ -105,7 +105,7 @@
     @endfragment
     @unless ($isLiveTableRequest)
     <x-modal name="applicant-profile-checklist-editor" maxWidth="2xl">
-        @include('profile.partials.applicant-profile-checklist-editor')
+        @include('profile.partials.applicant-profile-checklist-editor', ['deferPhoneEnhancement' => true])
     </x-modal>
     @endunless
     </div>

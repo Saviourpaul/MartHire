@@ -79,7 +79,7 @@
         <div class="nw-form-row nw-form-row--fields">
             <div>
                 <x-input-label for="phone" :value="__('Phone number')" />
-                <x-phone-input id="phone" name="phone" :value="old('phone', $user->phone)" :required="$user->isApplicant()" />
+                <x-phone-input id="phone" name="phone" :value="old('phone', $user->phone)" :required="$user->isApplicant()" :deferred="$deferPhoneEnhancement ?? false" />
             </div>
             <div>
                 <x-input-label for="date_of_birth" :value="__('Date of birth')" />

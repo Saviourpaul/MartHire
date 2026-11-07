@@ -257,7 +257,6 @@ export function initializeLiveTables({ document: doc = document, window: win = w
     function refreshAll(detail = {}, local = false) {
         scan();
         regions.forEach((state) => {
-            if (detail.initial && Number(state.root.dataset.liveInterval || 0) === 0) return;
             if (local && detail.origin === instance && detail.source === state.id) return;
             if (topicsOverlap(state.topics, Array.isArray(detail.topics) ? detail.topics : [])) refresh(state, undefined, { background: true });
         });
@@ -279,8 +278,7 @@ export function initializeLiveTables({ document: doc = document, window: win = w
     }, 30000);
     queueMicrotask(() => {
         const signal = doc.querySelector('[data-live-changes]');
-        if (signal) { try { publish(JSON.parse(signal.dataset.liveChanges)); return; } catch (_) {} }
-        refreshAll({ initial: true });
+        if (signal) { try { publish(JSON.parse(signal.dataset.liveChanges)); } catch (_) {} }
     });
     return { refreshAll, destroy() { destroyed = true; removers.forEach((remove) => remove()); regions.forEach((state) => state.transport.invalidate()); timers.forEach(clearTimeout); win.clearInterval(polling); channel?.close(); } };
 }
