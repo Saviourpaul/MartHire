@@ -31,7 +31,11 @@ class OrganizationSettingsService
         'default_application_instructions',
     ];
 
-    public function __construct(private OrganizationContext $context, private ActivityLogger $audit) {}
+    public function __construct(
+        private OrganizationContext $context,
+        private ActivityLogger $audit,
+        private WorkspaceUpdateBroadcaster $workspaceUpdates,
+    ) {}
 
     public function forOrganization(Organization|int $organization): OrganizationSetting
     {
@@ -52,7 +56,7 @@ class OrganizationSettingsService
                 abort_if($newLogoPath === null, 422, 'The logo could not be saved. Please try again.');
             }
 
-            return DB::transaction(function () use ($organization, $actor, $data, $newLogoPath): OrganizationSetting {
+            $settings = DB::transaction(function () use ($organization, $actor, $data, $newLogoPath): OrganizationSetting {
                 abort_unless($this->context->organizationId() === $organization->id, 409, 'Your active organization changed. Reload Settings before saving.');
                 $locked = Organization::query()->whereKey($organization->id)->lockForUpdate()->firstOrFail();
                 $freshActor = User::query()->whereKey($actor->id)->lockForUpdate()->firstOrFail();
@@ -88,6 +92,16 @@ class OrganizationSettingsService
 
                 return $settings;
             });
+
+            $this->workspaceUpdates->admins(['organizations', 'jobs'], 'An organization profile was updated.', 'info');
+            $this->workspaceUpdates->organization(
+                $organization->id,
+                ['jobs', 'team'],
+                'Organization profile updated.',
+                'info',
+            );
+
+            return $settings;
         } catch (Throwable $exception) {
             if ($newLogoPath) {
                 Storage::disk('public')->delete($newLogoPath);

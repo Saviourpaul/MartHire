@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApplicationDocumentType;
 use App\Http\Requests\StoreApplicationFormRequest;
+use App\Models\ApplicantProfile;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
-use App\Models\ApplicantProfile;
 use App\Models\Job;
 use App\Models\User;
 use App\Models\UserIdentificationDocument;
@@ -16,6 +16,7 @@ use App\Services\ApplicationFormService;
 use App\Services\CandidateJobPreferenceService;
 use App\Services\LocationService;
 use App\Services\PublicJobService;
+use App\Support\LiveTables;
 use App\Support\OrganizationContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -282,14 +283,14 @@ class JobApplicationController extends Controller
             ->with('success', 'Your application has been submitted successfully.');
     }
 
-    public function show(Request $request, ApplicationForm $applicationForm): View
+    public function show(Request $request, ApplicationForm $applicationForm): View|JsonResponse
     {
         $this->authorize('view', $applicationForm);
 
-        return view('client.application-show', [
+        return LiveTables::view($request, view('client.application-show', [
             'application' => $applicationForm->load(['job', 'applicant', 'documents', 'statusHistories.changedBy', 'interviews']),
             'publicJob' => $applicationForm->job ? app(PublicJobService::class)->native($applicationForm->job) : null,
-        ]);
+        ]), ['client-application']);
     }
 
     public function documents(Request $request): View

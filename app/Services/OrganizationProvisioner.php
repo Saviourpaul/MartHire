@@ -12,13 +12,14 @@ use Illuminate\Support\Facades\DB;
 
 class OrganizationProvisioner
 {
-    public function __construct(private OrganizationContext $context) {}
+    public function __construct(private OrganizationContext $context, private WorkspaceUpdateBroadcaster $workspaceUpdates) {}
 
     public function ensureForEmployer(User $employer): Organization
     {
         abort_unless($employer->isOrganization(), 403);
 
-        return DB::transaction(function () use ($employer): Organization {
+        $created = false;
+        $organization = DB::transaction(function () use ($employer, &$created): Organization {
             User::query()->whereKey($employer->id)->lockForUpdate()->firstOrFail();
             $membership = OrganizationMember::withoutGlobalScope(OrganizationScope::class)
                 ->where('user_id', $employer->id)->where('status', 'active')->first();
@@ -31,6 +32,7 @@ class OrganizationProvisioner
                 ->withTrashed()->where('user_id', $employer->id)->exists(), 403);
 
             $organization = Organization::create(['name' => mb_substr(trim($employer->first_name.' '.$employer->last_name).' Organization', 0, 255)]);
+            $created = true;
             $this->context->runInOrganization($organization, fn () => OrganizationMember::create([
                 'organization_id' => $organization->id, 'user_id' => $employer->id,
                 'role' => OrganizationRole::Owner, 'status' => 'active',
@@ -38,5 +40,11 @@ class OrganizationProvisioner
 
             return $organization;
         });
+
+        if ($created) {
+            $this->workspaceUpdates->admins(['organizations', 'users'], 'An organization workspace was created.', 'info');
+        }
+
+        return $organization;
     }
 }

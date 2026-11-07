@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\JobAlertFrequency;
 use App\Enums\SocialPlatform;
 use App\Http\Requests\UpdateAppearanceRequest;
+use App\Http\Requests\UpdateNotificationPreferencesRequest;
+use App\Http\Requests\UpdateNotificationSoundPreferenceRequest;
 use App\Models\Job;
 use App\Models\SettingsAuditEvent;
 use App\Services\AccountLifecycleService;
@@ -16,6 +18,7 @@ use App\Services\UserPreferencesService;
 use App\Support\OrganizationContext;
 use DateTimeZone;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -52,5 +55,36 @@ class SettingsController extends Controller
         $this->preferences->update($request->user(), $request->validated());
 
         return to_route('settings.edit')->with('success', 'Display timezone saved.');
+    }
+
+    public function updateNotificationPreferences(UpdateNotificationPreferencesRequest $request, NotificationPreferenceService $notifications): RedirectResponse
+    {
+        $user = $request->user();
+        $data = $request->validated();
+
+        if (array_key_exists('email_preferences', $data)) {
+            $notifications->update($user, $data['email_preferences']);
+        }
+
+        if (array_key_exists('membership_email_preferences', $data)) {
+            $organization = $this->context->organization();
+            abort_unless($organization !== null, 403);
+            $notifications->updateMembership($user, $organization, $data['membership_email_preferences']);
+        }
+
+        return to_route('settings.edit')->with('success', 'Notification preferences saved.');
+    }
+
+    public function updateNotificationSound(UpdateNotificationSoundPreferenceRequest $request): JsonResponse
+    {
+        $preference = $this->preferences->updateNotificationSound(
+            $request->user(),
+            (bool) $request->validated('enabled'),
+        );
+
+        return response()->json([
+            'enabled' => (bool) $preference->notification_sound_enabled,
+            'message' => __('Notification sound preference saved.'),
+        ]);
     }
 }

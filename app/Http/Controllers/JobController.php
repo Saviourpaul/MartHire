@@ -12,6 +12,7 @@ use App\Models\Organization;
 use App\Models\OrganizationMember;
 use App\Services\JobCountryService;
 use App\Services\LocationService;
+use App\Services\WorkspaceUpdateBroadcaster;
 use App\Support\JobDescription;
 use App\Support\LiveTables;
 use App\Support\OrganizationContext;
@@ -126,7 +127,7 @@ class JobController extends Controller
             ->distinct()->orderBy('category')->pluck('category')->all();
     }
 
-    public function store(StoreJobRequest $request): RedirectResponse|JsonResponse
+    public function store(StoreJobRequest $request, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
         unset($data['action'], $data['location']);
@@ -148,6 +149,12 @@ class JobController extends Controller
             return $job;
         });
 
+        $workspaceUpdates->admins(
+            ['jobs'],
+            $job->status === JobStatus::Open ? 'An organization published a job.' : null,
+            'info',
+        );
+
         $message = $request->resolvedStatus() === JobStatus::Draft
             ? 'Job saved as a draft.'
             : 'Job published and open for applications.';
@@ -168,7 +175,7 @@ class JobController extends Controller
         return redirect()->route('organisations.jobs.show', $job)->with('success', $message);
     }
 
-    public function update(UpdateJobRequest $request, Job $job): RedirectResponse|JsonResponse
+    public function update(UpdateJobRequest $request, Job $job, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
         unset($data['action'], $data['location']);
@@ -217,6 +224,7 @@ class JobController extends Controller
         if ($oldLogoPath !== null) {
             Storage::disk('public')->delete($oldLogoPath);
         }
+        $workspaceUpdates->admins(['jobs']);
         $message = $status === JobStatus::Draft ? 'Job saved as a draft.' : 'Job updated successfully.';
 
         if (! LiveTables::actionRequested($request)) {
@@ -238,7 +246,7 @@ class JobController extends Controller
         return redirect()->route('organisations.jobs.show', $job)->with('success', $message);
     }
 
-    public function close(CloseJobRequest $request, Job $job): RedirectResponse|JsonResponse
+    public function close(CloseJobRequest $request, Job $job, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
         $updated = Job::query()->whereKey($job->id)->where('status', '<>', JobStatus::Closed->value)
             ->update(['status' => JobStatus::Closed]);
@@ -246,6 +254,7 @@ class JobController extends Controller
         if ($updated === 0) {
             throw ValidationException::withMessages(['confirm_closure' => 'This job is already closed.']);
         }
+        $workspaceUpdates->admins(['jobs']);
 
         if (! LiveTables::actionRequested($request)) {
             LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
@@ -265,7 +274,7 @@ class JobController extends Controller
         return redirect()->route('organisations.jobs.show', $job)->with('success', 'Job closed. Existing applications remain available.');
     }
 
-    public function destroy(Request $request, Job $job): RedirectResponse|JsonResponse
+    public function destroy(Request $request, Job $job, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
         $this->ensureEmployerOwnsJob($request, $job);
         Gate::authorize('delete', $job);
@@ -290,6 +299,7 @@ class JobController extends Controller
         if ($logoPath !== null) {
             Storage::disk('public')->delete($logoPath);
         }
+        $workspaceUpdates->admins(['jobs']);
 
         if (! LiveTables::actionRequested($request)) {
             LiveTables::signal($request, ['jobs', 'applications', 'candidates']);

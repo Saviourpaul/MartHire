@@ -48,4 +48,26 @@ class UserPreferencesService
             return $this->resolved[$user->id] = $preference;
         });
     }
+
+    public function updateNotificationSound(User $user, bool $enabled): UserPreference
+    {
+        return DB::transaction(function () use ($user, $enabled): UserPreference {
+            User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $preference = UserPreference::query()->firstOrNew(['user_id' => $user->id]);
+            $before = $preference->notification_sound_enabled;
+
+            if ($before !== $enabled) {
+                $preference->notification_sound_enabled = $enabled;
+                $preference->save();
+                SettingsAuditEvent::create([
+                    'actor_id' => $user->id, 'user_id' => $user->id, 'scope' => 'personal',
+                    'action' => 'notification_sound_updated',
+                    'changes' => ['before' => $before, 'after' => $enabled],
+                    'created_at' => now(),
+                ]);
+            }
+
+            return $this->resolved[$user->id] = $preference;
+        });
+    }
 }

@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ApplicantAccountActivityService;
 use App\Services\PlatformSettingsService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,7 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request, PlatformSettingsService $settings): RedirectResponse
+    public function store(Request $request, PlatformSettingsService $settings, ApplicantAccountActivityService $activity): RedirectResponse
     {
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
@@ -54,6 +55,8 @@ class RegisteredUserController extends Controller
                 'status' => UserStatus::Pending,
             ]);
         });
+
+        $activity->registered($user);
 
         // Pending users have a limited session for the verification and resend
         // screens only. Product routes remain behind the verified middleware.

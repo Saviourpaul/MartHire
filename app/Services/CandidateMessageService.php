@@ -128,7 +128,8 @@ class CandidateMessageService
         $organization = Organization::findOrFail($organizationId);
         $this->context->runInOrganization($organization, function () use ($initialMessage): void {
             $failure = null;
-            DB::transaction(function () use ($initialMessage, &$failure): void {
+            $deliveryNotice = null;
+            DB::transaction(function () use ($initialMessage, &$failure, &$deliveryNotice): void {
                 Organization::whereKey($initialMessage->organization_id)->lockForUpdate()->firstOrFail();
                 ApplicationForm::whereKey($initialMessage->application_form_id)->lockForUpdate()->firstOrFail();
                 $interview = Interview::query()->lockForUpdate()->find($initialMessage->interview_id);
@@ -141,13 +142,15 @@ class CandidateMessageService
                 if (! $interview || $message->interview_version !== $interview->version
                     || ($message->type !== InterviewTemplateType::InterviewCancel && ! in_array($interview->status, [InterviewStatus::Scheduled, InterviewStatus::Rescheduled], true))
                     || ($message->type === InterviewTemplateType::InterviewCancel && $interview->status !== InterviewStatus::Cancelled)) {
-                    $this->failMessage($message, 'This message was not sent because the interview details have changed.');
+                    $activity = $this->failMessage($message, 'This message was not sent because the interview details have changed.');
+                    $deliveryNotice = ['message_id' => $message->id, 'activity_id' => (int) $activity->id, 'sent' => false];
 
                     return;
                 }
 
                 if ($message->type !== InterviewTemplateType::InterviewCancel && ($interview->end_at->isPast() || $this->linksExpired($message))) {
-                    $this->failMessage($message, 'This invitation was not sent because its response window has expired.');
+                    $activity = $this->failMessage($message, 'This invitation was not sent because its response window has expired.');
+                    $deliveryNotice = ['message_id' => $message->id, 'activity_id' => (int) $activity->id, 'sent' => false];
 
                     return;
                 }
@@ -160,7 +163,8 @@ class CandidateMessageService
                         'status' => CandidateMessageStatus::Sent, 'sent_at' => now(), 'failed_at' => null,
                         'error_message' => null, 'provider_message_id' => $sent?->getMessageId(),
                     ]);
-                    $this->record($message, null, 'candidate_email_sent');
+                    $activity = $this->record($message, null, 'candidate_email_sent');
+                    $deliveryNotice = ['message_id' => $message->id, 'activity_id' => (int) $activity->id, 'sent' => true];
                 } catch (Throwable $exception) {
                     $message->update(['error_message' => 'Delivery failed temporarily. Automatic retries are pending.']);
                     Log::warning('Candidate interview email delivery attempt failed.', [
@@ -169,6 +173,10 @@ class CandidateMessageService
                     $failure = $exception;
                 }
             });
+
+            if ($deliveryNotice !== null) {
+                $this->notifyEmailDeliverySafely($deliveryNotice['message_id'], $deliveryNotice['activity_id'], $deliveryNotice['sent']);
+            }
 
             if ($failure) {
                 throw $failure;
@@ -188,7 +196,8 @@ class CandidateMessageService
         }
 
         $this->context->runInOrganization($organization, function () use ($messageId): void {
-            DB::transaction(function () use ($messageId): void {
+            $activityId = null;
+            DB::transaction(function () use ($messageId, &$activityId): void {
                 $initialMessage = CandidateMessage::query()->find($messageId);
 
                 if (! $initialMessage) {
@@ -202,10 +211,36 @@ class CandidateMessageService
 
                 if ($message?->status === CandidateMessageStatus::Queued) {
                     $activity = $this->failMessage($message, 'The email could not be sent. Please retry or contact support.');
-                    $this->notifications->candidateEmailFailed($message, $activity->id);
+                    $activityId = (int) $activity->id;
                 }
             });
+
+            if ($activityId !== null) {
+                $this->notifyEmailDeliverySafely($messageId, $activityId, false);
+            }
         });
+    }
+
+    private function notifyEmailDeliverySafely(int $messageId, int $activityId, bool $sent): void
+    {
+        try {
+            $message = CandidateMessage::query()->find($messageId);
+            if (! $message) {
+                return;
+            }
+
+            if ($sent) {
+                $this->notifications->candidateEmailSent($message, $activityId);
+            } else {
+                $this->notifications->candidateEmailFailed($message, $activityId);
+            }
+        } catch (Throwable $exception) {
+            Log::warning('Interview email status notice could not be recorded; delivery status remains saved.', [
+                'message_id' => $messageId,
+                'activity_id' => $activityId,
+                'exception_type' => $exception::class,
+            ]);
+        }
     }
 
     private function dispatchAfterCommit(CandidateMessage $message): void

@@ -97,6 +97,20 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
+        View::composer('layouts.app', function (\Illuminate\View\View $view): void {
+            $user = request()->user();
+            $userPreferences = $user ? app(UserPreferencesService::class)->forUser($user) : null;
+            $summary = $user && $user->isActive() && $user->hasVerifiedEmail()
+                ? app(NotificationInboxService::class)->summary($user)
+                : ['recentNotifications' => collect(), 'unreadNotificationCount' => 0];
+
+            $view->with([
+                ...$summary,
+                'notificationSoundEnabled' => $userPreferences?->notification_sound_enabled === true,
+                'notificationSoundPreferenceConfigured' => $userPreferences?->notification_sound_enabled !== null,
+            ]);
+        });
+
         RateLimiter::for('team-invitations', fn (Request $request) => Limit::perMinute(5)->by($request->user()?->id ?: $request->ip()));
 
         RateLimiter::for('downloads', function (Request $request) {

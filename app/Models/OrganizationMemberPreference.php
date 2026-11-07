@@ -12,11 +12,16 @@ class OrganizationMemberPreference extends Model
     /** @use HasFactory<OrganizationMemberPreferenceFactory> */
     use HasFactory;
 
-    protected $fillable = ['organization_member_id', 'new_application_email', 'interview_response_email', 'candidate_email_failure_email'];
+    protected $fillable = ['organization_member_id', 'new_application_email', 'interview_response_email', 'candidate_email_failure_email', 'organization_moderation_email'];
 
     protected function casts(): array
     {
-        return ['new_application_email' => 'boolean', 'interview_response_email' => 'boolean', 'candidate_email_failure_email' => 'boolean'];
+        return [
+            'new_application_email' => 'boolean',
+            'interview_response_email' => 'boolean',
+            'candidate_email_failure_email' => 'boolean',
+            'organization_moderation_email' => 'boolean',
+        ];
     }
 
     public function membership(): BelongsTo

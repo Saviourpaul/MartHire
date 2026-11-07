@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\Organization;
+use App\Models\OrganizationMember;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\SecurityChallenge;
 use App\Models\SettingsAuditEvent;
 use App\Models\User;
@@ -23,7 +26,11 @@ use Throwable;
 
 class AccountLifecycleService
 {
-    public function __construct(private OrganizationOwnerGuard $ownerGuard) {}
+    public function __construct(
+        private OrganizationOwnerGuard $ownerGuard,
+        private WorkflowNotificationService $workflowNotifications,
+        private WorkspaceUpdateBroadcaster $workspaceUpdates,
+    ) {}
 
     public function changePassword(User $user, #[SensitiveParameter] string $password, ?Request $request = null, bool $reset = false): void
     {
@@ -93,11 +100,25 @@ class AccountLifecycleService
             throw ValidationException::withMessages(['user' => 'You cannot suspend, demote, or delete your own administrator account.']);
         }
 
+        $wasOrganization = false;
+        $wasApplicant = false;
+        $applicantStatusChanged = false;
+        $changed = false;
+        $organizationIds = [];
+
         $this->protectRemoval($target, $delete ? UserRole::Applicant : $role, $delete ? UserStatus::Suspended : $status,
-            function (User $locked) use ($actor, $role, $status, $delete): void {
+            function (User $locked) use ($actor, $role, $status, $delete, &$wasOrganization, &$wasApplicant, &$applicantStatusChanged, &$organizationIds, &$changed): void {
                 $actor = User::query()->lockForUpdate()->findOrFail($actor->id);
                 abort_unless($actor->isAdmin() && $actor->isActive() && $actor->hasVerifiedEmail(), 403);
+                $wasOrganization = $locked->isOrganization();
+                $wasApplicant = $locked->isApplicant();
+                $applicantStatusChanged = $wasApplicant && ! $delete
+                    && $role === UserRole::Applicant && $locked->status !== $status;
                 $changed = $delete || $locked->role !== $role || $locked->status !== $status;
+                $organizationIds = $wasOrganization
+                    ? OrganizationMember::withoutGlobalScope(OrganizationScope::class)->where('user_id', $locked->id)
+                        ->where('status', 'active')->whereNull('deleted_at')->distinct()->pluck('organization_id')->all()
+                    : [];
                 if ($changed) {
                     $this->revoke($locked);
                 }
@@ -114,8 +135,48 @@ class AccountLifecycleService
                     }
                     $locked->save();
                 }
-                SettingsAuditEvent::query()->create(['actor_id' => $actor->id, 'user_id' => $locked->id, 'scope' => 'personal', 'action' => $delete ? 'account_removed_by_admin' : 'account_access_updated', 'changes' => ['role' => $role->value, 'status' => $status->value]]);
+                $audit = SettingsAuditEvent::query()->create([
+                    'actor_id' => $actor->id, 'user_id' => $locked->id, 'scope' => 'personal',
+                    'action' => $delete ? 'account_removed_by_admin' : 'account_access_updated',
+                    'changes' => ['role' => $role->value, 'status' => $status->value],
+                ]);
+
+                if ($changed && $applicantStatusChanged) {
+                    $this->workflowNotifications->applicantAccountStatusChanged($actor, $locked, (int) $audit->id, $status);
+                }
+
+                if ($changed && $wasOrganization && $organizationIds !== []) {
+                    $organizations = Organization::query()->whereIn('id', $organizationIds)->get()->keyBy('id');
+                    foreach ($organizationIds as $organizationId) {
+                        $organization = $organizations->get($organizationId);
+                        if ($organization) {
+                            $this->workflowNotifications->organizationAccountAccessChanged(
+                                $organization,
+                                $locked,
+                                (int) $audit->id,
+                                $delete ? 'removed' : $status->value,
+                            );
+                        }
+                    }
+                }
             });
+
+        if ($changed) {
+            $adminTopics = $wasOrganization ? ['users', 'organizations', 'jobs'] : ['users'];
+            if ($applicantStatusChanged) {
+                $adminTopics[] = 'notifications';
+            }
+            $this->workspaceUpdates->admins($adminTopics);
+
+            foreach ($organizationIds as $organizationId) {
+                $this->workspaceUpdates->organization(
+                    (int) $organizationId,
+                    ['team', 'jobs', 'candidates', 'notifications'],
+                    'An organization member account was updated by platform administration.',
+                    'info',
+                );
+            }
+        }
     }
 
     /**
@@ -129,7 +190,7 @@ class AccountLifecycleService
     {
         abort_unless($actor->isAdmin() && $actor->isActive() && $actor->hasVerifiedEmail(), 403);
 
-        return DB::transaction(function () use ($actor, $data): User {
+        $user = DB::transaction(function () use ($actor, $data): User {
             $actor = User::query()->lockForUpdate()->findOrFail($actor->id);
             abort_unless($actor->isAdmin() && $actor->isActive() && $actor->hasVerifiedEmail(), 403);
 
@@ -163,6 +224,10 @@ class AccountLifecycleService
 
             return $user;
         }, 3);
+
+        $this->workspaceUpdates->admins($user->isOrganization() ? ['users', 'organizations'] : ['users']);
+
+        return $user;
     }
 
     /** @return Collection<int, array{current: bool, ip_address: string, user_agent: string, last_activity: Carbon}> */

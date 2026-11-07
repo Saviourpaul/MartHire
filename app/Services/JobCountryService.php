@@ -18,6 +18,9 @@ class JobCountryService
     /** @var array<string, array{latitude: mixed, longitude: mixed}>|null */
     private ?array $coordinates = null;
 
+    /** @var array<string, true>|null */
+    private ?array $availableFlags = null;
+
     /**
      * Only installed World records are selectable. Missing reference data must
      * not silently make an arbitrary submitted country code valid.
@@ -107,8 +110,35 @@ class JobCountryService
         }
 
         $path = 'asset/marthire/flags/'.$code.'.svg';
+        $availableFlags = $this->availableFlagCodes();
 
-        return is_file(public_path($path)) ? asset($path) : null;
+        return isset($availableFlags[$code]) ? asset($path) : null;
+    }
+
+    /**
+     * Build the flag lookup with one directory scan instead of statting each
+     * country's SVG separately while the full World country list is assembled.
+     *
+     * @return array<string, true>
+     */
+    private function availableFlagCodes(): array
+    {
+        if ($this->availableFlags !== null) {
+            return $this->availableFlags;
+        }
+
+        $this->availableFlags = [];
+        $paths = glob(public_path('asset/marthire/flags/*.svg'), GLOB_NOSORT) ?: [];
+
+        foreach ($paths as $path) {
+            $code = strtolower(pathinfo($path, PATHINFO_FILENAME));
+
+            if (preg_match('/^[a-z]{2}$/D', $code)) {
+                $this->availableFlags[$code] = true;
+            }
+        }
+
+        return $this->availableFlags;
     }
 
     private function coordinate(mixed $value, int $limit): ?float

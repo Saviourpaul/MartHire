@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\JobAlertFrequency;
 use App\Enums\SecurityActionPurpose;
 use App\Http\Controllers\Concerns\RespondsWithApplicantProfileChecklist;
 use App\Http\Requests\CloseAccountRequest;
@@ -10,9 +11,9 @@ use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\User;
 use App\Services\AccountLifecycleService;
+use App\Services\ApplicantAccountActivityService;
 use App\Services\ApplicantProfileService;
 use App\Services\CandidateJobPreferenceService;
-use App\Enums\JobAlertFrequency;
 use App\Services\LocationService;
 use App\Services\SecurityChallengeService;
 use Illuminate\Http\RedirectResponse;
@@ -64,9 +65,10 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request, ApplicantProfileService $profiles): RedirectResponse|JsonResponse
+    public function update(ProfileUpdateRequest $request, ApplicantProfileService $profiles, ApplicantAccountActivityService $activity): RedirectResponse|JsonResponse
     {
         $user = $request->user();
+        $applicantProfile = $user->isApplicant() ? $profiles->forUser($user) : null;
         $data = $request->safe()->except(
             'profile_image',
             'email',
@@ -88,6 +90,26 @@ class ProfileController extends Controller
         }
 
         $user->fill($data);
+        $changedFields = array_keys($user->getDirty());
+        if ($request->hasFile('profile_image')) {
+            $changedFields[] = 'profile_image';
+        }
+
+        if ($applicantProfile) {
+            foreach ($request->safe()->only(['professional_headline', 'about']) as $field => $value) {
+                if ($applicantProfile->getAttribute($field) !== $value) {
+                    $changedFields[] = $field;
+                }
+            }
+
+            $identification = $applicantProfile->selfIdentification;
+            $identityChanged = collect($request->safe()->only([
+                'gender_identity', 'disability_status', 'disability_details',
+            ]))->contains(fn ($value, string $field): bool => $identification?->getAttribute($field) !== $value);
+            if ($identityChanged) {
+                $changedFields[] = 'self_identification';
+            }
+        }
 
         // A successful save with a validated country selection confirms the
         // applicant's canonical location.
@@ -104,6 +126,7 @@ class ProfileController extends Controller
                 'disability_status',
                 'disability_details',
             ]));
+            $activity->profileUpdated($user, $changedFields);
         }
 
         if ($user->isApplicant() && $request->expectsJson()) {

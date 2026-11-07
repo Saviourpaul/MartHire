@@ -2,24 +2,26 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\NotificationCategory;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateNotificationPreferencesRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && NotificationCategory::forUser($this->user()) !== [];
+        return $this->user()?->isActive() && $this->user()->hasVerifiedEmail();
     }
 
-    /** @return array<string, mixed> */
     public function rules(): array
     {
-        $keys = array_column(NotificationCategory::forUser($this->user()), 'value');
-
         return [
-            'email_preferences' => ['required', 'array:'.implode(',', $keys)],
-            'email_preferences.*' => ['required', 'boolean'],
+            'email_preferences' => ['sometimes', 'array'],
+            'email_preferences.*' => ['boolean'],
+            'membership_email_preferences' => [
+                Rule::prohibitedIf(! $this->user()?->isOrganization()),
+                'sometimes', 'array',
+            ],
+            'membership_email_preferences.*' => ['nullable', Rule::in(['on', 'off'])],
         ];
     }
 }

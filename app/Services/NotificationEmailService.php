@@ -49,8 +49,17 @@ class NotificationEmailService
             $user = $notification && $notification->notifiable_type === (new User)->getMorphClass()
                 ? User::query()->find($notification->notifiable_id) : null;
             $category = NotificationCategory::tryFrom((string) $notification?->category);
-            if (! $user || ! $category || ! $this->inbox->eligibleForDelivery($notification, $user)
-                || ! $this->preferences->emailEnabled($user, $category, $notification->organization_id)) {
+            $mandatoryApplicantStatusNotice = $user && $notification && $category === NotificationCategory::ApplicantAccountStatus
+                && $notification->scope === 'account'
+                && $notification->subject_type === 'user'
+                && (int) $notification->subject_id === (int) $user->id
+                && $user->isApplicant()
+                && $user->hasVerifiedEmail();
+
+            if (! $user || ! $category || (! $mandatoryApplicantStatusNotice && (
+                ! $this->inbox->eligibleForDelivery($notification, $user)
+                || ! $this->preferences->emailEnabled($user, $category, $notification->organization_id)
+            ))) {
                 $entry->update(['status' => 'cancelled', 'locked_until' => null, 'last_error' => null]);
 
                 return;

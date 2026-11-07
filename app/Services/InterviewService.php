@@ -100,12 +100,13 @@ class InterviewService
             Gate::forUser($actor)->authorize('create', [Interview::class, $application]);
             $interview = $this->draft($application, $data);
             $interview->save();
-            $this->recordActivity($interview, $actor, 'interview_scheduled');
+            $activity = $this->recordActivity($interview, $actor, 'interview_scheduled');
             $this->messages->queue(
                 $interview, $actor,
                 $interview->mode === InterviewMode::Online ? InterviewTemplateType::InterviewOnline : InterviewTemplateType::InterviewOnsite,
                 $data['subject'] ?? null, $data['body'] ?? null,
             );
+            $this->notifications->interviewLifecycleChanged($interview, (int) $activity->id, 'scheduled');
 
             return $interview->load('applicationForm.job');
         });
@@ -127,8 +128,9 @@ class InterviewService
                 'responded_at' => null,
                 'version' => $interview->version + 1,
             ])->save();
-            $this->recordActivity($interview, $actor, 'interview_rescheduled', ['previous' => $previous]);
+            $activity = $this->recordActivity($interview, $actor, 'interview_rescheduled', ['previous' => $previous]);
             $this->messages->queue($interview, $actor, InterviewTemplateType::InterviewReschedule, $data['subject'] ?? null, $data['body'] ?? null);
+            $this->notifications->interviewLifecycleChanged($interview, (int) $activity->id, 'rescheduled');
 
             return $interview->load('applicationForm.job');
         });
@@ -148,8 +150,9 @@ class InterviewService
                 'responded_at' => null,
                 'version' => $interview->version + 1,
             ])->save();
-            $this->recordActivity($interview, $actor, 'interview_cancelled', ['previous' => $previous]);
+            $activity = $this->recordActivity($interview, $actor, 'interview_cancelled', ['previous' => $previous]);
             $this->messages->queue($interview, $actor, InterviewTemplateType::InterviewCancel, $data['subject'] ?? null, $data['body'] ?? null);
+            $this->notifications->interviewLifecycleChanged($interview, (int) $activity->id, 'cancelled');
 
             return $interview->load('applicationForm.job');
         });
@@ -199,7 +202,8 @@ class InterviewService
 
             $previous = $this->snapshot($interview);
             $interview->forceFill(['status' => InterviewStatus::Completed, 'version' => $interview->version + 1])->save();
-            $this->recordActivity($interview, $actor, 'interview_completed', ['previous' => $previous]);
+            $activity = $this->recordActivity($interview, $actor, 'interview_completed', ['previous' => $previous]);
+            $this->notifications->interviewLifecycleChanged($interview, (int) $activity->id, 'completed');
 
             // Completion records the employer's review action; selection and
             // candidate communication remain separate explicit actions.

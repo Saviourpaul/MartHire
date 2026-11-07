@@ -9,6 +9,8 @@ use App\Http\Requests\SuspendJobRequest;
 use App\Models\Job;
 use App\Models\Organization;
 use App\Services\JobCountryService;
+use App\Services\WorkflowNotificationService;
+use App\Services\WorkspaceUpdateBroadcaster;
 use App\Support\JobDescription;
 use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
@@ -59,9 +61,13 @@ class JobManagementController extends Controller
         return LiveTables::view($request, $view, ['admin-job-detail']);
     }
 
-    public function suspend(SuspendJobRequest $request, Job $job): RedirectResponse|JsonResponse
-    {
-        DB::transaction(function () use ($job, $request): void {
+    public function suspend(
+        SuspendJobRequest $request,
+        Job $job,
+        WorkflowNotificationService $notifications,
+        WorkspaceUpdateBroadcaster $workspaceUpdates,
+    ): RedirectResponse|JsonResponse {
+        DB::transaction(function () use ($job, $request, $notifications): void {
             $lockedJob = Job::query()->lockForUpdate()->findOrFail($job->id);
             Gate::authorize('suspend', $lockedJob);
 
@@ -80,7 +86,16 @@ class JobManagementController extends Controller
                 'suspension_reason' => $request->validated('suspension_reason'),
                 'suspended_by' => $request->user()->id,
             ])->save();
+            $notifications->organizationJobSuspended($lockedJob);
         });
+
+        $workspaceUpdates->admins(['jobs']);
+        $workspaceUpdates->organization(
+            $job->organization_id,
+            ['jobs', 'applications', 'candidates', 'notifications'],
+            'A job posting was suspended by platform administration.',
+            'warning',
+        );
 
         $message = 'Job suspended successfully.';
 
@@ -101,8 +116,9 @@ class JobManagementController extends Controller
         );
     }
 
-    public function destroy(DeleteModeratedJobRequest $request, Job $job): RedirectResponse|JsonResponse
+    public function destroy(DeleteModeratedJobRequest $request, Job $job, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
+        $organizationId = $job->organization_id;
         $logoPath = DB::transaction(function () use ($job): ?string {
             Organization::whereKey($job->organization_id)->lockForUpdate()->firstOrFail();
             $lockedJob = Job::query()->lockForUpdate()->findOrFail($job->id);
@@ -125,6 +141,14 @@ class JobManagementController extends Controller
         if ($logoPath !== null) {
             Storage::disk('public')->delete($logoPath);
         }
+
+        $workspaceUpdates->admins(['jobs']);
+        $workspaceUpdates->organization(
+            $organizationId,
+            ['jobs', 'applications', 'candidates'],
+            'A job posting was removed by platform administration.',
+            'warning',
+        );
 
         LiveTables::signal($request, ['jobs', 'applications', 'candidates']);
 
