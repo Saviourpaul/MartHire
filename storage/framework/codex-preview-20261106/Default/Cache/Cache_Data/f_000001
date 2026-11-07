@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="78HnXHCDAFAS3chaUZKAOPVFIlSveNIVjF9FyPIr">
+<meta name="description" content="Search open roles by title, skill, place or category. Sign up for a free Marthire account when you find one worth applying for.">
+<meta name="color-scheme" content="light dark">
+<meta name="application-name" content="Marthire">
+<meta property="og:site_name" content="Marthire">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Browse jobs | Marthire">
+<meta property="og:description" content="Search open roles by title, skill, place or category. Sign up for a free Marthire account when you find one worth applying for.">
+<meta property="og:url" content="http://127.0.0.1:8000/jobs">
+<meta property="og:image" content="http://127.0.0.1:8000/asset/images/favicon.ico">
+<link rel="canonical" href="http://127.0.0.1:8000/jobs">
+<link rel="icon" type="image" href="http://127.0.0.1:8000/asset/images/favicon.ico">
+<title>Browse jobs | Marthire</title>
+
+<script>
+    (() => {
+        let preference = 'system';
+        try {
+            // Read the old preference once, then keep only the Marthire key.
+            const legacyThemeKey = 'nearbyworks-theme';
+            let savedPreference = window.localStorage.getItem('marthire-theme');
+            if (savedPreference === null) {
+                savedPreference = window.localStorage.getItem(legacyThemeKey);
+                if (['system', 'light', 'dark'].includes(savedPreference)) {
+                    window.localStorage.setItem('marthire-theme', savedPreference);
+                }
+            }
+            window.localStorage.removeItem(legacyThemeKey);
+            if (['system', 'light', 'dark'].includes(savedPreference)) {
+                preference = savedPreference;
+            }
+        } catch (_) {}
+
+        const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.themePreference = preference;
+        document.documentElement.dataset.theme = preference === 'system'
+            ? (systemIsDark ? 'dark' : 'light')
+            : preference;
+    })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="http://127.0.0.1:8000/asset/marthire/build/assets/app-DuKfw2Dv.css" /><link rel="preload" as="style" href="http://127.0.0.1:8000/asset/marthire/build/assets/app-CQ7DNbul.css" /><link rel="modulepreload" as="script" href="http://127.0.0.1:8000/asset/marthire/build/assets/app-Cl7GsaO4.js" /><link rel="stylesheet" href="http://127.0.0.1:8000/asset/marthire/build/assets/app-DuKfw2Dv.css" /><link rel="stylesheet" href="http://127.0.0.1:8000/asset/marthire/build/assets/app-CQ7DNbul.css" /><script type="module" src="http://127.0.0.1:8000/asset/marthire/build/assets/app-Cl7GsaO4.js"></script>    </head>
+    <body>
+        <header class="nw-header" x-data="{ open: false }" x-on:keydown.escape.window="if (open) { open = false; $refs.navigationToggle.focus(); }">
+    <div class="nw-container nw-header__inner">
+        <a class="nw-brand" href="http://127.0.0.1:8000" aria-label="Marthire home">
+            <span class="nw-wordmark">
+            <img class="nw-icon--to-dark" src="http://127.0.0.1:8000/asset/images/marthire-logo.png" alt="Marthire" width="543" height="178" style="height:1.9em;width:auto">
+        <img class="nw-icon--to-light" src="http://127.0.0.1:8000/asset/images/marthire-logo-dark.png" alt="" aria-hidden="true" width="543" height="178" style="height:1.9em;width:auto">
+    </span>
+        </a>
+
+        <nav class="nw-desktop-nav" aria-label="Main navigation">
+            <a href="http://127.0.0.1:8000/workable-jobs" >Browse jobs</a>
+            <a href="http://127.0.0.1:8000/how-it-works" >How it works</a>
+            <a href="http://127.0.0.1:8000#for-employers">For employers</a>
+            <a href="http://127.0.0.1:8000#for-job-seekers">For job seekers</a>
+            <a href="http://127.0.0.1:8000/About" >About</a>
+            <a href="http://127.0.0.1:8000/ContactUs" >Contact</a>
+        </nav>
+
+        <div class="nw-header__actions">
+                            <a class="nw-button nw-button--primary nw-button--small nw-header__cta" href="http://127.0.0.1:8000/register">Start Your Journey <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+                    </div>
+
+        <button x-ref="navigationToggle" class="nw-menu-toggle" type="button" x-on:click="open = ! open" aria-controls="site-mobile-navigation" aria-expanded="false" x-bind:aria-expanded="open.toString()" aria-label="Open navigation" x-bind:aria-label="open ? 'Close navigation' : 'Open navigation'">
+            <span x-show="! open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M4 6h16M4 12h16M4 18h16"/>
+</svg>
+</span>
+            <span x-show="open" x-cloak><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="m6 6 12 12M6 18 18 6"/>
+</svg>
+</span>
+        </button>
+    </div>
+
+    <nav id="site-mobile-navigation" class="nw-mobile-nav" aria-label="Mobile navigation" x-show="open" x-cloak x-on:click="if ($event.target.closest('a')) open = false">
+        <div class="nw-container">
+            <a href="http://127.0.0.1:8000/workable-jobs">Browse jobs</a>
+            <a href="http://127.0.0.1:8000/how-it-works" >How it works</a>
+            <a href="http://127.0.0.1:8000#for-employers">For employers</a>
+            <a href="http://127.0.0.1:8000#for-job-seekers">For job seekers</a>
+            <a href="http://127.0.0.1:8000/About">About</a>
+            <a href="http://127.0.0.1:8000/ContactUs">Contact</a>
+                            <a href="http://127.0.0.1:8000/login">Log in</a>
+                <a class="nw-button nw-button--primary" href="http://127.0.0.1:8000/register">Start Your Journey <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+                    </div>
+    </nav>
+</header>
+
+        <main id="main-content">
+            <div x-data="jobSearch({ jobs: JSON.parse('[{\u0022text\u0022:\u0022software engineer scale soffware how does an applicant tracking system work? an applicant tracking system (ats) works by automating and managing various stages of the recruitment process. here\\u2019... \u0022,\u0022where\u0022:\u0022azerbaijan az azerbaijan\u0022,\u0022workplace\u0022:null,\u0022type\u0022:\u0022Part-time\u0022,\u0022category\u0022:\u0022soffware\u0022,\u0022title\u0022:\u0022Software Engineer\u0022,\u0022posted\u0022:1793774417000},{\u0022text\u0022:\u0022account manger scale banking requirements 1. simplify job creation: use one country dropdown powered by the existing nnjeim\\\/world package. ensure the selected country is validated, saved co... \u0022,\u0022where\u0022:\u0022andorra ad andorra\u0022,\u0022workplace\u0022:null,\u0022type\u0022:\u0022Internship\u0022,\u0022category\u0022:\u0022banking\u0022,\u0022title\u0022:\u0022Account Manger\u0022,\u0022posted\u0022:1793304940000},{\u0022text\u0022:\u0022virtual assistance scale health stress test the pasted table doesn\\u2019t add up. its ten items sum to \\u20a64,326,400, not \\u20a6876,400, and \\u201c300,00\\u201d looks like a typo. if that table is going to the rivers... \u0022,\u0022where\u0022:\u0022sweden se sweden\u0022,\u0022workplace\u0022:null,\u0022type\u0022:\u0022Full-time\u0022,\u0022category\u0022:\u0022health\u0022,\u0022title\u0022:\u0022Virtual Assistance\u0022,\u0022posted\u0022:1793303132000}]'), categories: JSON.parse('{\u0022banking\u0022:\u0022Banking\u0022,\u0022health\u0022:\u0022Health\u0022,\u0022soffware\u0022:\u0022Soffware\u0022}'), pageSize: 9 })">
+        <section class="nw-jobs-hero" aria-labelledby="jobs-page-heading">
+            <div class="nw-container">
+                <span class="nw-eyebrow">Browse jobs</span>
+                <h1 id="jobs-page-heading">Find the role<br><em>that fits.</em></h1>
+                <p class="nw-copy">Search by title, skill or company, narrow things down by field, or look through
+                    everything. Sign up when you’re ready to apply.</p>
+
+                <form class="nw-search" role="search" aria-label="Search jobs" x-on:submit.prevent="showResults()">
+                    <label class="nw-search__field">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+</svg>
+                        <span class="nw-search__text">
+                            <span class="nw-search__label">What</span>
+                            <input class="nw-search__input" type="search" placeholder="Job title, skill or company"
+                                autocomplete="off" x-model.debounce.150ms="query">
+                        </span>
+                    </label>
+                    <label class="nw-search__field">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>
+</svg>
+                        <span class="nw-search__text">
+                            <span class="nw-search__label">Where</span>
+                            <input class="nw-search__input" type="search" placeholder="City, country or remote"
+                                autocomplete="off" x-model.debounce.150ms="place">
+                        </span>
+                    </label>
+                    <button class="nw-button nw-button--primary nw-search__submit" type="submit">Search jobs <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M5 12h14m-6-6 6 6-6 6"/>
+</svg>
+</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="nw-section nw-section--results" aria-label="Job results">
+            <div class="nw-container">
+                                    <div class="nw-jobs-layout">
+                        <div class="nw-filters-wrap">
+                            <button type="button" class="nw-filter-toggle" aria-controls="job-filters"
+                                x-bind:aria-expanded="filtersOpen.toString()" x-on:click="filtersOpen = ! filtersOpen">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>
+</svg>
+ Filters
+                                <span class="nw-filter-toggle__count" x-show="sidebarCount > 0" x-cloak
+                                    x-text="sidebarCount"></span>
+                            </button>
+
+                            <form id="job-filters" class="nw-filters" aria-label="Filter jobs" x-show="filtersOpen"
+                                x-cloak x-on:submit.prevent>
+                                                                    <fieldset class="nw-filters__group">
+                                        <legend>Category</legend>
+                                        <label class="nw-filter">
+                                            <input class="nw-filter__input" type="radio" name="category"
+                                                value="" x-model="category">
+                                            <span class="nw-filter__label">All categories</span>
+                                            <small>3</small>
+                                        </label>
+                                                                                    <label class="nw-filter">
+                                                <input class="nw-filter__input" type="radio" name="category"
+                                                    value="banking" x-model="category">
+                                                <span class="nw-filter__label">Banking</span>
+                                                <small>1</small>
+                                            </label>
+                                                                                    <label class="nw-filter">
+                                                <input class="nw-filter__input" type="radio" name="category"
+                                                    value="health" x-model="category">
+                                                <span class="nw-filter__label">Health</span>
+                                                <small>1</small>
+                                            </label>
+                                                                                    <label class="nw-filter">
+                                                <input class="nw-filter__input" type="radio" name="category"
+                                                    value="soffware" x-model="category">
+                                                <span class="nw-filter__label">Soffware</span>
+                                                <small>1</small>
+                                            </label>
+                                                                            </fieldset>
+                                
+                                                                    <fieldset class="nw-filters__group">
+                                        <legend>Job type</legend>
+                                                                                    <label class="nw-filter">
+                                                <input class="nw-filter__input" type="checkbox"
+                                                    value="Full-time" x-model="types">
+                                                <span class="nw-filter__label">Full-time</span>
+                                                <small>1</small>
+                                            </label>
+                                                                                    <label class="nw-filter">
+                                                <input class="nw-filter__input" type="checkbox"
+                                                    value="Part-time" x-model="types">
+                                                <span class="nw-filter__label">Part-time</span>
+                                                <small>1</small>
+                                            </label>
+                                                                                    <label class="nw-filter">
+                                                <input class="nw-filter__input" type="checkbox"
+                                                    value="Internship" x-model="types">
+                                                <span class="nw-filter__label">Internship</span>
+                                                <small>1</small>
+                                            </label>
+                                                                            </fieldset>
+                                
+                                
+                                <button type="button" class="nw-link nw-filters__clear" x-show="sidebarCount > 0"
+                                    x-cloak x-on:click="clearAll()">Clear filters</button>
+                            </form>
+                        </div>
+
+                        <div class="nw-results" x-ref="results">
+                            <div class="nw-results__bar">
+                                <p class="nw-jobs__count" role="status" aria-live="polite" x-text="summary">Showing
+                                    3 of 3
+                                    roles</p>
+                                <label class="nw-sort">
+                                    <span>Sort by</span>
+                                    <select class="nw-select" x-model="sort">
+                                        <option value="newest">Newest first</option>
+                                        <option value="title">Job title A to Z</option>
+                                    </select>
+                                </label>
+                            </div>
+
+                            <div class="nw-active" x-show="activeFilters.length > 0" x-cloak>
+                                <template x-for="filter in activeFilters"
+                                    x-bind:key="filter.key + (filter.value ?? '')">
+                                    <button type="button" class="nw-chip nw-chip--remove"
+                                        x-on:click="removeFilter(filter)">
+                                        <span x-text="filter.label"></span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="m6 6 12 12M6 18 18 6"/>
+</svg>
+                                        <span class="nw-sr-only">Remove this filter</span>
+                                    </button>
+                                </template>
+                                <button type="button" class="nw-link nw-link--small" x-on:click="clearAll()">Clear
+                                    all</button>
+                            </div>
+
+                            <div class="nw-job-grid nw-job-grid--results">
+                                                                    <div class="nw-job-slot" x-show="isShown(0)"
+                                        x-bind:style="{ order: order(0) }"
+                                        >
+                                        <article class="nw-job">
+    <header class="nw-job__top">
+        <span class="nw-monogram nw-monogram--mint nw-monogram--logo"
+       x-data="{ logoFailed: false }"  aria-hidden="true">
+            <img src="http://127.0.0.1:8000/media/job-logos/aykaM59rt1BpLrEkBc6aWJOkoSN0BloHfr56Mm5p.webp" alt="" width="46" height="46"
+             class="nw-monogram__image" x-show="!logoFailed"
+             x-init="if ($el.complete && !$el.naturalWidth) logoFailed = true"
+             x-on:error="logoFailed = true">
+        <span x-show="logoFailed" x-cloak>S</span>
+    </span>
+        <div>
+            <p class="nw-job__company">Scale</p>
+                            <p class="nw-job__posted"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+</svg>
+ 2 days ago</p>
+                    </div>
+            </header>
+
+    <h3 class="nw-job__title"><a href="http://127.0.0.1:8000/jobs/software-engineer">Software Engineer</a></h3>
+            <p class="nw-job__summary">How Does an Applicant Tracking System Work? An Applicant Tracking System (ATS) works by automating and managing various stages of the recruitment process. Here’...</p>
+    
+            <ul class="nw-job__meta" aria-label="Role details">
+                                        <li><span class="nw-job-country">
+                    <img src="http://127.0.0.1:8000/asset/marthire/flags/az.svg" width="20" height="20" alt="" loading="lazy">
+                <span>Azerbaijan</span>
+    </span>
+</li>
+                                        <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12a24 24 0 0 0 18 0m-9 0v3"/>
+</svg>
+ Part-time</li>
+                                </ul>
+    
+    
+    <div class="nw-job__footer">
+        <a class="nw-button nw-button--primary nw-button--small" href="http://127.0.0.1:8000/jobs/software-engineer/apply">
+    Apply now
+    <span class="nw-sr-only">for Software Engineer at Scale</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+    </div>
+</article>
+                                    </div>
+                                                                    <div class="nw-job-slot" x-show="isShown(1)"
+                                        x-bind:style="{ order: order(1) }"
+                                        >
+                                        <article class="nw-job">
+    <header class="nw-job__top">
+        <span class="nw-monogram nw-monogram--mint nw-monogram--logo"
+       x-data="{ logoFailed: false }"  aria-hidden="true">
+            <img src="http://127.0.0.1:8000/media/job-logos/dTAwBIzoniAXy5oxCMtghEStL7AxbtwJ4LjrD6gT.png" alt="" width="46" height="46"
+             class="nw-monogram__image" x-show="!logoFailed"
+             x-init="if ($el.complete && !$el.naturalWidth) logoFailed = true"
+             x-on:error="logoFailed = true">
+        <span x-show="logoFailed" x-cloak>S</span>
+    </span>
+        <div>
+            <p class="nw-job__company">Scale</p>
+                            <p class="nw-job__posted"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+</svg>
+ 1 week ago</p>
+                    </div>
+            </header>
+
+    <h3 class="nw-job__title"><a href="http://127.0.0.1:8000/jobs/account-manger">Account Manger</a></h3>
+            <p class="nw-job__summary">Requirements 1. Simplify Job Creation: Use one Country dropdown powered by the existing nnjeim/world package. Ensure the selected country is validated, saved co...</p>
+    
+            <ul class="nw-job__meta" aria-label="Role details">
+                                        <li><span class="nw-job-country">
+                    <img src="http://127.0.0.1:8000/asset/marthire/flags/ad.svg" width="20" height="20" alt="" loading="lazy">
+                <span>Andorra</span>
+    </span>
+</li>
+                                        <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12a24 24 0 0 0 18 0m-9 0v3"/>
+</svg>
+ Internship</li>
+                                </ul>
+    
+    
+    <div class="nw-job__footer">
+        <a class="nw-button nw-button--primary nw-button--small" href="http://127.0.0.1:8000/jobs/account-manger/apply">
+    Apply now
+    <span class="nw-sr-only">for Account Manger at Scale</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+    </div>
+</article>
+                                    </div>
+                                                                    <div class="nw-job-slot" x-show="isShown(2)"
+                                        x-bind:style="{ order: order(2) }"
+                                        >
+                                        <article class="nw-job">
+    <header class="nw-job__top">
+        <span class="nw-monogram nw-monogram--mint nw-monogram--logo"
+       x-data="{ logoFailed: false }"  aria-hidden="true">
+            <img src="http://127.0.0.1:8000/media/job-logos/X1s3pB9DLYWgZv9BXrw5o0qupuy1iEPcnJbksSwQ.png" alt="" width="46" height="46"
+             class="nw-monogram__image" x-show="!logoFailed"
+             x-init="if ($el.complete && !$el.naturalWidth) logoFailed = true"
+             x-on:error="logoFailed = true">
+        <span x-show="logoFailed" x-cloak>S</span>
+    </span>
+        <div>
+            <p class="nw-job__company">Scale</p>
+                            <p class="nw-job__posted"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+</svg>
+ 1 week ago</p>
+                    </div>
+            </header>
+
+    <h3 class="nw-job__title"><a href="http://127.0.0.1:8000/jobs/virtual-assistance">Virtual Assistance</a></h3>
+            <p class="nw-job__summary">Stress test The pasted table doesn’t add up. Its ten items sum to ₦4,326,400, not ₦876,400, and “300,00” looks like a typo. If that table is going to the Rivers...</p>
+    
+            <ul class="nw-job__meta" aria-label="Role details">
+                                        <li><span class="nw-job-country">
+                    <img src="http://127.0.0.1:8000/asset/marthire/flags/se.svg" width="20" height="20" alt="" loading="lazy">
+                <span>Sweden</span>
+    </span>
+</li>
+                                        <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12a24 24 0 0 0 18 0m-9 0v3"/>
+</svg>
+ Full-time</li>
+                                </ul>
+    
+    
+    <div class="nw-job__footer">
+        <a class="nw-button nw-button--primary nw-button--small" href="http://127.0.0.1:8000/jobs/virtual-assistance/apply">
+    Apply now
+    <span class="nw-sr-only">for Virtual Assistance at Scale</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+    </div>
+</article>
+                                    </div>
+                                                            </div>
+
+                            <div class="nw-jobs__empty" x-show="matches.length === 0" x-cloak>
+                                <h3>No roles match your search yet.</h3>
+                                <p>Try a shorter keyword, another place or fewer filters. You can also create an account
+                                    and come back as new roles arrive.</p>
+                                <div class="nw-button-row nw-button-row--center">
+                                    <button type="button" class="nw-button nw-button--outline"
+                                        x-on:click="clearAll()">Clear all filters</button>
+                                    <a href="http://127.0.0.1:8000/register" class="nw-button nw-button--primary">Create an
+                                        account <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+                                </div>
+                            </div>
+
+                            <div class="nw-jobs__more" x-show="remaining > 0" x-cloak>
+                                <button type="button" class="nw-button nw-button--outline"
+                                    x-on:click="loadMore()"><span>Show <span
+                                            x-text="Math.min(remaining, pageSize)">0</span>
+                                        more roles</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M5 12h14m-6-6 6 6-6 6"/>
+</svg>
+</button>
+                            </div>
+                        </div>
+                    </div>
+                            </div>
+        </section>
+    </div>
+
+    <section class="nw-cta" aria-labelledby="cta-heading">
+        <div class="nw-container nw-cta__inner">
+            <div><span class="nw-eyebrow">Found something promising?</span>
+                <h2 id="cta-heading" class="nw-heading">Create your account<br>and <em>apply today.</em></h2>
+            </div><a href="http://127.0.0.1:8000/register" class="nw-button nw-button--light">Get started with Marthire
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+        </div>
+    </section>
+        </main>
+
+        <footer class="nw-footer">
+    <div class="nw-container">
+                    <div class="nw-footer__top">
+                <div class="nw-footer__brand">
+                    <a class="nw-brand" href="http://127.0.0.1:8000" aria-label="Marthire home"><span class="nw-wordmark">
+            <img class="nw-icon--to-dark" src="http://127.0.0.1:8000/asset/images/marthire-logo.png" alt="Marthire" width="543" height="178" style="height:1.9em;width:auto">
+        <img class="nw-icon--to-light" src="http://127.0.0.1:8000/asset/images/marthire-logo-dark.png" alt="" aria-hidden="true" width="543" height="178" style="height:1.9em;width:auto">
+    </span>
+</a>
+                    <p>One platform to manageRecruitment across African businesses, and international organisations.</p>
+                                            <nav class="nw-footer__socials" aria-label="Follow us on social media">
+                                                            <a href="https://www.facebook.com/MartHirerecruit" target="_blank" rel="noopener noreferrer" aria-label="Follow Marthire on Facebook" title="Facebook">
+                                                                            <span class="nw-footer__social-icon fa-brands fa-facebook-f" aria-hidden="true"></span>
+                                                                        <span class="nw-sr-only">Facebook</span>
+                                </a>
+                                                            <a href="https://x.com/MartHirerecruit" target="_blank" rel="noopener noreferrer" aria-label="Follow Marthire on X" title="X">
+                                                                            <svg class="nw-footer__social-x" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.48l8.6-9.83L0 1.15h7.6l5.24 6.93 6.06-6.93Zm-1.29 19.49h2.04L6.49 3.24H4.3l13.31 17.4Z" /></svg>
+                                                                        <span class="nw-sr-only">X</span>
+                                </a>
+                                                            <a href="https://www.instagram.com/marthirerecruit" target="_blank" rel="noopener noreferrer" aria-label="Follow Marthire on Instagram" title="Instagram">
+                                                                            <span class="nw-footer__social-icon fa-brands fa-instagram" aria-hidden="true"></span>
+                                                                        <span class="nw-sr-only">Instagram</span>
+                                </a>
+                                                            <a href="https://www.linkedin.com/company/marthire/" target="_blank" rel="noopener noreferrer" aria-label="Follow Marthire on LinkedIn" title="LinkedIn">
+                                                                            <span class="nw-footer__social-icon fa-brands fa-linkedin-in" aria-hidden="true"></span>
+                                                                        <span class="nw-sr-only">LinkedIn</span>
+                                </a>
+                                                    </nav>
+                                    </div>
+
+                <div class="nw-footer__group">
+                    <h2>Find your next</h2>
+                    <a href="http://127.0.0.1:8000/workable-jobs">Browse jobs</a>
+                    <a href="http://127.0.0.1:8000#categories">Job categories</a>
+                    <a href="http://127.0.0.1:8000#for-employers">For employers</a>
+                    <a href="http://127.0.0.1:8000#for-job-seekers">For job seekers</a>
+                    <a href="http://127.0.0.1:8000/register">Create an account</a>
+                    <a href="http://127.0.0.1:8000/login">Log in</a>
+                </div>
+
+                <div class="nw-footer__group">
+                    <h2>Marthire</h2>
+                    <a href="http://127.0.0.1:8000/how-it-works">How it works</a>
+                    <a href="http://127.0.0.1:8000/About">About us</a>
+                    <a href="http://127.0.0.1:8000/ContactUs">Contact us</a>
+                                    </div>
+
+                <div class="nw-footer__note">
+                    <span class="nw-eyebrow">Built around people</span>
+                    <p>Because the right connection can change everything.</p>
+                    <a class="nw-link" href="http://127.0.0.1:8000/About">Get to know us <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="M7 17 17 7M7 7h10v10"/>
+</svg>
+</a>
+                </div>
+            </div>
+        
+        <div class="nw-footer__bottom">
+            <p>&copy; 2026 Marthire. All rights reserved.</p>
+            <span class="nw-footer__people">People first. Always.</span>
+            <div class="nw-theme-control">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/>
+</svg>
+                <label for="theme-preference">Appearance</label>
+                <select id="theme-preference" name="theme-preference" data-theme-control>
+                    <option value="system">System</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+            <div class="nw-footer-art" aria-hidden="true">
+            <span class="nw-footer-art__wordmark" style="--nw-footer-photo: url('http://127.0.0.1:8000/asset/marthire/conversation.png'); padding-inline-end: .1em">Marthire</span>
+        </div>
+    </footer>
+        <section class="nw-toasts" data-position="bottom-right" data-toast-region aria-label="Notifications">
+        <ol class="nw-toasts__list" data-toast-list>
+                    </ol>
+    </section>
+<dialog class="nw-alert-dialog" data-alert-dialog aria-labelledby="nw-alert-title" aria-describedby="nw-alert-message">
+    <div class="nw-alert-dialog__body">
+        <button type="button" class="nw-alert-dialog__dismiss" data-alert-dismiss aria-label="Close alert"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="m6 6 12 12M6 18 18 6"/>
+</svg>
+</button>
+        <div class="nw-alert-dialog__icon" aria-hidden="true">
+            <span data-alert-icon="success" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>
+</svg>
+</span><span data-alert-icon="error" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>
+</svg>
+</span><span data-alert-icon="warning" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <path d="m10.3 4-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0ZM12 9v4m0 4h.01"/>
+</svg>
+</span><span data-alert-icon="info" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+    class="nw-icon">
+    <circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>
+</svg>
+</span>        </div>
+        <h2 id="nw-alert-title" data-alert-title></h2>
+        <p id="nw-alert-message" data-alert-message></p>
+        <div class="nw-alert-dialog__actions"><button type="button" class="nw-button nw-button--outline" data-alert-cancel>Cancel</button><button type="button" class="nw-button nw-button--primary" data-alert-confirm>Confirm</button></div>
+    </div>
+</dialog>
+    </body>
+</html>
