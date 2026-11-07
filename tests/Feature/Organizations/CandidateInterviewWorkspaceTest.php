@@ -3,11 +3,14 @@
 use App\Enums\CandidatePipelineStage;
 use App\Enums\InterviewCandidateResponse;
 use App\Enums\InterviewStatus;
+use App\Enums\NotificationCategory;
 use App\Models\ActivityLog;
 use App\Models\ApplicationForm;
 use App\Models\CandidateMessage;
 use App\Models\Interview;
 use App\Models\User;
+use App\Models\WorkflowNotification;
+use App\Services\CandidateMessageService;
 use App\Support\OrganizationContext;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -66,6 +69,20 @@ test('interview scheduling stays in the candidate workspace and queues a complet
         ->and($message->rendered_html)->toContain('Confirm attendance', 'https://meet.example.com/interview')
         ->and($message->confirm_url)->not->toBeNull();
     expect(ActivityLog::withoutGlobalScopes()->where('application_form_id', $application->id)->where('type', 'interview')->exists())->toBeTrue();
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $owner->id,
+        'category' => NotificationCategory::InterviewUpdate->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $applicant->id,
+        'category' => NotificationCategory::ApplicantInterviewUpdate->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
+    $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Interview scheduled');
+    $this->actingAs($applicant)->get(route('notifications.index'))->assertOk()->assertSee('Interview scheduled');
     Mail::assertNothingSent();
 });
 
@@ -99,6 +116,9 @@ test('default reschedule messages retain meeting destination and invalidate olde
     expect($interview->fresh()->version)->toBe(2)
         ->and($interview->fresh()->status)->toBe(InterviewStatus::Rescheduled)
         ->and(CandidateMessage::withoutGlobalScopes()->latest('id')->first()->rendered_body)->toContain('https://meet.example.com/interview');
+    expect(WorkflowNotification::query()->where('notifiable_id', $applicant->id)
+        ->where('category', NotificationCategory::ApplicantInterviewUpdate->value)
+        ->where('subject_id', $application->id)->count())->toBe(2);
     $this->actingAs($applicant)->get($oldLink)->assertGone();
     $this->actingAs($owner)->patch(route('organisations.interviews.update', $interview), interviewWorkspacePayload(['version' => 1]))
         ->assertSessionHasErrors('version');
@@ -111,8 +131,31 @@ test('signed interview responses render safely and record confirmation once', fu
     $this->actingAs($applicant)->get($message->confirm_url)->assertOk()->assertSee('Confirm your interview');
     $this->actingAs($applicant)->post($message->confirm_url)->assertOk()->assertSee('Response recorded');
     expect(Interview::withoutGlobalScopes()->sole()->candidate_response)->toBe(InterviewCandidateResponse::Confirmed);
+    $this->actingAs($owner)->get(route('notifications.index'))
+        ->assertOk()->assertSee('Interview response');
+    $this->actingAs($applicant)->get(route('notifications.index'))
+        ->assertOk()->assertSee('Interview response recorded');
     $this->actingAs($applicant)->post($message->confirm_url)->assertOk();
     $this->actingAs($applicant)->get(preg_replace('/signature=[^&]+/', 'signature=invalid', $message->confirm_url))->assertForbidden();
+});
+
+test('declining an interview notifies the authorized organization team and the applicant inbox', function () {
+    [$owner, $applicant, $application] = interviewWorkspaceApplication();
+    $this->actingAs($owner)->post(route('organisations.interviews.store', $application), interviewWorkspacePayload())
+        ->assertSessionHasNoErrors();
+    $message = CandidateMessage::withoutGlobalScopes()->sole();
+
+    $this->actingAs($applicant)->get($message->decline_url)->assertOk();
+    $this->actingAs($applicant)->post($message->decline_url)->assertOk()->assertSee('Response recorded');
+
+    $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Interview response');
+    $this->actingAs($applicant)->get(route('notifications.index'))->assertOk()->assertSee('Declined response');
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $owner->id,
+        'category' => NotificationCategory::InterviewResponse->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
 });
 
 test('cancelling an interview queues cancellation and closes its response link', function () {
@@ -123,7 +166,62 @@ test('cancelling an interview queues cancellation and closes its response link',
     $this->actingAs($owner)->post(route('organisations.interviews.cancel', $interview), ['version' => 1])->assertSessionHasNoErrors();
     expect($interview->fresh()->status)->toBe(InterviewStatus::Cancelled)
         ->and(CandidateMessage::withoutGlobalScopes()->latest('id')->first()->confirm_url)->toBeNull();
+    $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Interview cancelled');
+    $this->actingAs($applicant)->get(route('notifications.index'))->assertOk()->assertSee('Interview cancelled');
     $this->actingAs($applicant)->post($link)->assertGone();
+});
+
+test('completed interviews notify the applicant and organization workspace', function () {
+    [$owner, $applicant, $application] = interviewWorkspaceApplication();
+    $this->actingAs($owner)->post(route('organisations.interviews.store', $application), interviewWorkspacePayload())
+        ->assertSessionHasNoErrors();
+    $interview = Interview::withoutGlobalScopes()->sole();
+    $interview->forceFill(['start_at' => now()->subHours(2), 'end_at' => now()->subHour()])->save();
+
+    $this->actingAs($owner)->patch(route('organisations.interviews.complete', $interview), [
+        'version' => $interview->version,
+        'completion_confirmed' => 1,
+    ])->assertSessionHasNoErrors();
+
+    expect($interview->fresh()->status)->toBe(InterviewStatus::Completed);
+    $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Interview marked completed');
+    $this->actingAs($applicant)->get(route('notifications.index'))->assertOk()->assertSee('Interview marked completed');
+});
+
+test('successful interview email delivery creates an authorized organization notice', function () {
+    [$owner, , $application] = interviewWorkspaceApplication();
+    $this->actingAs($owner)->post(route('organisations.interviews.store', $application), interviewWorkspacePayload())
+        ->assertSessionHasNoErrors();
+    $message = CandidateMessage::withoutGlobalScopes()->sole();
+
+    app(CandidateMessageService::class)->deliver($message->id, $application->organization_id);
+
+    expect($message->fresh()->status->value)->toBe('sent');
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $owner->id,
+        'category' => NotificationCategory::CandidateEmailSent->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
+    $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Interview email sent');
+});
+
+test('permanent interview email delivery failures keep the durable organization notice', function () {
+    [$owner, , $application] = interviewWorkspaceApplication();
+    $this->actingAs($owner)->post(route('organisations.interviews.store', $application), interviewWorkspacePayload())
+        ->assertSessionHasNoErrors();
+    $message = CandidateMessage::withoutGlobalScopes()->sole();
+
+    app(CandidateMessageService::class)->markFailed($message->id, $application->organization_id, new RuntimeException('Transport unavailable'));
+
+    expect($message->fresh()->status->value)->toBe('failed');
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $owner->id,
+        'category' => NotificationCategory::CandidateEmailFailure->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
+    $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Interview email delivery failed');
 });
 
 test('invitation HTML escapes candidate-controlled content and preview creates no records', function () {

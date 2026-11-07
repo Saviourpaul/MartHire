@@ -93,6 +93,16 @@ test('an organization member can see and move a real candidate through the pipel
 
     expect($application->fresh()->status)->toBe(CandidatePipelineStage::Shortlisted);
     expect($application->statusHistories()->count())->toBe(1);
+    $this->actingAs($applicant)->get(route('notifications.index'))
+        ->assertOk()->assertSee('Application status updated')->assertSee('Shortlisted');
+    $this->get(route('client.applications.show', $application))->assertOk()->assertSee('Shortlisted');
+    $applicantFragment = $this->withHeader('X-Live-Tables', 'client-application')
+        ->getJson(route('client.applications.show', $application))->assertOk();
+    expect($applicantFragment->json('regions.client-application'))->toContain('Shortlisted');
+
+    $organizationFragment = $this->actingAs($organizationUser)->withHeader('X-Live-Tables', 'candidate-review')
+        ->getJson(route('organisations.candidates.show', $application))->assertOk();
+    expect($organizationFragment->json('regions.candidate-review'))->toContain('Shortlisted');
 });
 
 test('a candidate cannot skip pipeline stages', function () {

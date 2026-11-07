@@ -8,11 +8,12 @@ const turn = () => new Promise((resolve) => setImmediate(resolve));
 
 // Minimal DOM contract fixture; the real browser checks cover fragment rendering,
 // Alpine initialization, focus restoration and cross-tab synchronization.
-function page(fetcher) {
+function page(fetcher, { interval = '0' } = {}) {
     const target = () => ({ listeners: new Map(), addEventListener(name, fn) { this.listeners.set(name, fn); }, removeEventListener() {}, dispatchEvent(event) { return this.listeners.get(event.type)?.(event); } });
     const doc = target();
+    let poll;
     const win = Object.assign(target(), { location: { href: 'https://example.test/team', origin: 'https://example.test' }, navigator: { onLine: true },
-        getComputedStyle: () => ({ visibility: 'visible' }), setInterval: () => 1, clearInterval() {},
+        getComputedStyle: () => ({ visibility: 'visible' }), setInterval: (callback) => { poll = callback; return 1; }, clearInterval() {},
         Marthire: { notify() {}, confirm: async () => true },
         FormData: class { constructor(form) { this.form = form; } append() {} },
         DOMParser: class { parseFromString() { throw new Error('The edited workspace must not be replaced.'); } },
@@ -21,12 +22,12 @@ function page(fetcher) {
     const bar = { classList: { toggle() {} }, querySelector: () => statusText };
     const modal = { isConnected: true, open: false, getClientRects() { return this.open ? [1] : []; }, closest() { return this; }, getAttribute: () => 'manage-title' };
     const forms = [];
-    const root = { isConnected: true, dataset: { liveTable: 'team', liveTopics: 'team', liveInterval: '0' },
+    const root = { isConnected: true, dataset: { liveTable: 'team', liveTopics: 'team', liveInterval: interval },
         querySelector: () => bar, querySelectorAll: () => [modal], setAttribute() {}, contains: (node) => forms.includes(node),
     };
     doc.activeElement = null;
     doc.querySelector = () => null;
-    doc.querySelectorAll = (selector) => selector === '[data-live-table]' ? [root] : [];
+    doc.querySelectorAll = (selector) => selector === '[data-live-table]' ? [root] : selector === '[role="dialog"]' ? [modal] : [];
     const form = (action) => {
         const input = { disabled: false, value: 'Committed edit', isConnected: true };
         const item = { action: `https://example.test/${action}`, method: 'post', elements: [input], isConnected: true, resets: 0,
@@ -38,7 +39,7 @@ function page(fetcher) {
     const app = initializeLiveTables({ document: doc, window: win, fetch: fetcher });
     const submit = (item) => doc.listeners.get('submit')({ target: item, defaultPrevented: false, preventDefault() {}, submitter: null });
     const refresh = () => doc.listeners.get('click')({ target: { closest: (selector) => selector === '[data-live-refresh]' ? { closest: () => root } : null } });
-    return { app, form, submit, refresh, modal, statusText };
+    return { app, form, submit, refresh, modal, statusText, poll: () => poll?.() };
 }
 
 test('a foreground refresh cannot erase a dialog opened while its response was pending', async () => {
@@ -86,5 +87,18 @@ test('a successful edit retains its committed values when the following refresh 
     assert.equal(form.elements[0].value, 'Committed edit');
     assert.equal(form.elements[0].disabled, false);
     assert.match(fixture.statusText.textContent, /server could not complete/);
+    fixture.app.destroy();
+});
+
+test('a timed table skips the redundant startup request and still polls for updates', async () => {
+    let requests = 0;
+    const fixture = page(async () => { requests++; return response({}, 500); }, { interval: '30000' });
+
+    await turn();
+    assert.equal(requests, 0, 'server-rendered rows should not be fetched again during startup');
+
+    fixture.poll();
+    await turn();
+    assert.equal(requests, 1, 'the configured periodic poll should still refresh the table');
     fixture.app.destroy();
 });

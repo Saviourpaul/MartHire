@@ -37,14 +37,18 @@ function dashboardApplications(User $applicant, int $count, string $prefix = 'Da
 test('admin live dashboard refreshes cached metrics and recent rows together', function () {
     $admin = User::factory()->admin()->create();
     User::factory()->create();
-    $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+    $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()
+        ->assertSee('data-notification-sound-enabled="false"', false)
+        ->assertDontSee('data-notification-sound-toggle', false)
+        ->assertSee('/asset/marthire/sounds/notification.mp3');
     expect(Cache::get('admin_dashboard.metrics')['total_applicants'])->toBe(1);
     User::factory()->create(['first_name' => 'Fresh', 'last_name' => 'DashboardAccount']);
 
     $response = $this->getJson(route('admin.dashboard'), ['X-Live-Tables' => 'admin-dashboard'])
         ->assertOk()->assertJsonStructure(['regions' => ['admin-dashboard'], 'url', 'title']);
     $html = $response->json('regions.admin-dashboard');
-    expect($html)->toContain('Fresh DashboardAccount')->not->toContain('<html', '<body');
+    expect($html)->toContain('Fresh DashboardAccount', 'data-live-table="admin-dashboard"', 'data-live-topics="users,notifications"')
+        ->not->toContain('<html', '<body');
     preg_match('/Applicants<\/span>.*?<span class="nw-stat__value">([^<]*)<\/span>/s', $html, $metric);
     expect($metric[1] ?? null)->toBe('2');
 });
@@ -55,7 +59,7 @@ test('organization dashboard fragments preserve organization and job visibility'
 
     $response = $this->actingAs($owner)->getJson(route('organisations.dashboard'), ['X-Live-Tables' => 'organization-dashboard'])->assertOk();
     $html = $response->json('regions.organization-dashboard');
-    expect($html)->toContain('Own Dashboard Role 01', 'Visible Applicant')
+    expect($html)->toContain('Own Dashboard Role 01', 'Visible Applicant', 'data-live-table="organization-dashboard"', 'data-live-topics="applications,candidates,interviews,notifications,jobs,team"')
         ->not->toContain('Other Tenant Role 01', 'Private OtherTenant', '<html');
 });
 
@@ -94,6 +98,7 @@ test('applicant dashboard paginates applications without a new route and retains
     dashboardApplications($applicant, 12);
     $first = $this->actingAs($applicant)->get(route('client.dashboard'))
         ->assertOk()->assertSee('data-live-table="client-dashboard"', false)
+        ->assertSee('data-phone-deferred', false)->assertSee('x-ignore', false)
         ->assertViewHas('applications', fn ($applications): bool => $applications->total() === 12 && $applications->count() === 10);
     expect($first->getContent())->toContain('applications_page=2');
 

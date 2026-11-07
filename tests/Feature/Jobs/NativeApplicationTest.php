@@ -1,10 +1,14 @@
 <?php
 
-use App\Enums\JobStatus;
 use App\Enums\ApplicationDocumentType;
+use App\Enums\JobStatus;
+use App\Enums\NotificationCategory;
+use App\Enums\OrganizationRole;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\CandidateJobPreference;
+use App\Models\JobPostMember;
+use App\Models\Organization;
 use App\Models\User;
 use App\Models\UserIdentificationDocument;
 use App\Services\ApplicantProfileChecklistService;
@@ -277,12 +281,38 @@ test('a native application snapshots international phone parts independently of 
 test('a native application reaches the organization pipeline with private documents and an applicant receipt', function () {
     [$job, $owner] = nativeApplicationJob();
     $applicant = User::factory()->create();
+    $organization = Organization::query()->findOrFail($job->organization_id);
+    $assignedRecruiter = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    $unassignedRecruiter = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    app(OrganizationContext::class)->runInOrganization($organization, fn () => JobPostMember::create([
+        'organization_id' => $organization->id,
+        'job_id' => $job->id,
+        'user_id' => $assignedRecruiter->user_id,
+    ]));
 
     $response = $this->actingAs($applicant)->post(route('applications.store', $job), nativeApplicationPayload());
     $response->assertSessionHasNoErrors();
 
     $application = ApplicationForm::withoutGlobalScopes()->where('job_id', $job->id)->firstOrFail();
     $response->assertRedirect(route('client.applications.show', $application));
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $owner->id,
+        'category' => NotificationCategory::NewApplication->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $assignedRecruiter->user_id,
+        'category' => NotificationCategory::NewApplication->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
+    $this->assertDatabaseMissing('notifications', [
+        'notifiable_id' => $unassignedRecruiter->user_id,
+        'category' => NotificationCategory::NewApplication->value,
+        'subject_type' => 'application',
+        'subject_id' => $application->id,
+    ]);
     expect($application->user_id)->toBe($applicant->id)
         ->and($application->organization_id)->toBe($job->organization_id)
         ->and($application->email)->toBe('alice@example.test')
@@ -313,12 +343,20 @@ test('a native application reaches the organization pipeline with private docume
     $this->get(route('client.applications.show', $application))
         ->assertOk()->assertSee($application->reference)->assertSee('Documents received')
         ->assertSee('Résumé / CV')->assertDontSee('resume.pdf');
-
     $this->actingAs($owner)->get(route('organisations.candidates.index'))
         ->assertOk()->assertSee('Alice Applicant')
         ->assertSee(route('organisations.candidates.show', $application), false);
-    $this->get(route('organisations.candidates.show', $application))
+    $this->actingAs($owner)->get(route('notifications.index'))
+        ->assertOk()->assertSee('New application')->assertSee($application->reference);
+    $this->actingAs($assignedRecruiter->user)->get(route('notifications.index'))
+        ->assertOk()->assertSee('New application')->assertSee($application->reference);
+    $this->actingAs($unassignedRecruiter->user)->get(route('notifications.index'))
+        ->assertOk()->assertDontSee($application->reference);
+    $this->actingAs($owner)->get(route('organisations.candidates.show', $application))
         ->assertOk()->assertSee($application->reference)->assertSee('Alice Applicant');
+    $this->actingAs($applicant)->withHeader('X-Live-Tables', 'client-application')
+        ->getJson(route('client.applications.show', $application))
+        ->assertOk()->assertJsonStructure(['regions' => ['client-application']]);
 });
 
 test('repeat native applications redirect to their receipt and cannot create duplicate records', function () {
