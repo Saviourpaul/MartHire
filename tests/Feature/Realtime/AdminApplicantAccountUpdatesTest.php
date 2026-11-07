@@ -18,12 +18,12 @@ test('applicant registration creates a private inbox notice for active verified 
     $this->post(route('register'), [
         'first_name' => 'New',
         'last_name' => 'Applicant',
-        'email' => 'new-applicant@example.test',
-        'password' => 'Vx9#Lp2qZmT8oWr$',
-        'password_confirmation' => 'Vx9#Lp2qZmT8oWr$',
+        'email' => '',
+        'password' => '',
+        'password_confirmation' => '',
     ])->assertRedirect(route('verification.notice', absolute: false));
 
-    $applicant = User::query()->where('email', 'new-applicant@example.test')->sole();
+    $applicant = User::query()->where('email', '')->sole();
 
     $this->assertDatabaseHas('notifications', [
         'notifiable_id' => $admin->id,
