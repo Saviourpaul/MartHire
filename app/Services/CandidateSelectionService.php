@@ -27,7 +27,7 @@ class CandidateSelectionService
     {
         if (! $this->eligible($application)) {
             throw ValidationException::withMessages([
-                'stage' => 'Complete an interview for this candidate before confirming them as Selected.',
+                'stage' => 'Complete an interview for this candidate before confirming them as Hired.',
             ]);
         }
     }

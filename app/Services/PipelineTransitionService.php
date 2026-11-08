@@ -39,7 +39,7 @@ class PipelineTransitionService
                 app(CandidateSelectionService::class)->ensureEligible($application);
                 if (! $selectionConfirmed) {
                     throw ValidationException::withMessages([
-                        'selection_confirmed' => 'Explicitly confirm this candidate as Selected to continue.',
+                        'selection_confirmed' => 'Explicitly confirm this candidate as Hired to continue.',
                     ]);
                 }
             }
