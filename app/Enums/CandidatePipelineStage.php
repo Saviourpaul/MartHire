@@ -39,7 +39,7 @@ enum CandidatePipelineStage: string
             self::Submitted => 'Submitted',
             self::Shortlisted => 'Shortlisted',
             self::Interview => 'Interview',
-            self::Selected => 'Selected',
+            self::Selected => 'Hired',
             self::Rejected => 'Rejected',
         };
     }
