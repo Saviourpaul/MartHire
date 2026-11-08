@@ -93,7 +93,7 @@ class OrganizationInterviewController extends Controller
     {
         $this->interviews->complete($interview, $request->user(), $request->validated());
 
-        $message = 'Interview marked completed. An authorized team member can now explicitly confirm the candidate as Selected.';
+        $message = 'Interview marked completed. An authorized team member can now explicitly confirm the candidate as Hired.';
 
         return LiveTables::mutation($request, $message, $this->backToWorkspace($interview->application_form_id)->with('success', $message), ['interviews', 'candidates']);
     }

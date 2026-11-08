@@ -32,6 +32,6 @@ class MoveCandidatePipelineRequest extends FormRequest
 
     public function messages(): array
     {
-        return ['selection_confirmed.accepted' => 'Explicitly confirm this candidate as Selected to continue.'];
+        return ['selection_confirmed.accepted' => 'Explicitly confirm this candidate as Hired to continue.'];
     }
 }
