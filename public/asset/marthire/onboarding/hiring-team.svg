@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Hiring team collaboration</title>
+  <desc id="desc">A hiring workspace showing teammates collaborating on a candidate review.</desc>
+  <rect x="28" y="35" width="664" height="450" rx="34" fill="#E8EAFB"/>
+  <circle cx="610" cy="103" r="29" fill="#C9F542"/>
+  <circle cx="91" cy="408" r="18" fill="#C7BFFD"/>
+  <rect x="101" y="79" width="520" height="367" rx="23" fill="#fff" stroke="#DADFF0" stroke-width="2"/>
+  <path d="M101 102c0-12.703 10.297-23 23-23h474c12.703 0 23 10.297 23 23v38H101v-38Z" fill="#F7F8FD"/>
+  <circle cx="132" cy="111" r="6" fill="#C7BFFD"/><circle cx="153" cy="111" r="6" fill="#C9F542"/><circle cx="174" cy="111" r="6" fill="#DADFF0"/>
+  <rect x="142" y="170" width="224" height="18" rx="9" fill="#032A5E"/>
+  <rect x="142" y="199" width="146" height="9" rx="4.5" fill="#A5ABC1"/>
+  <rect x="142" y="235" width="438" height="1.5" fill="#E6E8F0"/>
+  <rect x="142" y="260" width="438" height="72" rx="15" fill="#F7F8FD" stroke="#E6E8F0"/>
+  <circle cx="181" cy="296" r="20" fill="#DAD5FF"/>
+  <path d="M171 302c2-6 6-9 10-9s8 3 10 9" stroke="#032A5E" stroke-width="3" stroke-linecap="round"/><circle cx="181" cy="288" r="5" stroke="#032A5E" stroke-width="3"/>
+  <rect x="215" y="280" width="142" height="9" rx="4.5" fill="#032A5E"/><rect x="215" y="298" width="99" height="7" rx="3.5" fill="#A5ABC1"/>
+  <rect x="472" y="282" width="82" height="26" rx="13" fill="#EAF7D7"/><circle cx="489" cy="295" r="4" fill="#25824F"/><rect x="499" y="291" width="43" height="8" rx="4" fill="#25824F"/>
+  <rect x="142" y="346" width="438" height="72" rx="15" fill="#F7F8FD" stroke="#E6E8F0"/>
+  <circle cx="181" cy="382" r="20" fill="#FFE9DB"/><path d="M171 388c2-6 6-9 10-9s8 3 10 9" stroke="#A8582D" stroke-width="3" stroke-linecap="round"/><circle cx="181" cy="374" r="5" stroke="#A8582D" stroke-width="3"/>
+  <rect x="215" y="366" width="127" height="9" rx="4.5" fill="#032A5E"/><rect x="215" y="384" width="116" height="7" rx="3.5" fill="#A5ABC1"/>
+  <g class="nw-art-float">
+    <rect x="397" y="53" width="204" height="82" rx="19" fill="#fff" stroke="#DADFF0" stroke-width="2"/>
+    <circle cx="432" cy="94" r="18" fill="#E5F0D2"/><path d="M423 100c2-6 5-9 9-9s7 3 9 9" stroke="#25824F" stroke-width="2.5" stroke-linecap="round"/><circle cx="432" cy="87" r="4" stroke="#25824F" stroke-width="2.5"/>
+    <rect x="462" y="82" width="108" height="9" rx="4.5" fill="#032A5E"/><rect x="462" y="99" width="77" height="7" rx="3.5" fill="#A5ABC1"/>
+  </g>
+</svg>

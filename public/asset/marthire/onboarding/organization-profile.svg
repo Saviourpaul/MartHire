@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Organization profile setup</title>
+  <desc id="desc">A company profile card with its name, industry, and a logo placeholder.</desc>
+  <rect x="28" y="35" width="664" height="450" rx="34" fill="#E8EAFB"/>
+  <circle cx="615" cy="102" r="28" fill="#C9F542"/>
+  <circle cx="94" cy="414" r="18" fill="#C7BFFD"/>
+  <rect x="104" y="79" width="512" height="366" rx="24" fill="#fff" stroke="#DADFF0" stroke-width="2"/>
+  <path d="M104 103c0-13.255 10.745-24 24-24h464c13.255 0 24 10.745 24 24v38H104v-38Z" fill="#F7F8FD"/>
+  <circle cx="136" cy="111" r="6" fill="#C7BFFD"/><circle cx="157" cy="111" r="6" fill="#C9F542"/><circle cx="178" cy="111" r="6" fill="#DADFF0"/>
+  <rect x="146" y="174" width="106" height="106" rx="22" fill="#E8EAFB"/>
+  <path d="M178 229v-27l21-13 21 13v27h-42Z" stroke="#032A5E" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M189 229v-16h20v16M172 236h54" stroke="#25824F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="281" y="182" width="228" height="17" rx="8.5" fill="#032A5E"/>
+  <rect x="281" y="211" width="152" height="10" rx="5" fill="#A5ABC1"/>
+  <rect x="281" y="239" width="80" height="24" rx="12" fill="#EAF7D7"/>
+  <circle cx="296" cy="251" r="4" fill="#25824F"/><rect x="306" y="247" width="43" height="8" rx="4" fill="#25824F"/>
+  <rect x="146" y="316" width="428" height="1.5" fill="#E6E8F0"/>
+  <rect x="146" y="344" width="149" height="11" rx="5.5" fill="#032A5E"/>
+  <rect x="146" y="366" width="340" height="8" rx="4" fill="#DADFF0"/>
+  <rect x="146" y="384" width="296" height="8" rx="4" fill="#DADFF0"/>
+  <g class="nw-art-float">
+    <rect x="453" y="285" width="135" height="58" rx="17" fill="#C9F542"/>
+    <circle cx="479" cy="314" r="13" fill="#fff"/>
+    <path d="m473 314 4 4 8-9" stroke="#032A5E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="501" y="306" width="66" height="8" rx="4" fill="#032A5E"/>
+    <rect x="501" y="321" width="46" height="6" rx="3" fill="#56708F"/>
+  </g>
+</svg>

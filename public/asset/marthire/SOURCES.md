@@ -31,6 +31,10 @@ The repository's code and organization use the MIT license, but the logos themse
 
 These logos identify outbound independent career resources only. They must not be presented as Marthire' identity, customers, partners, integrations, or endorsers. The Marthire wordmark and any original geometric brand treatment are separate from these third-party marks.
 
+## Organization onboarding illustrations
+
+The organization onboarding flow uses `onboarding/hiring-workspace.svg`, `onboarding/organization-profile.svg`, `onboarding/hiring-team.svg`, and `onboarding/workspace-ready.svg`. The latter three were authored for Marthire using the existing design palette and recruitment workflow. They are original local illustrations, informed by general motion and layout patterns explored in the requested [Dribbble onboarding animation gallery](https://dribbble.com/tags/onboarding-animation) and [Jitter website templates](https://jitter.video/templates/websites/); no contributor artwork is embedded or hotlinked.
+
 ## Hero map
 
 Retrieved 24 October 2026.
