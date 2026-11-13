@@ -118,7 +118,7 @@ Alpine.data('resumeAutofill', (messages = {}) => ({
         let changed = false;
 
         const heading = /^(?:professional\s+)?(?:summary|profile|objective|about\s+me)$/i;
-        const nextHeading = /^(?:technical\s+)?(?:skills|key\s+skills|core\s+competencies|experience|work\s+experience|employment\s+history|education|education\s+and\s+qualifications|projects|certifications|references)$/i;
+        const nextHeading = /^(?:technical\s+)?(?:skills|key\s+skills|core\s+competencies|experience|work\s+experience|employment\s+history|education|education\s+and\s+qualifications|projects|cer[...]
         const section = (pattern, stopPattern = nextHeading) => {
             const start = lines.findIndex((line) => pattern.test(line));
             if (start < 0) return [];
@@ -150,9 +150,9 @@ Alpine.data('resumeAutofill', (messages = {}) => ({
         };
         for (const [platform, pattern] of Object.entries(linkPatterns)) {
             const link = text.match(pattern)?.[0]?.replace(/[),.;]+$/, '');
-            changed = fill(`[name="links[${platform}]"]`, link) || changed;
+            changed = fill(`[name="links[${platform}]" ]`, link) || changed;
         }
-        const website = lines.map((line) => line.match(/https?:\/\/(?:www\.)?(?!linkedin\.com|github\.com)[\w.-]+\.[a-z]{2,}(?:\/[^\s]*)?/i)?.[0]).find(Boolean);
+        const website = lines.map((line) => line.match(/https?:\/\/(?:www\.)?(?!linkedin\.com|github\.com)[\w.-]+\.[a-z]{2,}(?:\/[^"]*)?/i)?.[0]).find(Boolean);
         changed = fill('[name="links[website]"]', website?.replace(/[),.;]+$/, '')) || changed;
 
         const phoneLine = lines.find((line) => /(?:phone|mobile|tel\.?|\+\d)/i.test(line));
@@ -325,6 +325,8 @@ Alpine.data('jobSearch', ({ jobs, categories, pageSize = 9 }) => ({
     sort: 'newest',
     shown: pageSize,
     filtersOpen: false,
+    matchesCacheKey: '',
+    matchesCache: [],
     init() {
         const params = new URLSearchParams(window.location.search);
         const category = params.get('category') ?? '';
@@ -337,24 +339,42 @@ Alpine.data('jobSearch', ({ jobs, categories, pageSize = 9 }) => ({
 
         this.$watch(
             () => JSON.stringify([this.query, this.place, this.category, this.types, this.workplaces, this.sort]),
-            () => { this.shown = this.pageSize; this.syncUrl(); },
+            () => { this.shown = this.pageSize; this.refreshMatches(); this.syncUrl(); },
         );
+
+        this.refreshMatches();
     },
-    get matches() {
+    refreshMatches() {
         const query = this.query.trim().toLowerCase();
         const place = this.place.trim().toLowerCase();
+        const stateKey = JSON.stringify([query, place, this.category, this.types, this.workplaces, this.sort]);
+
+        if (this.matchesCacheKey === stateKey) {
+            return this.matchesCache;
+        }
+
         const found = this.jobs.reduce((list, job, index) => {
             if ((!query || job.text.includes(query))
                 && (!place || job.where.includes(place))
                 && (!this.category || job.category === this.category)
                 && (!this.types.length || this.types.includes(job.type))
-                && (!this.workplaces.length || this.workplaces.includes(job.workplace))) list.push(index);
+                && (!this.workplaces.length || this.workplaces.includes(job.workplace))) {
+                list.push(index);
+            }
             return list;
         }, []);
 
-        return found.sort((a, b) => this.sort === 'title'
+        const sorted = found.sort((a, b) => this.sort === 'title'
             ? this.jobs[a].title.localeCompare(this.jobs[b].title)
             : this.jobs[b].posted - this.jobs[a].posted);
+
+        this.matchesCacheKey = stateKey;
+        this.matchesCache = sorted;
+
+        return this.matchesCache;
+    },
+    get matches() {
+        return this.refreshMatches();
     },
     get visible() { return this.matches.slice(0, this.shown); },
     get remaining() { return this.matches.length - this.visible.length; },
