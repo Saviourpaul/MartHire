@@ -36,6 +36,7 @@ class RegisteredUserController extends Controller
     public function store(Request $request, PlatformSettingsService $settings, ApplicantAccountActivityService $activity): RedirectResponse
     {
         $request->validate([
+            'account_type' => ['sometimes', 'required', 'string', 'in:applicant'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -51,12 +52,16 @@ class RegisteredUserController extends Controller
                 'name' => trim($request->first_name.' '.$request->last_name),
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                // Public self-registration is intentionally limited to applicants.
+                // Organization owners enter through an approved demo setup link.
                 'role' => UserRole::Applicant,
                 'status' => UserStatus::Pending,
             ]);
         });
 
-        $activity->registered($user);
+        if ($user->isApplicant()) {
+            $activity->registered($user);
+        }
 
         // Pending users have a limited session for the verification and resend
         // screens only. Product routes remain behind the verified middleware.

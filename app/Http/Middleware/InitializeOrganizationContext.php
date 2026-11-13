@@ -33,8 +33,9 @@ class InitializeOrganizationContext
         $memberships = OrganizationMember::withoutGlobalScope(OrganizationScope::class)
             ->with('organization')->where('user_id', $user->id)->where('status', 'active')->orderBy('id')->get();
 
-        if (! $request->routeIs('team-invitations.*') && $memberships->isEmpty() && ! OrganizationMember::withoutGlobalScope(OrganizationScope::class)
-            ->withTrashed()->where('user_id', $user->id)->exists()) {
+        if (! $request->routeIs('team-invitations.*') && $user->hasVerifiedEmail() && $user->isActive()
+            && $memberships->isEmpty() && ! OrganizationMember::withoutGlobalScope(OrganizationScope::class)
+                ->withTrashed()->where('user_id', $user->id)->exists()) {
             $this->provisioner->ensureForEmployer($user);
             $memberships = OrganizationMember::withoutGlobalScope(OrganizationScope::class)
                 ->with('organization')->where('user_id', $user->id)->where('status', 'active')->get();

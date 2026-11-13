@@ -28,6 +28,7 @@ class OrganizationTeamService
         private readonly ActivityLogger $activityLogger,
         private readonly OrganizationContext $context,
         private readonly OrganizationOwnerGuard $ownerGuard,
+        private readonly OrganizationOnboardingService $onboarding,
     ) {}
 
     public function invite(Organization $organization, User $actor, string $email, OrganizationRole $role): TeamInvitation
@@ -161,6 +162,8 @@ class OrganizationTeamService
                         'status' => OrganizationMemberStatus::Active,
                     ]);
                 }
+
+                $this->onboarding->initialize($member);
 
                 $invitation->update(['status' => TeamInvitationStatus::Accepted, 'accepted_at' => now()]);
                 $this->recordActivity($organization, $recipient, [

@@ -6,9 +6,11 @@ use App\Enums\JobStatus;
 use App\Models\Job;
 use App\Services\JobCountryService;
 use App\Support\JobDescription;
+use App\Support\OrganizationContext;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 
 class StoreJobRequest extends FormRequest
 {
@@ -19,6 +21,10 @@ class StoreJobRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $this->merge([
+            'company' => app(OrganizationContext::class)->organization()?->name,
+        ]);
+
         if (is_string($this->input('country_code'))) {
             $this->merge(['country_code' => strtoupper(trim($this->input('country_code')))]);
         }
@@ -43,8 +49,9 @@ class StoreJobRequest extends FormRequest
             'category' => ['nullable', 'string', 'max:255'],
             'country_code' => ['bail', 'required', 'string', 'size:2', Rule::in(array_keys(app(JobCountryService::class)->all()))],
             'employment_type' => ['required', 'string', Rule::in(array_keys(Job::employmentTypeOptions()))],
+            'workplace_type' => ['required', 'string', Rule::in(array_keys(Job::workplaceTypeOptions()))],
             'logo' => $this->hasFile('logo')
-                ? ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048']
+                ? ['nullable', File::image()->types(['jpg', 'jpeg', 'png', 'webp', 'gif'])->max(2048)]
                 : ['nullable', 'string', 'max:2048'],
             'start_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:start_date', 'after_or_equal:today'],

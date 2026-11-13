@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Job;
 use App\Models\JobPosting;
+use App\Models\Organization;
 use App\Models\Scopes\OrganizationScope;
 use App\Support\HtmlSanitizer;
 use App\Support\JobCatalog;
@@ -37,6 +38,18 @@ class PublicJobService
             ->sortByDesc('posted_at')->values();
     }
 
+    /** @return Collection<int, array<string, mixed>> */
+    public function forOrganization(Organization $organization): Collection
+    {
+        return Job::withoutGlobalScope(OrganizationScope::class)
+            ->where('organization_id', $organization->id)
+            ->with('organization.settings')
+            ->acceptingApplications()
+            ->latest('created_at')
+            ->get()
+            ->map(fn (Job $job): array => $this->native($job));
+    }
+
     /** @return array<string, mixed> */
     public function native(Job $job): array
     {
@@ -57,7 +70,7 @@ class PublicJobService
             'company_about' => $organizationSettings?->about,
             'location' => $legacyLocation,
             'type' => $job->employmentTypeLabel(),
-            'workplace' => null,
+            'workplace' => $job->workplaceTypeLabel(),
             'salary' => null,
             'posted_at' => $job->created_at?->toIso8601String(),
             'expires_at' => $job->due_date?->endOfDay()->toIso8601String(),

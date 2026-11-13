@@ -12,14 +12,18 @@ use Illuminate\Support\Facades\DB;
 
 class OrganizationProvisioner
 {
-    public function __construct(private OrganizationContext $context, private WorkspaceUpdateBroadcaster $workspaceUpdates) {}
+    public function __construct(
+        private OrganizationContext $context,
+        private WorkspaceUpdateBroadcaster $workspaceUpdates,
+        private OrganizationOnboardingService $onboarding,
+    ) {}
 
-    public function ensureForEmployer(User $employer): Organization
+    public function ensureForEmployer(User $employer, ?string $organizationName = null): Organization
     {
-        abort_unless($employer->isOrganization(), 403);
+        abort_unless($employer->isOrganization() && $employer->isActive() && $employer->hasVerifiedEmail() && ! $employer->trashed(), 403);
 
         $created = false;
-        $organization = DB::transaction(function () use ($employer, &$created): Organization {
+        $organization = DB::transaction(function () use ($employer, $organizationName, &$created): Organization {
             User::query()->whereKey($employer->id)->lockForUpdate()->firstOrFail();
             $membership = OrganizationMember::withoutGlobalScope(OrganizationScope::class)
                 ->where('user_id', $employer->id)->where('status', 'active')->first();
@@ -31,12 +35,15 @@ class OrganizationProvisioner
             abort_if(OrganizationMember::withoutGlobalScope(OrganizationScope::class)
                 ->withTrashed()->where('user_id', $employer->id)->exists(), 403);
 
-            $organization = Organization::create(['name' => mb_substr(trim($employer->first_name.' '.$employer->last_name).' Organization', 0, 255)]);
+            $name = trim((string) $organizationName);
+            $name = $name !== '' ? $name : trim($employer->first_name.' '.$employer->last_name).' Organization';
+            $organization = Organization::create(['name' => mb_substr($name, 0, 255)]);
             $created = true;
-            $this->context->runInOrganization($organization, fn () => OrganizationMember::create([
+            $membership = $this->context->runInOrganization($organization, fn () => OrganizationMember::create([
                 'organization_id' => $organization->id, 'user_id' => $employer->id,
                 'role' => OrganizationRole::Owner, 'status' => 'active',
             ]));
+            $this->onboarding->initialize($membership);
 
             return $organization;
         });

@@ -21,6 +21,10 @@ class OrganizationSettingsService
     /** @var list<string> */
     private const SETTING_FIELDS = [
         'about',
+        'industry',
+        'organization_size',
+        'brand_primary_color',
+        'brand_accent_color',
         'careers_url',
         'public_contact_email',
         'public_contact_phone',

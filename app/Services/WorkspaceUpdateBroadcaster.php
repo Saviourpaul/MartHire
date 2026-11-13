@@ -11,7 +11,7 @@ use Throwable;
 class WorkspaceUpdateBroadcaster
 {
     /** @var list<string> */
-    private const TOPICS = ['users', 'organizations', 'jobs', 'candidates', 'applications', 'team', 'interviews', 'notifications'];
+    private const TOPICS = ['users', 'organizations', 'jobs', 'candidates', 'applications', 'team', 'interviews', 'notifications', 'demo-requests'];
 
     /** @param list<string> $topics */
     public function admins(array $topics, ?string $message = null, string $type = 'info'): void

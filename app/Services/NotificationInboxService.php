@@ -7,6 +7,7 @@ use App\Enums\OrganizationRole;
 use App\Models\ApplicationForm;
 use App\Models\Job;
 use App\Models\Organization;
+use App\Models\OrganizationDemoRequest;
 use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\TeamInvitation;
@@ -120,6 +121,14 @@ class NotificationInboxService
     {
         if ($notification->category === NotificationCategory::AdminApplicantAccount->value) {
             return route('admin.users.applicants');
+        }
+
+        if ($notification->category === NotificationCategory::AdminDemoRequest->value && $user->isAdmin()) {
+            $demoRequest = OrganizationDemoRequest::query()->find($notification->subject_id);
+
+            return $demoRequest
+                ? route('admin.demo-requests.show', $demoRequest)
+                : route('admin.demo-requests.index');
         }
 
         if ($notification->category === NotificationCategory::ApplicantAccountStatus->value) {

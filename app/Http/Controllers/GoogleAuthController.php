@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
 use App\Services\EmailVerificationService;
@@ -26,8 +27,12 @@ class GoogleAuthController extends Controller
      * Direct user to Google for authentication.
      *
      */
-    public function googleLogin(): \Symfony\Component\HttpFoundation\RedirectResponse
+    public function googleLogin(Request $request): \Symfony\Component\HttpFoundation\RedirectResponse
     {
+        // Legacy account_type query strings are ignored. Existing Google-linked
+        // employers still authenticate as their stored role in the callback.
+        $request->session()->forget('oauth_registration_intent');
+
         return Socialite::driver('google')
             ->with(['prompt' => 'select_account'])
             ->redirect();
@@ -37,6 +42,7 @@ class GoogleAuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
+            $request->session()->forget('oauth_registration_intent');
 
             $googleId = (string) $googleUser->getId();
             $email = strtolower((string) $googleUser->getEmail());
@@ -100,6 +106,7 @@ class GoogleAuthController extends Controller
                             'email' => $email,
                             'google_id' => $googleId,
                             'password' => Hash::make(Str::random(40)),
+                            'role' => UserRole::Applicant,
                             'status' => UserStatus::Pending,
                         ]);
                     });

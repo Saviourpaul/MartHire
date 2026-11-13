@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PublicMediaUrl;
 use Database\Factories\OrganizationSettingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,10 @@ class OrganizationSetting extends Model
     protected $fillable = [
         'organization_id',
         'company_logo_path',
+        'industry',
+        'organization_size',
+        'brand_primary_color',
+        'brand_accent_color',
         'about',
         'careers_url',
         'public_contact_email',
@@ -41,6 +46,6 @@ class OrganizationSetting extends Model
 
     public function companyLogoUrl(): ?string
     {
-        return app(\App\Services\PublicMediaUrl::class)->url($this->company_logo_path);
+        return app(PublicMediaUrl::class)->url($this->company_logo_path);
     }
 }

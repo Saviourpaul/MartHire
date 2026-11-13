@@ -33,6 +33,7 @@ class Job extends Model
         'location',
         'country_code',
         'employment_type',
+        'workplace_type',
         'logo',
         'start_date',
         'due_date',
@@ -45,6 +46,12 @@ class Job extends Model
         'contract' => 'Contract',
         'internship' => 'Internship',
         'freelance' => 'Freelance',
+    ];
+
+    public const WORKPLACE_TYPES = [
+        'remote' => 'Remote',
+        'hybrid' => 'Hybrid',
+        'on_site' => 'On-site',
     ];
 
     /**
@@ -131,6 +138,17 @@ class Job extends Model
     public static function employmentTypeOptions(): array
     {
         return self::EMPLOYMENT_TYPES;
+    }
+
+    /** @return array<string, string> */
+    public static function workplaceTypeOptions(): array
+    {
+        return self::WORKPLACE_TYPES;
+    }
+
+    public function workplaceTypeLabel(): ?string
+    {
+        return self::WORKPLACE_TYPES[$this->workplace_type] ?? null;
     }
 
     public function scopeStatus(Builder $query, JobStatus|string $status): Builder

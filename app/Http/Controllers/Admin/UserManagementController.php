@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserManagementController extends Controller
@@ -32,7 +33,7 @@ class UserManagementController extends Controller
 
     public function organizations(Request $request): View|JsonResponse|Response
     {
-        return $this->index($request, 'admin.users.index', 'Organizations', UserRole::Organization, exportRoute: 'admin.users.organizations.export');
+        return $this->index($request, 'admin.users.index', 'Organizations', UserRole::Organization, showCreate: false, exportRoute: 'admin.users.organizations.export');
     }
 
     public function administrators(Request $request): View|JsonResponse|Response
@@ -87,6 +88,12 @@ class UserManagementController extends Controller
             'role' => ['required', Rule::in($this->getAllowedRoles())],
             'status' => ['required', Rule::in(UserStatus::values())],
         ]);
+
+        if ($data['role'] === UserRole::Organization->value) {
+            throw ValidationException::withMessages([
+                'role' => 'Create organization access through an approved demo request.',
+            ]);
+        }
 
         $this->accounts->createUser($request->user(), $data);
 

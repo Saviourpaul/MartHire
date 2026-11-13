@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\OrganizationDashboardService;
 use App\Services\AccountGreetingService;
+use App\Services\OrganizationDashboardService;
+use App\Services\OrganizationOnboardingService;
 use App\Support\LiveTables;
 use App\Support\OrganizationContext;
 use App\Support\OrganizationPermissions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class OrganizationDashboardController extends Controller
@@ -17,14 +19,19 @@ class OrganizationDashboardController extends Controller
         private readonly OrganizationDashboardService $dashboardService,
         private readonly OrganizationPermissions $permissions,
         private readonly OrganizationContext $context,
+        private readonly OrganizationOnboardingService $onboarding,
     ) {}
 
-    public function index(Request $request, AccountGreetingService $greetings): View|JsonResponse
+    public function index(Request $request, AccountGreetingService $greetings): View|JsonResponse|RedirectResponse
     {
         $user = $request->user();
         $membership = $this->permissions->membership($user);
 
         abort_unless($membership, 403, 'You are not an active member of an organization.');
+        $onboardingProgress = $this->onboarding->initialize($membership);
+        if ($this->onboarding->requiresOnboarding($onboardingProgress)) {
+            return redirect()->route('organisations.onboarding.show');
+        }
         $greeting = $greetings->forUser($user);
 
         return LiveTables::view($request, view('organisations.dashboard', [

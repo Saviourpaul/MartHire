@@ -110,6 +110,11 @@ class AccountLifecycleService
             function (User $locked) use ($actor, $role, $status, $delete, &$wasOrganization, &$wasApplicant, &$applicantStatusChanged, &$organizationIds, &$changed): void {
                 $actor = User::query()->lockForUpdate()->findOrFail($actor->id);
                 abort_unless($actor->isAdmin() && $actor->isActive() && $actor->hasVerifiedEmail(), 403);
+                if (! $locked->isOrganization() && $role === UserRole::Organization) {
+                    throw ValidationException::withMessages([
+                        'role' => 'Organization access must be created through an approved demo request.',
+                    ]);
+                }
                 $wasOrganization = $locked->isOrganization();
                 $wasApplicant = $locked->isApplicant();
                 $applicantStatusChanged = $wasApplicant && ! $delete
@@ -196,6 +201,11 @@ class AccountLifecycleService
 
             $role = $data['role'] instanceof UserRole ? $data['role'] : UserRole::from($data['role']);
             $status = $data['status'] instanceof UserStatus ? $data['status'] : UserStatus::from($data['status']);
+            if ($role === UserRole::Organization) {
+                throw ValidationException::withMessages([
+                    'role' => 'Create organization access through an approved demo request.',
+                ]);
+            }
 
             $user = new User([
                 'first_name' => $data['first_name'],

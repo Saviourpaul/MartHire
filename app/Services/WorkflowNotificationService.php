@@ -14,6 +14,7 @@ use App\Models\Job;
 use App\Models\JobPostMember;
 use App\Models\NotificationEmailOutbox;
 use App\Models\Organization;
+use App\Models\OrganizationDemoRequest;
 use App\Models\User;
 use App\Models\WorkflowNotification;
 use Illuminate\Database\Eloquent\Builder;
@@ -240,6 +241,23 @@ class WorkflowNotificationService
             $this->adminRecipients(), 'account', null, 'user', $applicant->id,
             'New applicant registered', 'A new applicant has registered and may need account review.',
         );
+    }
+
+    public function organizationDemoRequestSubmitted(OrganizationDemoRequest $demoRequest): void
+    {
+        $this->publish(
+            NotificationCategory::AdminDemoRequest,
+            'organization-demo-request-submitted:'.$demoRequest->id,
+            $this->adminRecipients(),
+            'account',
+            null,
+            'organization_demo_request',
+            (int) $demoRequest->id,
+            'New organization demo request',
+            $demoRequest->company_name.' submitted a request for a MarHire demo.',
+            true,
+        );
+        $this->workspaceUpdates->admins(['demo-requests', 'notifications']);
     }
 
     /** The audit event ID gives profile notices a stable, retry-safe event key. */

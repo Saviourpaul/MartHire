@@ -98,9 +98,12 @@ class JobController extends Controller
     public function create(Request $request): View
     {
         Gate::authorize('create', Job::class);
+        $organization = app(OrganizationContext::class)->organization();
+        abort_unless($organization instanceof Organization, 403);
 
         return view('organisations.jobs.create', [
             'job' => null,
+            'organization' => $organization,
             'countries' => app(LocationService::class)->jobCountries(),
             'categories' => $this->orgCategories($request),
             'employmentTypes' => Job::employmentTypeOptions(),
@@ -141,7 +144,8 @@ class JobController extends Controller
         $data['organization_id'] = app(OrganizationContext::class)->organizationId();
 
         $job = DB::transaction(function () use ($request, $data): Job {
-            Organization::whereKey($data['organization_id'])->lockForUpdate()->firstOrFail();
+            $organization = Organization::whereKey($data['organization_id'])->lockForUpdate()->firstOrFail();
+            $data['company'] = $organization->name;
             Gate::authorize('create', Job::class);
             $job = $request->user()->jobs()->create($data);
             JobPostMember::create(['organization_id' => $job->organization_id, 'job_id' => $job->id, 'user_id' => $request->user()->id]);
@@ -178,17 +182,19 @@ class JobController extends Controller
     public function update(UpdateJobRequest $request, Job $job, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        unset($data['action'], $data['location']);
+        unset($data['action'], $data['location'], $data['remove_logo']);
         $data['description'] = app(JobDescription::class)->toHtml($data['description']);
         if ($request->hasFile('logo')) {
             unset($data['logo']);
         }
 
+        $removeLogo = $request->boolean('remove_logo') && ! $request->hasFile('logo');
+
         $status = $request->resolvedStatus();
         $oldLogoPath = null;
         $newLogoPath = null;
         try {
-            DB::transaction(function () use ($request, $job, $data, $status, &$oldLogoPath, &$newLogoPath): void {
+            DB::transaction(function () use ($request, $job, $data, $status, $removeLogo, &$oldLogoPath, &$newLogoPath): void {
                 $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
 
                 if ($currentJob->status === JobStatus::Suspended) {
@@ -209,6 +215,9 @@ class JobController extends Controller
                     $oldLogoPath = $previousLogoPath;
                     $newLogoPath = $request->file('logo')->store('job-logos', 'public');
                     $currentJob->logo = $newLogoPath;
+                } elseif ($removeLogo) {
+                    $oldLogoPath = $previousLogoPath;
+                    $currentJob->logo = null;
                 } elseif ($currentJob->isDirty('logo')) {
                     $oldLogoPath = $previousLogoPath;
                 }

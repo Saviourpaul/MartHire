@@ -73,6 +73,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('send_candidate_email', fn (User $user, ApplicationForm $application): bool => app(OrganizationPermissions::class)->can($user, 'send_candidate_email', application: $application));
         Gate::define('manage_email_templates', fn (User $user, Organization $organization): bool => $organization->id === app(OrganizationContext::class)->organizationId()
             && app(OrganizationPermissions::class)->can($user, 'manage_email_templates'));
+        Gate::define('demo_requests.review', fn (User $user): bool => $user->isAdmin()
+            && $user->isActive() && $user->hasVerifiedEmail() && ! $user->trashed());
 
         RateLimiter::for('candidate-email', fn (Request $request): array => [
             Limit::perHour((int) config('interviews.user_send_limit', 20))->by('interview-user:'.$request->user()?->id),

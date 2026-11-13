@@ -15,6 +15,7 @@ enum NotificationCategory: string
     case ApplicantInterviewUpdate = 'applicant_interview_update';
     case OrganizationModeration = 'organization_moderation';
     case AdminApplicantAccount = 'admin_applicant_account';
+    case AdminDemoRequest = 'admin_demo_request';
     case ApplicantAccountStatus = 'applicant_account_status';
 
     public function label(): string
@@ -29,6 +30,7 @@ enum NotificationCategory: string
             self::ApplicantInterviewUpdate => 'Interview updates',
             self::OrganizationModeration => 'Organization moderation updates',
             self::AdminApplicantAccount => 'Applicant account updates',
+            self::AdminDemoRequest => 'Organization demo requests',
             self::ApplicantAccountStatus => 'Applicant account status',
         };
     }
@@ -45,6 +47,7 @@ enum NotificationCategory: string
             self::ApplicantInterviewUpdate => 'Updates about interviews for your applications.',
             self::OrganizationModeration => 'Platform administration changes affecting your organization or its job postings.',
             self::AdminApplicantAccount => 'Applicant registrations, profile updates, and moderation changes.',
+            self::AdminDemoRequest => 'New organization demo requests requiring administrative review.',
             self::ApplicantAccountStatus => 'Important changes to your Marthire account access.',
         };
     }
@@ -52,7 +55,7 @@ enum NotificationCategory: string
     /** @return list<self> */
     public static function forUser(User $user): array
     {
-        return $user->isAdmin() ? [self::AdminApplicantAccount]
+        return $user->isAdmin() ? [self::AdminApplicantAccount, self::AdminDemoRequest]
             : ($user->isApplicant() ? [self::ApplicationStatus]
                 : ($user->isOrganization() ? [self::NewApplication, self::InterviewResponse, self::CandidateEmailFailure, self::OrganizationModeration] : []));
     }

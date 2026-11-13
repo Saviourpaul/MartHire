@@ -7,6 +7,7 @@ use App\Enums\DashboardPeriod;
 use App\Enums\UserRole;
 use App\Models\ApplicationForm;
 use App\Models\Job;
+use App\Models\OrganizationDemoRequest;
 use App\Models\User;
 use App\Support\AdminDashboardDateRange;
 use Carbon\Carbon;
@@ -128,6 +129,9 @@ class AdminDashboardService
                 'total_organizations' => $this->countUsersByRole(UserRole::Organization),
                 'total_jobs' => Job::query()->count(),
                 'total_applications' => (int) $applicationCounts->sum(),
+                'open_demo_requests' => OrganizationDemoRequest::query()
+                    ->whereIn('status', ['submitted', 'under_review', 'information_requested', 'guided_demo_offered'])
+                    ->count(),
                 'selected_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Selected->value] ?? 0),
                 'rejected_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Rejected->value] ?? 0),
                 'submitted_candidates' => (int) ($applicationCounts[CandidatePipelineStage::Submitted->value] ?? 0),
