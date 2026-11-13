@@ -41,8 +41,6 @@ class JobCatalog
     /** @var array<string, array<string, mixed>|null> */
     private array $placeCache = [];
 
-    private static ?self $fallback = null;
-
     /**
      * @param  iterable<array<string, mixed>>  $jobs
      * @param  iterable<array<string, string>>  $knownCategories
@@ -67,11 +65,6 @@ class JobCatalog
             ])
             ->sortBy([['count', 'desc'], ['name', 'asc']])
             ->values();
-    }
-
-    public static function fallback(): self
-    {
-        return self::$fallback ??= new self([]);
     }
 
     /**
