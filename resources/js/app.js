@@ -15,7 +15,10 @@ import { registerInterviewEmailTemplatePicker } from './interview-email-template
 import { registerAdminUserDocumentViewer } from './admin-user-document-viewer';
 import { initializeAlerts } from './alerts';
 import { initializeLiveTables } from './live-tables';
+import { registerTableActionMenu } from './table-actions';
 import { createDeferredPhoneInitializer } from './deferred-phone';
+import { initializeOrganizationOnboardingTransitions, registerOrganizationOnboarding } from './organization-onboarding';
+import { registerOrganizationImageUpload } from './organization-image-upload';
 
 window.Alpine = Alpine;
 Alpine.data('notificationMenu', () => ({
@@ -48,6 +51,10 @@ registerAvatarUpload(Alpine);
 registerCandidateReview(Alpine);
 registerInterviewEmailTemplatePicker(Alpine);
 registerAdminUserDocumentViewer(Alpine);
+registerOrganizationOnboarding(Alpine);
+registerOrganizationImageUpload(Alpine);
+registerTableActionMenu(Alpine);
+initializeOrganizationOnboardingTransitions();
 initializeAlerts();
 initializeRealtimeWorkspaces({ notificationSound: initializeNotificationSound() });
 

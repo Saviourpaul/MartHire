@@ -109,10 +109,24 @@
                                 <td><x-status-badge :status="$managedUser->role->label()" /></td>
                                 <td><x-status-badge :status="$managedUser->status" /></td>
                                 <td>{{ $managedUser->created_at->format('j M Y') }}</td>
-                                <td class="nw-table__go nw-table__go--persist">
-                                    <button type="button" class="nw-link nw-link--small" x-on:click="$dispatch('open-modal', 'manage-user-{{ $managedUser->id }}')">
-                                        {{ __('Manage') }}
-                                    </button>
+                                <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
+                                    <x-table.actions :label="trim($managedUser->first_name.' '.$managedUser->last_name) ?: $managedUser->email">
+                                        <button type="button" class="nw-row-actions__item" role="menuitem" x-on:click="openModal('manage-user-{{ $managedUser->id }}')">
+                                            <x-icon name="eye" /> {{ __('View') }}
+                                        </button>
+                                        <button type="button" class="nw-row-actions__item" role="menuitem" x-on:click="openModal('manage-user-{{ $managedUser->id }}', 'role-{{ $managedUser->id }}')">
+                                            <x-icon name="pencil" /> {{ __('Edit') }}
+                                        </button>
+                                        @unless ($managedUser->is(auth()->user()))
+                                            <form method="POST" action="{{ route('admin.users.destroy', $managedUser) }}" role="presentation" data-confirm="{{ __('Permanently delete this account? This cannot be undone.') }}" data-confirm-label="{{ __('Delete account') }}" data-confirm-type="error">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="nw-row-actions__item nw-row-actions__item--danger" role="menuitem">
+                                                    <x-icon name="trash" /> {{ __('Delete') }}
+                                                </button>
+                                            </form>
+                                        @endunless
+                                    </x-table.actions>
                                 </td>
                             </tr>
                         @endforeach
@@ -125,7 +139,7 @@
     </section>
 
     @foreach ($users as $managedUser)
-        <x-modal :name="'manage-user-'.$managedUser->id">
+        <x-modal :name="'manage-user-'.$managedUser->id" focusable>
             <div class="nw-modal-content">
                 <div class="nw-modal-profile">
                     <img src="{{ $managedUser->profileImageUrl() }}" alt="" class="nw-modal-profile__image">
@@ -166,7 +180,9 @@
                             <x-input-label :for="'role-'.$managedUser->id" :value="__('Role')" />
                             <select id="role-{{ $managedUser->id }}" class="nw-select" name="role" required>
                                 @foreach ($roles as $roleOption)
-                                    <option value="{{ $roleOption->value }}" @selected($managedUser->role->value === $roleOption->value)>{{ $roleOption->label() }}</option>
+                                    @if ($roleOption->value !== 'organization' || $managedUser->isOrganization())
+                                        <option value="{{ $roleOption->value }}" @selected($managedUser->role->value === $roleOption->value)>{{ $roleOption->label() }}</option>
+                                    @endif
                                 @endforeach
                             </select>
                         </div>
@@ -196,15 +212,6 @@
 
 
 
-                    @unless ($managedUser->is(auth()->user()))
-                        <form method="POST" action="{{ route('admin.users.destroy', $managedUser) }}" data-confirm="{{ __('Permanently delete this account? This cannot be undone.') }}" data-confirm-label="{{ __('Delete account') }}" data-confirm-type="error">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="nw-button nw-button--danger nw-button--small">
-                                <x-icon name="trash" /> {{ __('Delete') }}
-                            </button>
-                        </form>
-                    @endunless
                 </div>
             </div>
         </x-modal>

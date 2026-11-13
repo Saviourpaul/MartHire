@@ -9,6 +9,7 @@
             ],
             __('Manage') => [
                 ['label' => __('Jobs'), 'href' => route('admin.jobs.index'), 'icon' => 'briefcase', 'active' => request()->routeIs('admin.jobs.*')],
+                ['label' => __('Demo requests'), 'href' => route('admin.demo-requests.index'), 'icon' => 'mail', 'active' => request()->routeIs('admin.demo-requests.*')],
                 ['label' => __('Organizations'), 'href' => route('admin.users.organizations'), 'icon' => 'briefcase', 'active' => request()->routeIs('admin.users.organizations')],
                 ['label' => __('Applicants'), 'href' => route('admin.users.applicants'), 'icon' => 'user', 'active' => request()->routeIs('admin.users.applicants')],
                 ['label' => __('Admins'), 'href' => route('admin.users.administrators'), 'icon' => 'grid', 'active' => request()->routeIs('admin.users.administrators')],

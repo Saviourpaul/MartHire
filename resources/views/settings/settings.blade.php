@@ -95,6 +95,9 @@
                 <header class="nw-settings-card__head">
                     <h2>{{ __('Organization profile and hiring defaults') }}</h2>
                     <p>{{ __('Manage your public company details, logo, and defaults used when arranging interviews and applications.') }}</p>
+                    @if ($organization?->slug)
+                        <a class="nw-link" href="{{ route('organizations.careers.show', $organization->slug) }}" target="_blank" rel="noopener">{{ __('Preview public careers page') }} <x-icon name="arrow-up-right" /></a>
+                    @endif
                 </header>
                 <form method="POST" action="{{ route('settings.organization.update') }}" enctype="multipart/form-data" class="nw-settings-form">
                     @csrf
@@ -127,18 +130,47 @@
                             <textarea class="nw-input" id="organization_about" name="about" rows="4" maxlength="2000">{{ old('about', $organizationSettings->about) }}</textarea>
                             @error('about') <p class="nw-field__error">{{ $message }}</p> @enderror
                         </div>
+                        <div class="nw-field">
+                            <label class="nw-label" for="organization_industry">{{ __('Industry') }}</label>
+                            <input class="nw-input" id="organization_industry" name="industry" type="text" value="{{ old('industry', $organizationSettings->industry) }}" maxlength="100">
+                            @error('industry') <p class="nw-field__error">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="nw-field">
+                            <label class="nw-label" for="organization_size">{{ __('Organization size') }}</label>
+                            <select class="nw-input" id="organization_size" name="organization_size">
+                                <option value="">{{ __('Choose a range') }}</option>
+                                @foreach (['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'] as $size)
+                                    <option value="{{ $size }}" @selected(old('organization_size', $organizationSettings->organization_size) === $size)>{{ $size }} {{ __('employees') }}</option>
+                                @endforeach
+                            </select>
+                            @error('organization_size') <p class="nw-field__error">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="nw-field">
+                            <label class="nw-label" for="organization_primary_color">{{ __('Primary brand color') }}</label>
+                            <input class="nw-input nw-color-input" id="organization_primary_color" name="brand_primary_color" type="color" value="{{ old('brand_primary_color', $organizationSettings->brand_primary_color ?: '#006b43') }}">
+                            @error('brand_primary_color') <p class="nw-field__error">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="nw-field">
+                            <label class="nw-label" for="organization_accent_color">{{ __('Accent color') }}</label>
+                            <input class="nw-input nw-color-input" id="organization_accent_color" name="brand_accent_color" type="color" value="{{ old('brand_accent_color', $organizationSettings->brand_accent_color ?: '#c9f542') }}">
+                            @error('brand_accent_color') <p class="nw-field__error">{{ $message }}</p> @enderror
+                        </div>
                     </div>
 
-                    <div class="nw-field" x-data="{ preview: @js($companyLogoUrl), currentLogo: @js($companyLogoUrl), removeLogo: @js((bool) old('remove_company_logo')), fileSelected: false }">
+                    <div class="nw-field nw-organization-image-upload" x-data="organizationImageUpload({ savedUrl: @js($companyLogoUrl), removeSavedImage: @js((bool) old('remove_company_logo')), maxBytes: 2097152, allowedTypes: ['image/jpeg', 'image/png', 'image/webp'], allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'], messages: { invalidType: @js(__('Choose a JPG, PNG, or WebP image.')), tooLarge: @js(__('Choose an image smaller than 2 MB.')), previewFailed: @js(__('This image could not be previewed. Choose another file.')) } })">
                         <label class="nw-label" for="company_logo">{{ __('Company logo') }}</label>
-                        <input class="nw-input" id="company_logo" name="company_logo" type="file" accept="image/png,image/jpeg,image/webp" x-on:change="const file = $event.target.files[0]; if (file) { fileSelected = true; removeLogo = false; const reader = new FileReader(); reader.onload = event => preview = event.target.result; reader.readAsDataURL(file); } else { fileSelected = false; preview = currentLogo; }">
-                        <p class="nw-hint">{{ __('PNG, JPG, or WebP, up to 2 MB. The logo appears on your public job listings.') }}</p>
-                        <div class="nw-settings-company-logo" x-show="preview && !removeLogo" x-cloak>
-                            <img class="nw-settings-company-logo__image" :src="preview" alt="{{ __('Organization logo preview') }}">
+                        <input class="nw-input" id="company_logo" name="company_logo" type="file" accept="image/png,image/jpeg,image/webp" x-ref="imageInput" x-on:change="previewImage($event)" aria-describedby="company-logo-hint">
+                        <p class="nw-hint" id="company-logo-hint">{{ __('PNG, JPG, or WebP, up to 2 MB. Selecting another file replaces the preview. The logo appears on your public job listings.') }}</p>
+                        <p class="nw-field__error" x-show="imageError" x-cloak x-text="imageError" role="alert"></p>
+                        <div class="nw-settings-company-logo" x-show="previewUrl" x-cloak>
+                            <img class="nw-settings-company-logo__image" :src="previewUrl" alt="{{ __('Organization logo preview') }}" x-on:error="imagePreviewFailed($refs.imageInput)">
+                            <span class="nw-organization-image-upload__status" x-text="hasSelectedImage ? '{{ __('Selected image preview') }}' : '{{ __('Current logo') }}'"></span>
                         </div>
+                        <p class="nw-hint" x-show="!previewUrl" x-cloak>{{ __('No organization logo selected.') }}</p>
+                        <button class="nw-button nw-button--outline nw-button--small nw-organization-image-upload__remove" type="button" x-show="hasSelectedImage" x-cloak x-on:click="clearSelectedImage($refs.imageInput)">{{ __('Remove selected image') }}</button>
                         @if ($companyLogoUrl)
                             <label class="nw-checkbox-label nw-settings-company-logo__remove">
-                                <input class="nw-checkbox" type="checkbox" name="remove_company_logo" value="1" x-model="removeLogo" x-bind:disabled="fileSelected">
+                                <input class="nw-checkbox" type="checkbox" name="remove_company_logo" value="1" x-model="removeSavedImage" x-on:change="toggleSavedImageRemoval($event, $refs.imageInput)" x-bind:disabled="hasSelectedImage">
                                 <span>{{ __('Remove current logo') }}</span>
                             </label>
                         @endif

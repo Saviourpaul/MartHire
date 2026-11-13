@@ -175,7 +175,7 @@
                                             @foreach ($allowedStages as $stage)
                                                 <button type="submit" name="stage" value="{{ $stage->value }}"
                                                     class="nw-button nw-button--small {{ $stage->value === 'rejected' ? 'nw-button--danger' : 'nw-button--primary' }}"
-                                                    @if ($stage === CandidatePipelineStage::Selected) data-confirm="{{ __('Confirm this candidate as Selected? This is a final pipeline stage.') }}" data-confirm-title="{{ __('Select candidate') }}" data-confirm-label="{{ __('Confirm selection') }}" data-confirm-type="success" data-confirm-field="selection_confirmed"
+                                                    @if ($stage === CandidatePipelineStage::Selected) data-confirm="{{ __('Confirm this candidate as Hired? This is a final pipeline stage.') }}" data-confirm-title="{{ __('Hire candidate') }}" data-confirm-label="{{ __('Confirm hire') }}" data-confirm-type="success" data-confirm-field="selection_confirmed"
                                         @elseif($stage === CandidatePipelineStage::Rejected) data-confirm="{{ __('Reject this candidate? This is a final pipeline stage.') }}" data-confirm-title="{{ __('Reject candidate') }}" data-confirm-label="{{ __('Confirm rejection') }}" data-confirm-type="warning" @endif>{{ __('Move to :stage', ['stage' => $stage->label()]) }}</button>
                                             @endforeach
                                         </div>

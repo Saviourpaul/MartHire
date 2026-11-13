@@ -72,7 +72,7 @@
                 </details>
                 <details>
                     <summary>Who is Marthire for?</summary>
-                    <p>Marthire is built for employers sourcing talent and posting jobs, and for job seekers looking for their next opportunity. Learn more <a href="{{ url('/About') }}">about our approach</a>.</p>
+                    <p>Marthire is built for organizations sourcing talent and posting jobs, and for job seekers looking for their next opportunity. Learn more <a href="{{ url('/About') }}">about our approach</a>.</p>
                 </details>
             </div>
         </div>

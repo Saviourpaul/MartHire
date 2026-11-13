@@ -16,7 +16,7 @@
         </div>
         <div>
             <x-input-label for="company" :value="__('Company')" />
-            <x-text-input id="company" name="company" :value="old('company', $job?->company)" required />
+            <x-text-input id="company" name="company" :value="$isEdit ? old('company', $job?->company) : $organization->name" :readonly="!$isEdit" required />
             <x-input-error :messages="$errors->get('company')" />
         </div>
     </div>
@@ -55,14 +55,50 @@
             </select>
             <x-input-error :messages="$errors->get('employment_type')" />
         </div>
-        <div x-data="{ preview: @js($job?->logoUrl()) }">
+        <div>
+            <x-input-label for="workplace_type" :value="__('Workplace type')" />
+            <select id="workplace_type" name="workplace_type" class="nw-select" required>
+                <option value="">{{ __('Select a workplace type') }}</option>
+                @foreach (\App\Models\Job::workplaceTypeOptions() as $value => $label)
+                    <option value="{{ $value }}" @selected(old('workplace_type', $job?->workplace_type) === $value)>{{ __($label) }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('workplace_type')" />
+        </div>
+    </div>
+
+    <div class="nw-form-row nw-form-row--fields">
+        <div class="nw-organization-image-upload nw-job-logo-upload nw-job-logo-upload--full" x-data="organizationImageUpload({ savedUrl: @js($job?->logoUrl()), removeSavedImage: @js((bool) old('remove_logo')), maxBytes: 2097152, allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'], messages: { invalidType: @js(__('Choose a JPG, PNG, WebP, or GIF image.')), tooLarge: @js(__('Choose an image smaller than 2 MB.')), previewFailed: @js(__('This image could not be previewed. Choose another file.')) } })">
             <x-input-label for="logo" :value="__('Logo (optional)')" />
-            <input type="file" id="logo" name="logo" accept="image/*" class="nw-input"
-                   x-on:change="const f=$event.target.files[0]; if(f){const r=new FileReader(); r.onload=e=>preview=e.target.result; r.readAsDataURL(f);}else{preview=@js($job?->logoUrl());}">
-            <template x-if="preview">
-                <img :src="preview" alt="" class="nw-logo-preview">
-            </template>
+            <div class="nw-avatar-upload nw-avatar-upload--apex nw-job-logo-upload__control">
+                <span class="nw-avatar-upload__preview" aria-hidden="true">
+                    <template x-if="previewUrl">
+                        <img :src="previewUrl" alt="" class="nw-avatar-upload__image" x-on:error="imagePreviewFailed($refs.imageInput)">
+                    </template>
+                    <x-icon name="upload" x-show="!previewUrl" />
+                </span>
+                <div class="nw-avatar-upload__details">
+                    <label for="logo" class="nw-button nw-button--outline nw-button--small">
+                        <x-icon name="upload" /> {{ __('Upload logo') }}
+                    </label>
+                    <button type="button" class="nw-link nw-link--small" x-show="hasSelectedImage" x-cloak x-on:click="clearSelectedImage($refs.imageInput)">
+                        {{ __('Undo change') }}
+                    </button>
+                    <p class="nw-form-hint" id="job-logo-hint">{{ __('JPG, PNG, WebP, or GIF. Up to 2 MB.') }}</p>
+                    <p class="nw-avatar-upload__filename" x-show="hasSelectedImage" x-text="selectedImageName" x-cloak></p>
+                    <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/webp,image/gif" class="nw-sr-only" x-ref="imageInput"
+                        x-on:change="previewImage($event)" aria-describedby="job-logo-hint job-logo-error" x-bind:aria-invalid="imageError ? 'true' : 'false'">
+                </div>
+            </div>
+            <p class="nw-field__error" id="job-logo-error" x-show="imageError" x-cloak x-text="imageError" role="alert"></p>
+            @if ($isEdit && $job?->logoUrl())
+                <label class="nw-checkbox-label nw-settings-company-logo__remove">
+                    <input class="nw-checkbox" type="checkbox" name="remove_logo" value="1" x-model="removeSavedImage" x-on:change="toggleSavedImageRemoval($event, $refs.imageInput)" x-bind:disabled="hasSelectedImage">
+                    <span>{{ __('Remove current logo') }}</span>
+                </label>
+            @endif
             <x-input-error :messages="$errors->get('logo')" />
+            <x-input-error :messages="$errors->get('remove_logo')" />
         </div>
     </div>
 

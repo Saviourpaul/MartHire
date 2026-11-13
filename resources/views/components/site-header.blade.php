@@ -9,7 +9,8 @@
         <nav class="nw-desktop-nav" aria-label="{{ __('Main navigation') }}">
             <a href="{{ route('workable-jobs.index') }}" @if (request()->routeIs('workable-jobs.*')) aria-current="page" @endif>{{ __('Browse jobs') }}</a>
             <a href="{{ route('how-it-works') }}" @if (request()->routeIs('how-it-works')) aria-current="page" @endif>{{ __('How it works') }}</a>
-            <a href="{{ url('/') }}#for-employers">{{ __('For employers') }}</a>
+            <a href="{{ url('/') }}#for-organizations">{{ __('For organizations') }}</a>
+            <a href="{{ route('organization-demo.create') }}" @if (request()->routeIs('organization-demo.*')) aria-current="page" @endif>{{ __('Request a demo') }}</a>
             <a href="{{ url('/') }}#for-job-seekers">{{ __('For job seekers') }}</a>
             <a href="{{ url('/About') }}" @if (request()->is('About')) aria-current="page" @endif>{{ __('About') }}</a>
             <a href="{{ url('/ContactUs') }}" @if (request()->is('ContactUs')) aria-current="page" @endif>{{ __('Contact') }}</a>
@@ -17,11 +18,19 @@
 
         <div class="nw-header__actions">
             @auth
-                <a class="nw-button nw-button--primary nw-button--small" href="{{ route('dashboard') }}">{{ __('Your workspace') }} <x-icon name="arrow-up-right" /></a>
+                <a class="nw-button nw-button--primary nw-button--small" href="{{ route('dashboard') }}">
+                    {{ __('Your workspace') }} <x-icon name="arrow-up-right" />
+                </a>
             @else
-                <a class="nw-button nw-button--primary nw-button--small nw-header__cta" href="{{ route('register') }}">{{ __('Start Your Journey') }} <x-icon name="arrow-up-right" /></a>
+                <a class="nw-button nw-button--primary nw-button--small nw-header__cta" href="{{ route('organization-demo.create') }}">
+                    {{ __('Request Demo') }} <x-icon name="arrow-up-right" />
+                </a>
+                <a class="nw-button nw-button--secondary nw-button--small" href="{{ route('login') }}">
+                    {{ __('Log in') }}
+                </a>
             @endauth
         </div>
+
 
         <button x-ref="navigationToggle" class="nw-menu-toggle" type="button" x-on:click="open = ! open" aria-controls="site-mobile-navigation" aria-expanded="false" x-bind:aria-expanded="open.toString()" aria-label="{{ __('Open navigation') }}" x-bind:aria-label="open ? '{{ __('Close navigation') }}' : '{{ __('Open navigation') }}'">
             <span x-show="! open"><x-icon name="menu" /></span>
@@ -33,7 +42,8 @@
         <div class="nw-container">
             <a href="{{ route('workable-jobs.index') }}">{{ __('Browse jobs') }}</a>
             <a href="{{ route('how-it-works') }}" @if (request()->routeIs('how-it-works')) aria-current="page" @endif>{{ __('How it works') }}</a>
-            <a href="{{ url('/') }}#for-employers">{{ __('For employers') }}</a>
+            <a href="{{ url('/') }}#for-organizations">{{ __('For organizations') }}</a>
+            <a href="{{ route('organization-demo.create') }}">{{ __('Request a demo') }}</a>
             <a href="{{ url('/') }}#for-job-seekers">{{ __('For job seekers') }}</a>
             <a href="{{ url('/About') }}">{{ __('About') }}</a>
             <a href="{{ url('/ContactUs') }}">{{ __('Contact') }}</a>
@@ -41,7 +51,7 @@
                 <a class="nw-button nw-button--primary" href="{{ route('dashboard') }}">{{ __('Your workspace') }} <x-icon name="arrow-up-right" /></a>
             @else
                 <a href="{{ route('login') }}">{{ __('Log in') }}</a>
-                <a class="nw-button nw-button--primary" href="{{ route('register') }}">{{ __('Start Your Journey') }} <x-icon name="arrow-up-right" /></a>
+                <a class="nw-button nw-button--primary" href="{{ route('organization-demo.create') }}">Request Demo<x-icon name="arrow-up-right" /></a>
             @endauth
         </div>
     </nav>

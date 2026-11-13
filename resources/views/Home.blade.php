@@ -10,14 +10,14 @@
 @endphp
 
 <x-layout title="Recruitment Management Platform"
-    description="Marthire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.">
+    description="MartHire helps organizations keep job vacancies, applications, applicant records, and candidate progression in one structured recruitment workspace.">
     <div x-data="jobBoard(@js($jobIndex), 6)">
         <section class="nw-hero" aria-labelledby="home-heading">
             <div class="nw-container nw-hero__grid">
                 <div class="nw-hero__copy">
                     <h1 id="home-heading">One platform to manage<br><em>Recruitment across African
-                            businesses,</em><br>and international organisations.</h1>
-                    <p class="nw-copy">Marthire helps organizations keep job vacancies, applications, applicant records,
+                            businesses,</em><br>and international organizations.</h1>
+                    <p class="nw-copy">MartHire helps organizations keep job vacancies, applications, applicant records,
                         and candidate progression in one structured recruitment workspace.</p>
                     <a href="{{ route('how-it-works') }}" class="nw-link">See how it works <x-icon
                             name="arrow-right" /></a>
@@ -114,10 +114,10 @@
         <section id="jobs" class="nw-section" aria-labelledby="jobs-heading">
             <div class="nw-container">
                 <div class="nw-section-heading">
-                    <div><span class="nw-eyebrow">For every vacancy</span>
+                    <div>
                         <h2 id="jobs-heading" class="nw-heading">Recruitment without the<br><em>manual chase</em></h2>
                     </div>
-                    <p>Marthire brings candidates, recruitment stages, and hiring activity into one organized
+                    <p>MartHire brings candidates, recruitment stages, and hiring activity into one organized
                         workflow—so your team can spend less time chasing updates across spreadsheets and emails.</p>
                 </div>
 
@@ -149,9 +149,7 @@
                                 @endforeach
                             </div>
                         @endif
-                        <p class="nw-jobs__count" role="status" aria-live="polite" x-text="summary">Showing
-                            {{ min(6, $jobs->count()) }} of {{ $jobs->count() }}
-                            {{ \Illuminate\Support\Str::plural('role', $jobs->count()) }}</p>
+                        
                     </div>
 
                     <div class="nw-job-grid">
@@ -170,8 +168,8 @@
                     </div>
 
                     <div class="nw-jobs__more">
-                        <a href="{{ route('workable-jobs.index') }}" class="nw-button nw-button--outline">View all
-                            {{ $jobs->count() }} {{ \Illuminate\Support\Str::plural('job', $jobs->count()) }} <x-icon
+                        <a href="{{ route('workable-jobs.index') }}" class="nw-button nw-button--outline">View all jobs
+                           <x-icon
                                 name="arrow-right" /></a>
                     </div>
                 @endif
@@ -209,34 +207,34 @@
         </section>
     @endif
 
-    <section id="for-you" class="nw-section" aria-labelledby="audience-heading" x-data="{ audience: window.location.hash === '#for-job-seekers' ? 'job-seekers' : 'employers', select(value, focus = false) { this.audience = value; if (focus) this.$nextTick(() => this.$refs[value === 'employers' ? 'employersTab' : 'jobseekersTab'].focus()); } }"
-        @hashchange.window="if (window.location.hash === '#for-job-seekers') audience = 'job-seekers'; if (window.location.hash === '#for-employers') audience = 'employers'">
+    <section id="for-you" class="nw-section" aria-labelledby="audience-heading" x-data="{ audience: window.location.hash === '#for-job-seekers' ? 'job-seekers' : 'organizations', select(value, focus = false) { this.audience = value; if (focus) this.$nextTick(() => this.$refs[value === 'organizations' ? 'organizationsTab' : 'jobseekersTab'].focus()); } }"
+        @hashchange.window="if (window.location.hash === '#for-job-seekers') audience = 'job-seekers'; if (window.location.hash === '#for-organizations') audience = 'organizations'">
         <div class="nw-container">
             <div class="nw-section-heading">
-                <div><span class="nw-eyebrow">For authorized stakeholders</span>
+                <div>
                     <h2 id="audience-heading" class="nw-heading">One platform for every<br><em>recruitment
                             workflow</em></h2>
                 </div>
                 <p>Bring vacancies, applications, documents, and decisions into one organized recruitment process.</p>
             </div>
-            <div class="nw-audience-switch" role="tablist" aria-label="Explore Marthire">
-                <button id="for-employers" x-ref="employersTab" role="tab" aria-controls="employers-panel"
-                    :aria-selected="(audience === 'employers').toString()"
-                    :tabindex="audience === 'employers' ? 0 : -1" @click="select('employers')"
+            <div class="nw-audience-switch" role="tablist" aria-label="Explore MartHire">
+                <button id="for-organizations" x-ref="organizationsTab" role="tab" aria-controls="organizations-panel"
+                    :aria-selected="(audience === 'organizations').toString()"
+                    :tabindex="audience === 'organizations' ? 0 : -1" @click="select('organizations')"
                     @keydown.right.prevent="select('job-seekers', true)"
                     @keydown.left.prevent="select('job-seekers', true)"
-                    @keydown.home.prevent="select('employers', true)"
-                    @keydown.end.prevent="select('job-seekers', true)">For employers</button>
+                    @keydown.home.prevent="select('organizations', true)"
+                    @keydown.end.prevent="select('job-seekers', true)">For organizations</button>
                 <button id="for-job-seekers" x-ref="jobseekersTab" role="tab" aria-controls="jobseekers-panel"
                     :aria-selected="(audience === 'job-seekers').toString()"
                     :tabindex="audience === 'job-seekers' ? 0 : -1" @click="select('job-seekers')"
-                    @keydown.right.prevent="select('employers', true)"
-                    @keydown.left.prevent="select('employers', true)"
-                    @keydown.home.prevent="select('employers', true)"
+                    @keydown.right.prevent="select('organizations', true)"
+                    @keydown.left.prevent="select('organizations', true)"
+                    @keydown.home.prevent="select('organizations', true)"
                     @keydown.end.prevent="select('job-seekers', true)">For job seekers</button>
             </div>
-            <div id="employers-panel" class="nw-audience-grid" role="tabpanel" aria-labelledby="for-employers"
-                tabindex="0" x-show="audience === 'employers'">
+            <div id="organizations-panel" class="nw-audience-grid" role="tabpanel" aria-labelledby="for-organizations"
+                tabindex="0" x-show="audience === 'organizations'">
                 <div class="nw-audience-content">
                     <h3>Replace disconnected<br>recruitment administration</h3>
                     <p>Bring vacancies, applications, documents, and recruitment decisions into one organized workspace
@@ -267,7 +265,7 @@
                 tabindex="0" x-show="audience === 'job-seekers'" x-cloak>
                 <div class="nw-audience-content">
                     <h3>Keep candidate progression<br>clear and consistent</h3>
-                    <p>Move applicants through Submitted, Shortlisted, Interview, Selected, and Rejected stages with a
+                    <p>Move applicants through Submitted, Shortlisted, Interview, Hired, and Rejected stages with a
                         recorded history of each progression decision.</p>
                     <ul class="nw-check-list">
                         <li><x-icon name="check" /> Interview Coordination</li>
@@ -304,12 +302,12 @@
             </div>
             <div class="nw-feature-grid">
                 <article class="nw-feature"><span class="nw-feature__number">01</span>
-                    <h3>What does Marthire help organizations manage?</h3>
-                    <p>Marthire centralizes vacancies, applications, candidate records, screening, shortlisting,
+                    <h3>What does MartHire help organizations manage?</h3>
+                    <p>MartHire centralizes vacancies, applications, candidate records, screening, shortlisting,
                         interviews, and hiring administration in one workflow.</p>
                 </article>
                 <article class="nw-feature"><span class="nw-feature__number">02</span>
-                    <h3>How does Marthire reduce manual recruitment work?</h3>
+                    <h3>How does MartHire reduce manual recruitment work?</h3>
                     <p>By replacing scattered spreadsheets, emails, and disconnected tools with a shared workspace that
                         keeps recruitment activity and candidate statuses together.</p>
                 </article>
@@ -324,11 +322,11 @@
 
     <section class="nw-section" aria-labelledby="people-heading">
         <div class="nw-container nw-editorial">
-            <img class="nw-editorial__image" src="{{ asset('asset/marthire/conversation.png') }}" width="585"
+            <img class="nw-editorial__image" src="{{ asset('asset/MartHire/conversation.png') }}" width="585"
                 height="444" loading="lazy" alt="A professional smiling during a video conversation">
-            <div><span class="nw-eyebrow">Who is Marthire built for?</span>
-                <h2 id="people-heading" class="nw-heading">Recruitment management<br><em>made for Africa</em></h2>
-                <p class="nw-copy">Marthire supports structured recruitment for organizations that need clear applicant
+            <div>
+                <h2 id="people-heading" class="nw-heading">Recruitment management<br><em>made for organizations</em></h2>
+                <p class="nw-copy">MartHire supports structured recruitment for organizations that need clear applicant
                     records, consistent candidate progression, and accountable administration.</p><a class="nw-link"
                     href="{{ url('/About') }}">About us <x-icon name="arrow-right" /></a>
             </div>
@@ -338,20 +336,20 @@
     <aside class="nw-resources" aria-labelledby="resources-heading">
         <div class="nw-container">
             <div class="nw-resources__heading">
-                <h2 id="resources-heading" class="nw-eyebrow">How can our organization access Marthire?</h2>
-                <p>Contact Marthire to discuss platform access for your organization. Applicants can create an account
+                <h2 id="resources-heading" class="nw-eyebrow">How can our organization access MartHire?</h2>
+                <p>Contact MartHire to discuss platform access for your organization. Applicants can create an account
                     and browse available opportunities.</p>
             </div>
             <div class="nw-resource-grid">
                 <a class="nw-resource" href="https://www.linkedin.com/learning/" rel="external"><img
-                        src="{{ asset('asset/marthire/linkedin.svg') }}" width="27" height="27"
+                        src="{{ asset('asset/MartHire/linkedin.svg') }}" width="27" height="27"
                         loading="lazy" alt=""><strong>LinkedIn Learning</strong><x-icon
                         name="arrow-up-right" /></a>
                 <a class="nw-resource" href="https://www.indeed.com/career-advice" rel="external"><img
-                        src="{{ asset('asset/marthire/indeed.svg') }}" width="27" height="27" loading="lazy"
+                        src="{{ asset('asset/MartHire/indeed.svg') }}" width="27" height="27" loading="lazy"
                         alt=""><strong>Indeed Career Guide</strong><x-icon name="arrow-up-right" /></a>
                 <a class="nw-resource" href="https://www.glassdoor.com/blog/" rel="external"><img
-                        src="{{ asset('asset/marthire/glassdoor.svg') }}" width="27" height="27"
+                        src="{{ asset('asset/MartHire/glassdoor.svg') }}" width="27" height="27"
                         loading="lazy" alt=""><strong>Glassdoor career insights</strong><x-icon
                         name="arrow-up-right" /></a>
             </div>

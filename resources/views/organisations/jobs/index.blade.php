@@ -76,7 +76,7 @@
                                 <td class="nw-table__main">
                                     <div class="nw-table__role">
                                         <div>
-                                            <strong><a class="nw-link" href="{{ route('organisations.jobs.show', $job) }}">{{ $job->title }}</a></strong>
+                                            <strong>{{ $job->title }}</strong>
                                             <small>{{ $job->company }}</small>
                                         </div>
                                     </div>
@@ -84,17 +84,39 @@
                                 <td><x-status-badge :status="$job->status" /></td>
                                 <td>{{ $job->applications_count }}</td>
                                 <td>{{ $job->due_date?->format('j M Y') }}</td>
-                                <td class="nw-table__go nw-table__go--persist">
-                                    @can('update', $job)
-                                        <a class="nw-link nw-link--small" href="{{ route('organisations.jobs.edit', $job) }}">{{ __('Edit') }}</a>
-                                    @endcan
-                                    @can('delete', $job)
-                                        <form method="POST" action="{{ route('organisations.jobs.destroy', $job) }}" data-confirm="{{ __('Delete this job? This cannot be undone.') }}" data-confirm-label="{{ __('Delete job') }}" data-confirm-type="error" class="nw-inline-form">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="nw-button nw-button--danger nw-button--small">{{ __('Delete') }}</button>
-                                        </form>
-                                    @endcan
+                                <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
+                                    <x-table.actions :label="$job->title">
+                                        <a class="nw-row-actions__item" role="menuitem" href="{{ route('organisations.jobs.show', $job) }}">
+                                            <x-icon name="eye" /> {{ __('View') }}
+                                        </a>
+                                        @can('update', $job)
+                                            <a class="nw-row-actions__item" role="menuitem" href="{{ route('organisations.jobs.edit', $job) }}">
+                                                <x-icon name="pencil" /> {{ __('Edit') }}
+                                            </a>
+                                        @endcan
+                                        @can('close', $job)
+                                            @unless ($job->isClosed())
+                                                <form method="POST" action="{{ route('organisations.jobs.close', $job) }}" role="presentation" data-confirm="{{ __('Close this job to new applications? Existing applications will stay available.') }}" data-confirm-label="{{ __('Close job') }}" data-confirm-type="warning">
+                                                    @csrf
+                                                    <input type="hidden" name="confirm_closure" value="1">
+                                                    <button type="submit" class="nw-row-actions__item" role="menuitem">
+                                                        <x-icon name="pause" /> {{ __('Close job') }}
+                                                    </button>
+                                                </form>
+                                            @endunless
+                                        @endcan
+                                        @can('delete', $job)
+                                            @if ((int) $job->applications_count === 0)
+                                                <form method="POST" action="{{ route('organisations.jobs.destroy', $job) }}" role="presentation" data-confirm="{{ __('Permanently delete this job? This cannot be undone.') }}" data-confirm-label="{{ __('Delete job permanently') }}" data-confirm-type="error">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="nw-row-actions__item nw-row-actions__item--danger" role="menuitem">
+                                                        <x-icon name="trash" /> {{ __('Delete job permanently') }}
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endcan
+                                    </x-table.actions>
                                 </td>
                             </tr>
                         @endforeach

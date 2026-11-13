@@ -31,7 +31,7 @@
         </div>
         <div class="nw-stat nw-stat--ink">
             <div class="nw-stat__top">
-                <span class="nw-stat__label">{{ __('Selected candidates') }}</span>
+                <span class="nw-stat__label">{{ __('Hired candidates') }}</span>
                 <span class="nw-stat__icon"><x-icon name="check" /></span>
             </div>
             <span class="nw-stat__value">{{ number_format($metrics['selected_candidates']) }}</span>
@@ -111,7 +111,7 @@
                 </header>
 
                 <ul class="nw-permissions-list">
-                    @foreach (['manage_team' => __('Manage team members'), 'hiring_settings' => __('Manage organization settings'), 'create_jobs' => __('Post new jobs'), 'delete_jobs' => __('Delete jobs'), 'select_candidates' => __('Select candidates'), 'send_candidate_email' => __('Email candidates')] as $key => $label)
+                    @foreach (['manage_team' => __('Manage team members'), 'hiring_settings' => __('Manage organization settings'), 'create_jobs' => __('Post new jobs'), 'delete_jobs' => __('Delete jobs'), 'select_candidates' => __('Mark candidates as hired'), 'send_candidate_email' => __('Email candidates')] as $key => $label)
                         <li class="{{ in_array($key, $permissions, true) ? 'is-allowed' : 'is-denied' }}">
                             <x-icon :name="in_array($key, $permissions, true) ? 'check' : 'close'" />
                             {{ $label }}

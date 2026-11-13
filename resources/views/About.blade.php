@@ -1,8 +1,8 @@
-<x-layout title="About Marthire" description="Meet Marthire: a hiring platform that brings employers and job seekers closer to their next connection.">
+<x-layout title="About Marthire" description="Meet Marthire: a hiring platform that brings organizations and job seekers closer to their next connection.">
     <section class="nw-interior-hero nw-container">
         <p class="nw-eyebrow">About Marthire</p>
         <h1>Behind every opportunity,<br> a person.</h1>
-        <p class="nw-copy">A new role can change a career. The right person can change a team. Marthire brings employers and job seekers closer to those possibilities.</p>
+        <p class="nw-copy">A new role can change a career. The right person can change a team. Marthire brings organizations and job seekers closer to those possibilities.</p>
     </section>
 
     <div class="nw-container nw-about-visual">
@@ -19,7 +19,7 @@
         <p class="nw-eyebrow">Our mission</p>
         <div>
             <h2 class="nw-heading" id="mission-heading">Bring talent and<br> opportunity closer.</h2>
-            <p class="nw-copy">Our focus is straightforward: help employers connect with people for their teams, and help job seekers find their next direction. Talent sourcing and job postings sit at the heart of that work.</p>
+            <p class="nw-copy">Our focus is straightforward: help organizations connect with people for their teams, and help job seekers find their next direction. Talent sourcing and job postings sit at the heart of that work.</p>
             <p class="nw-copy">We believe the experience should feel clear, considered, and human from the first connection.</p>
         </div>
     </section>

@@ -93,7 +93,7 @@
                                 <tr>
                                     <td class="nw-table__main">
                                         <div>
-                                            <strong><a class="nw-link" href="{{ route('admin.jobs.show', $job) }}">{{ $job->title }}</a></strong>
+                                            <strong>{{ $job->title }}</strong>
                                             <small>{{ $job->organization?->name ?? $job->company }}{{ $job->category ? ' · '.$job->category : '' }}</small>
                                         </div>
                                     </td>
@@ -111,8 +111,12 @@
                                     <td>{{ number_format($job->applications_count) }}</td>
                                     <td>{{ $job->due_date?->format('j M Y') ?? '—' }}</td>
                                     <td>{{ $job->created_at?->format('j M Y') }}</td>
-                                    <td class="nw-table__go nw-table__go--persist">
-                                        <a class="nw-link nw-link--small" href="{{ route('admin.jobs.show', $job) }}">{{ __('Review') }}</a>
+                                    <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
+                                        <x-table.actions :label="$job->title">
+                                            <a class="nw-row-actions__item" role="menuitem" href="{{ route('admin.jobs.show', $job) }}">
+                                                <x-icon name="eye" /> {{ __('View') }}
+                                            </a>
+                                        </x-table.actions>
                                     </td>
                                 </tr>
                             @endforeach

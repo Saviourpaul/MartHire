@@ -90,8 +90,12 @@
                                 <td><x-status-badge :status="$application->status" /></td>
                                 <td>{{ $application->documents_count }}</td>
                                 <td>{{ $application->submitted_at?->format('j M Y') }}</td>
-                                <td class="nw-table__go nw-table__go--persist">
-                                    <a class="nw-link nw-link--small" href="{{ route('organisations.candidates.show', $application) }}">{{ __('Review') }}</a>
+                                <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
+                                    <x-table.actions :label="trim(($application->applicant?->first_name ?? '').' '.($application->applicant?->last_name ?? '')) ?: ($application->applicant?->email ?? __('candidate'))">
+                                        <a class="nw-row-actions__item" role="menuitem" href="{{ route('organisations.candidates.show', $application) }}">
+                                            <x-icon name="eye" /> {{ __('View') }}
+                                        </a>
+                                    </x-table.actions>
                                 </td>
                             </tr>
                         @endforeach

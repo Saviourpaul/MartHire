@@ -13,31 +13,7 @@
         <div class="nw-form-bar__grow">
             <x-status-badge :status="$job->status" />
         </div>
-        @can('update', $job)
-            <a href="{{ route('organisations.jobs.edit', $job) }}" class="nw-button nw-button--outline nw-button--small">
-                <x-icon name="pencil" /> {{ __('Edit') }}
-            </a>
-        @endcan
-        @can('update', $job)
-            @unless ($job->isClosed())
-                <form method="POST" action="{{ route('organisations.jobs.close', $job) }}" data-confirm="{{ __('Close this job to new applications?') }}" data-confirm-label="{{ __('Close job') }}" data-confirm-type="warning">
-                    @csrf
-                    <input type="hidden" name="confirm_closure" value="1">
-                    <button type="submit" class="nw-button nw-button--outline nw-button--small">{{ __('Close') }}</button>
-                </form>
-            @endunless
-        @endcan
-        @can('delete', $job)
-            @if ((int) ($job->applications_count ?? 0) === 0)
-                <form method="POST" action="{{ route('organisations.jobs.destroy', $job) }}" data-confirm="{{ __('Delete this job? This cannot be undone.') }}" data-confirm-label="{{ __('Delete job') }}" data-confirm-type="error">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="nw-button nw-button--danger nw-button--small">{{ __('Delete') }}</button>
-                </form>
-            @else
-                <span class="nw-form-hint">{{ __('This job has applications. Keep it closed or suspended to preserve candidate history.') }}</span>
-            @endif
-        @endcan
+     
     </div>
 
     <section class="nw-panel">

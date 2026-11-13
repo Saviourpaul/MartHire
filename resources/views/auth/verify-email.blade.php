@@ -15,7 +15,7 @@
             <div>
                 <x-input-label for="code" :value="__('Verification code')" />
                 <x-text-input id="code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code"
-                    maxlength="6" pattern="[0-9]{6}" placeholder="123456" autofocus required />
+                    maxlength="6" pattern="[0-9]{6}" placeholder="XXXXXX" autofocus required />
                 <x-input-error id="code-error" :messages="$errors->get('code')" />
             </div>
 

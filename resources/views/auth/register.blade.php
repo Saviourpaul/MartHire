@@ -4,7 +4,7 @@
     <header class="nw-auth-heading">
         <span class="nw-eyebrow">{{ __('Start something good') }}</span>
         <h1 id="auth-heading">{{ __('Your possibilities start here.') }}</h1>
-        <p>{{ __('Create your Marthire account and take the first step.') }}</p>
+        <p>{{ __('Create your applicant account to explore opportunities and manage your applications.') }}</p>
     </header>
 
     <form method="POST" action="{{ route('register') }}" class="nw-form-stack">
@@ -46,13 +46,17 @@
 
    <br> 
    
-    <a href="{{ route('auth.google') }}" class="nw-button nw-button--outline nw-button--block">
-      <img src="{{ asset ('asset/images/google.svg') }}" width="20" height="30" >
-      {{ __('Continue with Google') }}
-    </a>
+    <div class="nw-auth-google-options">
+        <a href="{{ route('auth.google') }}" class="nw-button nw-button--outline nw-button--block" data-google-signup>
+            <img src="{{ asset('asset/images/google.svg') }}" width="20" height="20" alt="" aria-hidden="true">
+            <span>{{ __('Continue with Google') }}</span>
+        </a>
+    </div>
 
     <p class="nw-form-footer">
         {{ __('Already have an account?') }}
         <a class="nw-link" href="{{ route('login') }}">{{ __('Log in') }}</a>
     </p>
+
+   
 </x-guest-layout>

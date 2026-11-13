@@ -3,7 +3,7 @@
     $seen = [];
     foreach (['success', 'error', 'warning', 'info'] as $type) {
         $message = session($type);
-        if (is_string($message) && trim($message) !== '' && ! isset($seen[$message])) {
+        if (is_string($message) && trim($message) !== '' && !isset($seen[$message])) {
             $notifications[] = ['type' => $type, 'message' => $message];
             $seen[$message] = true;
         }
@@ -19,19 +19,19 @@
             'verification-required' => ['warning', __('Please verify your email address to continue.')],
             default => ['info', $status],
         };
-        if (! isset($seen[$message])) {
+        if (!isset($seen[$message])) {
             $notifications[] = ['type' => $type, 'message' => $message];
         }
     }
 @endphp
 
-    <section class="nw-toasts" data-position="bottom-right" data-toast-region aria-label="{{ __('Notifications') }}">
-        <ol class="nw-toasts__list" data-toast-list>
-            @foreach ($notifications as $notification)
-                <x-toast :type="$notification['type']" :message="$notification['message']" />
-            @endforeach
-        </ol>
-    </section>
+<section class="nw-toasts" data-position="bottom-right" data-toast-region aria-label="{{ __('Notifications') }}">
+    <ol class="nw-toasts__list" data-toast-list>
+        @foreach ($notifications as $notification)
+            <x-toast :type="$notification['type']" :message="$notification['message']" />
+        @endforeach
+    </ol>
+</section>
 <x-alert-dialog />
 @if (is_array(session('live-table-topics')))
     <span hidden data-live-changes="{{ json_encode(session('live-table-topics')) }}"></span>

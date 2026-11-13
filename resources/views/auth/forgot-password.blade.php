@@ -2,7 +2,6 @@
     <x-slot name="title">{{ __('Reset your password') }}</x-slot>
 
     <header class="nw-auth-heading">
-        <span class="nw-eyebrow">{{ __('A fresh start') }}</span>
         <h1 id="auth-heading">{{ __('Forgot your password?') }}</h1>
         <p>{{ __('Enter your email address and we will send you a link to choose a new password.') }}</p>
     </header>

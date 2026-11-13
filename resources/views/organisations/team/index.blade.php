@@ -120,10 +120,24 @@
                                 <td><x-status-badge :status="$member->role->label()" /></td>
                                 <td><x-status-badge :status="$member->status" /></td>
                                 <td>{{ $member->jobs_count }}</td>
-                                <td class="nw-table__go nw-table__go--persist">
-                                    <button type="button" class="nw-link nw-link--small" x-on:click="$dispatch('open-modal', 'manage-member-{{ $member->id }}')">
-                                        {{ __('Manage') }}
-                                    </button>
+                                <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
+                                    <x-table.actions :label="trim($member->user->first_name.' '.$member->user->last_name) ?: $member->user->email">
+                                        <button type="button" class="nw-row-actions__item" role="menuitem" x-on:click="openModal('manage-member-{{ $member->id }}')">
+                                            <x-icon name="eye" /> {{ __('View') }}
+                                        </button>
+                                        <button type="button" class="nw-row-actions__item" role="menuitem" x-on:click="openModal('manage-member-{{ $member->id }}', 'role-{{ $member->id }}')">
+                                            <x-icon name="pencil" /> {{ __('Edit') }}
+                                        </button>
+                                        @unless ($member->user->is(auth()->user()))
+                                            <form method="POST" action="{{ route('organisations.team.members.destroy', $member) }}" role="presentation" data-confirm="{{ __('Remove this team member? Their job assignments will be cleared.') }}" data-confirm-label="{{ __('Remove member') }}" data-confirm-type="error">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="nw-row-actions__item nw-row-actions__item--danger" role="menuitem">
+                                                    <x-icon name="trash" /> {{ __('Delete') }}
+                                                </button>
+                                            </form>
+                                        @endunless
+                                    </x-table.actions>
                                 </td>
                             </tr>
                         @endforeach
@@ -136,7 +150,7 @@
     </section>
 
     @foreach ($members as $member)
-        <x-modal :name="'manage-member-'.$member->id">
+        <x-modal :name="'manage-member-'.$member->id" focusable>
             <div class="nw-modal-content">
                 <div class="nw-modal-profile">
                     <img src="{{ $member->user->profileImageUrl() }}" alt="" class="nw-modal-profile__image">
@@ -179,17 +193,6 @@
                     </x-form.actions>
                 </form>
 
-                @unless ($member->user->is(auth()->user()))
-                    <div class="nw-modal-actions nw-modal-actions--secondary">
-                        <form method="POST" action="{{ route('organisations.team.members.destroy', $member) }}" data-confirm="{{ __('Remove this team member? Their job assignments will be cleared.') }}" data-confirm-label="{{ __('Remove member') }}" data-confirm-type="error">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="nw-button nw-button--danger nw-button--small">
-                                <x-icon name="trash" /> {{ __('Remove from team') }}
-                            </button>
-                        </form>
-                    </div>
-                @endunless
             </div>
         </x-modal>
     @endforeach

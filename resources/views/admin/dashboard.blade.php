@@ -5,7 +5,7 @@
     </x-slot>
 
     @fragment('admin-dashboard')
-    <div data-live-table="admin-dashboard" data-live-topics="users,notifications" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
+    <div data-live-table="admin-dashboard" data-live-topics="users,notifications,demo-requests" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-stats">
         <div class="nw-stat">
             <div class="nw-stat__top">
@@ -34,6 +34,14 @@
                 <span class="nw-stat__icon"><x-icon name="file" /></span>
             </div>
             <span class="nw-stat__value">{{ number_format($metrics['total_applications']) }}</span>
+        </div>
+        <div class="nw-stat nw-stat--lime">
+            <div class="nw-stat__top">
+                <span class="nw-stat__label">{{ __('Open demo requests') }}</span>
+                <span class="nw-stat__icon"><x-icon name="mail" /></span>
+            </div>
+            <span class="nw-stat__value">{{ number_format($metrics['open_demo_requests']) }}</span>
+            <a class="nw-link nw-link--small" href="{{ route('admin.demo-requests.index') }}">{{ __('Review requests') }}</a>
         </div>
     </div>
 

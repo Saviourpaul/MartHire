@@ -38,12 +38,12 @@
         ],
         [
             'id' => 'process-interviews', 'title' => __('Coordinate interviews and decisions'),
-            'description' => __('Schedule the conversation, share the arrangements and track the candidate’s response. Mark the interview completed before an authorized team member explicitly confirms selection.'),
+            'description' => __('Schedule the conversation, share the arrangements and track the candidate’s response. Mark the interview completed before an authorized team member confirms the candidate as hired.'),
             'image' => 'process-img-3.png', 'alt' => __('Illustrative progress and activity chart'),
         ],
         [
-            'id' => 'process-decisions', 'title' => __('Confirm selection and close the role'),
-            'description' => __('Record the final decision and close the vacancy when recruitment is complete. Keep the application, interview details and activity history together for a clear record of the process.'),
+            'id' => 'process-decisions', 'title' => __('Confirm the hire and close the role'),
+            'description' => __('Record the hiring decision and close the vacancy when recruitment is complete. Keep the application, interview details and activity history together for a clear record of the process.'),
             'image' => 'process-img-4.png', 'alt' => __('Illustration of a completed activity summary'),
         ],
     ];
