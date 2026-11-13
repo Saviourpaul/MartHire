@@ -37,7 +37,7 @@ class StoreOrganizationDemoRequestRequest extends FormRequest
             'phone' => ['bail', 'required', 'string', 'max:80', new InternationalPhoneNumber($this->input('phone_country'))],
             'industry' => ['nullable', 'string', 'max:100', 'not_regex:/[\x00-\x1f\x7f]/'],
             'organization_size' => ['required', Rule::in(['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'])],
-            'website' => ['nullable', 'string', 'max:255'],
+            'website' => ['nullable', 'url', 'max:255'],
             'g-recaptcha-response' => [app(OrganizationDemoCaptchaService::class)->enabled() ? 'required' : 'nullable', 'string', 'max:4096'],
             ...$this->phonePartRules(),
             'organization_id' => ['prohibited'],
@@ -49,12 +49,6 @@ class StoreOrganizationDemoRequestRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            if ($this->filled('website')) {
-                $validator->errors()->add('website', 'Unable to process this request. Please try again.');
-
-                return;
-            }
-
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
