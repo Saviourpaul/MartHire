@@ -29,6 +29,20 @@ class JobCatalog
     /** @var array<string, string>|null */
     private ?array $countryLookup = null;
 
+    /** @var array<string, Collection> */
+    private array $countCache = [];
+
+    /** @var array<string, mixed>|null */
+    private ?array $searchIndexCache = null;
+
+    /** @var Collection<int, array<string, mixed>>|null */
+    private ?Collection $pinsCache = null;
+
+    /** @var array<string, array<string, mixed>|null> */
+    private array $placeCache = [];
+
+    private static ?self $fallback = null;
+
     /**
      * @param  iterable<array<string, mixed>>  $jobs
      * @param  iterable<array<string, string>>  $knownCategories
@@ -55,6 +69,11 @@ class JobCatalog
             ->values();
     }
 
+    public static function fallback(): self
+    {
+        return self::$fallback ??= new self([]);
+    }
+
     /**
      * Uses the given jobs, or the sample listings when none are given.
      *
@@ -76,12 +95,16 @@ class JobCatalog
      */
     public function counts(string $key, array $preferredOrder = []): Collection
     {
-        $rank = fn (string $value): int => ($position = array_search($value, $preferredOrder, true)) === false
-            ? count($preferredOrder)
-            : $position;
+        $cacheKey = $key.'|'.implode('|', $preferredOrder);
 
-        return $this->jobs->pluck($key)->filter()->countBy()
-            ->sortBy(fn (int $count, string $value) => sprintf('%03d%s', $rank($value), $value));
+        return $this->countCache[$cacheKey] ??= (function () use ($key, $preferredOrder) {
+            $rank = fn (string $value): int => ($position = array_search($value, $preferredOrder, true)) === false
+                ? count($preferredOrder)
+                : $position;
+
+            return $this->jobs->pluck($key)->filter()->countBy()
+                ->sortBy(fn (int $count, string $value) => sprintf('%03d%s', $rank($value), $value));
+        })();
     }
 
     /**
@@ -91,7 +114,7 @@ class JobCatalog
      */
     public function searchIndex(): array
     {
-        return $this->jobs->map(fn (array $job) => [
+        return $this->searchIndexCache ??= $this->jobs->map(fn (array $job) => [
             'text' => mb_strtolower(implode(' ', [
                 $job['title'] ?? '',
                 $job['company'] ?? '',
@@ -121,7 +144,7 @@ class JobCatalog
      */
     public function pins(): Collection
     {
-        return $this->jobs
+        return $this->pinsCache ??= $this->jobs
             ->map(fn (array $job) => $this->placeOf($job))
             ->filter()
             ->groupBy('code')
@@ -153,6 +176,12 @@ class JobCatalog
      */
     public function placeOf(array $job): ?array
     {
+        $cacheKey = md5(json_encode($job));
+
+        if (array_key_exists($cacheKey, $this->placeCache)) {
+            return $this->placeCache[$cacheKey];
+        }
+
         $places = $this->places();
         $selected = $job['country_code'] ?? $job['country'] ?? null;
         $country = app(JobCountryService::class)->find($selected);
@@ -169,19 +198,19 @@ class JobCatalog
             if ($city && ($selectedCode === null || $city[0] === $selectedCode)) {
                 [$code, $lat, $lon] = $city;
 
-                return $this->mapPlace($code, $part, $lat, $lon);
+                return $this->placeCache[$cacheKey] = $this->mapPlace($code, $part, $lat, $lon);
             }
         }
 
         // An explicit selected country wins over a free-text location. World
         // coordinates also allow countries outside the original static map list.
         if ($country !== null && $country['latitude'] !== null && $country['longitude'] !== null) {
-            return $this->mapPlace($country['code'], null, $country['latitude'], $country['longitude']);
+            return $this->placeCache[$cacheKey] = $this->mapPlace($country['code'], null, $country['latitude'], $country['longitude']);
         }
         if ($selectedCode !== null && isset($places['countries'][$selectedCode])) {
             [, $lat, $lon] = $places['countries'][$selectedCode];
 
-            return $this->mapPlace($selectedCode, null, $lat, $lon);
+            return $this->placeCache[$cacheKey] = $this->mapPlace($selectedCode, null, $lat, $lon);
         }
 
         $candidates = $parts->reverse()->prepend($job['country_code'] ?? $job['country'] ?? null)->filter();
@@ -192,11 +221,11 @@ class JobCatalog
             if ($code && ($selectedCode === null || $code === $selectedCode)) {
                 [, $lat, $lon] = $places['countries'][$code];
 
-                return $this->mapPlace($code, null, $lat, $lon);
+                return $this->placeCache[$cacheKey] = $this->mapPlace($code, null, $lat, $lon);
             }
         }
 
-        return null;
+        return $this->placeCache[$cacheKey] = null;
     }
 
     /** @return array<string, mixed> */
