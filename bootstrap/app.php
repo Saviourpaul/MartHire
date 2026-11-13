@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureAuthenticationVersion;
+use App\Http\Middleware\EnsureOrganizationOnboardingIsComplete;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\InitializeOrganizationContext;
 use App\Support\ExpirationResponse;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
         $middleware->alias([
             'active.account' => EnsureAccountIsActive::class,
+            'organization.onboarding.complete' => EnsureOrganizationOnboardingIsComplete::class,
             'role' => EnsureUserHasRole::class,
         ]);
     })
