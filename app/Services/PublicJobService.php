@@ -19,7 +19,27 @@ class PublicJobService
     public function __construct(private JobCountryService $countries) {}
 
     /** @return Collection<int, array<string, mixed>> */
-    public function open(): Collection
+    public function homepage(): Collection
+    {
+        return $this->open(6);
+    }
+
+    /** @return Collection<int, array<string, mixed>> */
+    public function discover(): Collection
+    {
+        return $this->open(90);
+    }
+
+    /** @return Collection<int, array<string, mixed>> */
+    public function related(Job $job): Collection
+    {
+        return $this->open(12)
+            ->reject(fn (array $listing) => $listing['id'] === 'native:'.$job->id)
+            ->take(6);
+    }
+
+    /** @return Collection<int, array<string, mixed>> */
+    public function open(int $limit = 90): Collection
     {
         // Public discovery intentionally crosses organizations, but only exposes
         // published jobs whose application deadline has not passed.
@@ -27,15 +47,20 @@ class PublicJobService
             ->with('organization.settings')
             ->acceptingApplications()
             ->latest('created_at')
+            ->limit($limit)
             ->get()
             ->map(fn (Job $job): array => $this->native($job));
 
         $workable = JobPosting::with('company')->where('status', 'open')
-            ->orderByDesc('external_updated_at')->get()
+            ->orderByDesc('external_updated_at')
+            ->limit($limit)
+            ->get()
             ->map(fn (JobPosting $posting): array => $this->workable($posting));
 
         return $native->concat($workable)
-            ->sortByDesc('posted_at')->values();
+            ->sortByDesc('posted_at')
+            ->take($limit)
+            ->values();
     }
 
     /** @return Collection<int, array<string, mixed>> */
