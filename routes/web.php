@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\JobManagementController;
+use App\Http\Controllers\Admin\OrganizationDemoRequestController as AdminOrganizationDemoRequestController;
 use App\Http\Controllers\Admin\PlatformSettingsController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ApplicationDocumentDownloadController;
@@ -19,6 +20,10 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationApplicationController;
 use App\Http\Controllers\OrganizationDashboardController;
+use App\Http\Controllers\OrganizationDemoRequestController;
+use App\Http\Controllers\OrganizationDemoFollowupController;
+use App\Http\Controllers\OrganizationDemoSetupController;
+use App\Http\Controllers\OrganizationOnboardingController;
 use App\Http\Controllers\OrganizationEmailTemplateController;
 use App\Http\Controllers\OrganizationInterviewController;
 use App\Http\Controllers\OrganizationSettingsController;
@@ -26,6 +31,7 @@ use App\Http\Controllers\OrganizationTeamController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicMediaController;
 use App\Http\Controllers\PublicJobController;
+use App\Http\Controllers\PublicOrganizationCareerController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\WorkableJobController;
 use App\Models\ApplicationDocument;
@@ -65,6 +71,18 @@ Route::bind('job', fn (string $value) => Job::withoutGlobalScope(OrganizationSco
 
 Route::get('/', [PublicJobController::class, 'home'])->name('home');
 
+Route::get('request-demo', [OrganizationDemoRequestController::class, 'create'])->name('organization-demo.create');
+Route::post('request-demo', [OrganizationDemoRequestController::class, 'store'])
+    ->middleware('throttle:6,1')->name('organization-demo.store');
+Route::get('organization-setup/{token}', [OrganizationDemoSetupController::class, 'show'])
+    ->middleware('throttle:20,1')->name('organization-demo.setup.show');
+Route::post('organization-setup/{token}', [OrganizationDemoSetupController::class, 'store'])
+    ->middleware('throttle:6,1')->name('organization-demo.setup.store');
+Route::middleware(['signed', 'throttle:20,1'])->get('demo-request-updates/{token}', [OrganizationDemoFollowupController::class, 'show'])
+    ->name('organization-demo.followup.show');
+Route::middleware(['signed', 'throttle:6,1'])->post('demo-request-updates/{token}', [OrganizationDemoFollowupController::class, 'store'])
+    ->name('organization-demo.followup.store');
+
 Route::get('About', function () {
     return view('About');
 });
@@ -84,6 +102,7 @@ Route::get('media/{path}', PublicMediaController::class)
 // Preserve Workable URLs while native jobs use their own slug-based destinations.
 Route::get('jobs', [PublicJobController::class, 'index'])->name('jobs.index');
 Route::get('jobs/{job}', [PublicJobController::class, 'show'])->name('jobs.show');
+Route::get('organizations/{organization:slug}/careers', PublicOrganizationCareerController::class)->name('organizations.careers.show');
 Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])
     ->middleware(['auth', 'verified', 'active.account', 'role:applicant'])->name('applications.create');
 Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])
@@ -130,6 +149,19 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('dashboard/analytics', [AdminDashboardController::class, 'analytics'])->name('dashboard.analytics');
     Route::get('dashboard/active-users', [AdminDashboardController::class, 'activeUsers'])->name('dashboard.active-users');
 
+    Route::middleware(['active.account', 'can:demo_requests.review'])->prefix('demo-requests')->name('demo-requests.')->group(function () {
+        Route::get('/', [AdminOrganizationDemoRequestController::class, 'index'])->name('index');
+        Route::get('{demoRequest}', [AdminOrganizationDemoRequestController::class, 'show'])->whereNumber('demoRequest')->name('show');
+        Route::post('{demoRequest}/claim', [AdminOrganizationDemoRequestController::class, 'claim'])->whereNumber('demoRequest')->name('claim');
+        Route::post('{demoRequest}/notes', [AdminOrganizationDemoRequestController::class, 'note'])->whereNumber('demoRequest')->name('notes.store');
+        Route::post('{demoRequest}/guided-demo', [AdminOrganizationDemoRequestController::class, 'guidedDemo'])->whereNumber('demoRequest')->name('guided-demo');
+        Route::post('{demoRequest}/request-information', [AdminOrganizationDemoRequestController::class, 'requestInformation'])->whereNumber('demoRequest')->name('request-information');
+        Route::post('{demoRequest}/approve', [AdminOrganizationDemoRequestController::class, 'approve'])->whereNumber('demoRequest')->name('approve');
+        Route::post('{demoRequest}/reject', [AdminOrganizationDemoRequestController::class, 'reject'])->whereNumber('demoRequest')->name('reject');
+        Route::post('{demoRequest}/duplicate', [AdminOrganizationDemoRequestController::class, 'duplicate'])->whereNumber('demoRequest')->name('duplicate');
+        Route::post('{demoRequest}/resend-invitation', [AdminOrganizationDemoRequestController::class, 'resend'])->whereNumber('demoRequest')->name('resend');
+    });
+
     // Job moderation is restricted to verified administrators. Keep the
     // status routes ahead of the slug-bound detail route.
     Route::get('jobs', [JobManagementController::class, 'index'])->name('jobs.index');
@@ -167,7 +199,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::post('users/{user}/password-reset', [UserManagementController::class, 'sendPasswordReset'])->name('users.password-reset');
 });
 
-Route::middleware(['auth', 'verified', 'role:organization'])->prefix('organisations')->name('organisations.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:organization', 'organization.onboarding.complete'])->prefix('organisations')->name('organisations.')->group(function () {
+    Route::middleware('active.account')->prefix('onboarding')->name('onboarding.')->group(function () {
+        Route::get('/', [OrganizationOnboardingController::class, 'show'])->name('show');
+        Route::post('welcome', [OrganizationOnboardingController::class, 'saveWelcome'])->name('welcome');
+        Route::patch('profile', [OrganizationOnboardingController::class, 'saveProfile'])->name('profile');
+        Route::post('invitations', [OrganizationOnboardingController::class, 'inviteTeam'])->middleware('throttle:team-invitations')->name('invitations');
+        Route::post('skip/{step}', [OrganizationOnboardingController::class, 'skip'])->whereIn('step', ['profile', 'team'])->name('skip');
+        Route::post('back', [OrganizationOnboardingController::class, 'back'])->name('back');
+        Route::post('finish', [OrganizationOnboardingController::class, 'finish'])->name('finish');
+    });
     Route::get('dashboard', [OrganizationDashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/analytics', [OrganizationDashboardController::class, 'analytics'])->name('dashboard.analytics');
 
@@ -223,7 +264,7 @@ Route::middleware(['auth', 'verified', 'role:applicant'])->prefix('client')->nam
         ->middleware('active.account')->name('applications.show');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'organization.onboarding.complete'])->group(function () {
     Route::get('/settings', [SettingsController::class, 'edit'])->middleware(['verified', 'active.account'])->name('settings.edit');
     Route::patch('/settings/appearance', [SettingsController::class, 'updateAppearance'])->middleware(['verified', 'active.account'])->name('settings.appearance.update');
     Route::patch('/settings/notifications', [SettingsController::class, 'updateNotificationPreferences'])
