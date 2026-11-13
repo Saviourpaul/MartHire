@@ -11,7 +11,6 @@ use App\Support\OrganizationContext;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Js;
 
 beforeEach(function () {
     // World reference tables are installed separately from application migrations.
@@ -50,6 +49,7 @@ function publicVisibilityJobPayload(array $overrides = []): array
         'location' => 'Remote',
         'country_code' => 'NG',
         'employment_type' => 'full_time',
+        'workplace_type' => 'remote',
         'start_date' => today()->toDateString(),
         'due_date' => today()->addDays(30)->toDateString(),
         'action' => 'publish',
@@ -111,6 +111,50 @@ test('native job detail and application links keep the native job destination', 
     $this->get(route('applications.create', $native))
         ->assertOk()
         ->assertSee($native->title);
+});
+
+test('native job workplace and registered organization details appear on public listings and detail pages', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $organization->update(['name' => 'Northstar Studio']);
+    $organization->settings()->create(['about' => 'We build helpful tools for local communities.']);
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), publicVisibilityJobPayload([
+        'company' => 'Untrusted company name',
+        'workplace_type' => 'hybrid',
+    ]))->assertRedirect()->assertSessionHasNoErrors();
+
+    $job = Job::withoutGlobalScope(OrganizationScope::class)
+        ->where('organization_id', $organization->id)->firstOrFail();
+
+    expect($job->organization_id)->toBe($organization->id)
+        ->and($job->company)->toBe('Northstar Studio')
+        ->and($job->workplace_type)->toBe('hybrid');
+
+    $this->post(route('logout'))->assertRedirect();
+    $this->get(route('home'))->assertOk()->assertSee('Northstar Studio')->assertSee('Hybrid');
+    $this->get(route('jobs.index'))->assertOk()->assertSee('Northstar Studio')->assertSee('Hybrid');
+    $this->get(route('jobs.show', $job))->assertOk()
+        ->assertSee('Northstar Studio')->assertSee('Hybrid')
+        ->assertSee('We build helpful tools for local communities.');
+});
+
+test('native public job pages show each supported workplace label', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $jobs = [];
+
+    foreach (['remote' => 'Remote', 'hybrid' => 'Hybrid', 'on_site' => 'On-site'] as $value => $label) {
+        $jobs[$label] = publicVisibilityCreateJob($organization, $owner, [
+            'title' => 'Workplace '.$label,
+            'workplace_type' => $value,
+        ]);
+    }
+
+    $this->get(route('home'))->assertOk()
+        ->assertSee('Remote')->assertSee('Hybrid')->assertSee('On-site');
+
+    foreach ($jobs as $label => $job) {
+        $this->get(route('jobs.show', $job))->assertOk()->assertSee($label);
+    }
 });
 
 test('an explicit native job country supplies its country flag and hero map marker', function () {
@@ -254,12 +298,49 @@ test('an uploaded job logo appears on public cards and details and the edit form
     Storage::disk('public')->assertExists($job->logo);
     $logoUrl = route('public-media.show', ['path' => $job->logo]);
 
-    $this->get(route('organisations.jobs.edit', $job))->assertOk()->assertSee('preview: '.Js::from($logoUrl), false);
+    $this->get(route('organisations.jobs.edit', $job))->assertOk()
+        ->assertSee('organizationImageUpload(', false)
+        ->assertSee('previewImage($event)', false)
+        ->assertSee('Upload logo')
+        ->assertSee('Undo change')
+        ->assertSee('selectedImageName', false)
+        ->assertSee(basename($job->logo), false);
     $this->post(route('logout'))->assertRedirect();
 
     foreach ([route('home'), route('jobs.index'), route('jobs.show', $job)] as $url) {
         $this->get($url)->assertOk()->assertSee('src="'.$logoUrl.'"', false)->assertSee('nw-monogram__image', false);
     }
+});
+
+test('job logo uploads reject images larger than two megabytes', function () {
+    Storage::fake('public');
+    [$organization, $owner] = organizationWithOwner();
+    $logo = UploadedFile::fake()->createWithContent(
+        'oversized.png',
+        file_get_contents(base_path('tests/Fixtures/applications/profile.png')).str_repeat('x', 2 * 1024 * 1024),
+    );
+
+    $this->actingAs($owner)
+        ->from(route('organisations.jobs.create'))
+        ->post(route('organisations.jobs.store'), publicVisibilityJobPayload(['logo' => $logo]))
+        ->assertSessionHasErrors('logo');
+
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->count())->toBe(0);
+    expect(Storage::disk('public')->allFiles('job-logos'))->toBe([]);
+});
+
+test('job logo uploads reject unsupported image formats', function () {
+    Storage::fake('public');
+    [$organization, $owner] = organizationWithOwner();
+    $logo = UploadedFile::fake()->createWithContent('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+
+    $this->actingAs($owner)
+        ->from(route('organisations.jobs.create'))
+        ->post(route('organisations.jobs.store'), publicVisibilityJobPayload(['logo' => $logo]))
+        ->assertSessionHasErrors('logo');
+
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->count())->toBe(0);
+    expect(Storage::disk('public')->allFiles('job-logos'))->toBe([]);
 });
 
 test('replacing a job logo updates the public image and removes the old upload', function () {
@@ -282,9 +363,27 @@ test('replacing a job logo updates the public image and removes the old upload',
     $this->get(route('jobs.show', $job))->assertOk()->assertSee('src="'.$logoUrl.'"', false)->assertDontSee('storage/job-logos/previous.png', false);
 });
 
+test('an organization can remove the current logo from an existing job', function () {
+    Storage::fake('public');
+    [$organization, $owner] = organizationWithOwner();
+    Storage::disk('public')->put('job-logos/previous.png', file_get_contents(base_path('tests/Fixtures/applications/profile.png')));
+    $job = publicVisibilityCreateJob($organization, $owner, ['logo' => 'job-logos/previous.png']);
+
+    $this->actingAs($owner)
+        ->patch(route('organisations.jobs.update', $job), publicVisibilityJobPayload(['remove_logo' => '1']))
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($job->fresh()->logo)->toBeNull();
+    Storage::disk('public')->assertMissing('job-logos/previous.png');
+});
+
 test('absent or missing job logos keep company initials without a broken default image', function () {
     Storage::fake('public');
     [$organization, $owner] = organizationWithOwner();
+    // PublicJobService presents the canonical organization name; give this
+    // fixture deterministic initials rather than relying on the owner's Faker name.
+    $organization->update(['name' => 'Public Visibility Co']);
     $job = publicVisibilityCreateJob($organization, $owner, ['logo' => 'job-logos/missing.png']);
 
     expect((new Job)->logoUrl())->toBeNull()->and($job->logoUrl())->toBeNull();

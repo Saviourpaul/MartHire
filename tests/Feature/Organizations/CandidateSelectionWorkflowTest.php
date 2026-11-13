@@ -62,7 +62,7 @@ beforeEach(function () {
 
 test('reaching Interview alone neither offers nor permits selection', function () {
     [, $owner, $application] = selectionWorkflowApplication();
-    $this->actingAs($owner)->get(route('organisations.candidates.show', $application))->assertOk()->assertDontSee('Move to Selected');
+    $this->actingAs($owner)->get(route('organisations.candidates.show', $application))->assertOk()->assertDontSee('Move to Hired');
     $this->actingAs($owner)->patch(route('organisations.candidates.move', $application), [
         'stage' => 'selected', 'selection_confirmed' => 1,
     ])->assertSessionHasErrors('stage');
@@ -101,7 +101,7 @@ test('completion records one reviewed interview without changing the pipeline or
     $activity = ActivityLog::withoutGlobalScopes()->where('application_form_id', $application->id)->sole();
     expect($activity->payload['action'])->toBe('interview_completed');
     Mail::assertNothingSent();
-    $this->actingAs($owner)->get(route('organisations.candidates.show', $application))->assertOk()->assertSee('Move to Selected');
+    $this->actingAs($owner)->get(route('organisations.candidates.show', $application))->assertOk()->assertSee('Move to Hired');
 });
 
 test('selection requires a completed interview and an explicit confirmation', function () {

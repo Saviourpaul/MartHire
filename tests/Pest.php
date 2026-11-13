@@ -48,6 +48,7 @@ use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\OrganizationMember;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\OrganizationProvisioner;
 use App\Support\OrganizationContext;
@@ -57,6 +58,12 @@ function organizationWithOwner(): array
 {
     $owner = User::factory()->organization()->create();
     $organization = app(OrganizationProvisioner::class)->ensureForEmployer($owner);
+    $membership = OrganizationMember::withoutGlobalScope(OrganizationScope::class)->where('user_id', $owner->id)->firstOrFail();
+    $membership->onboardingProgress()->firstOrFail()->forceFill([
+        'current_step' => 'complete',
+        'completed_steps' => ['welcome', 'profile', 'team', 'finish'],
+        'completed_at' => now(),
+    ])->save();
 
     return [$organization, $owner];
 }

@@ -13,3 +13,15 @@ test('referenced static assets exist in the served asset directory', function ()
         ->and(file_exists($base.'/flags/ng.svg'))->toBeTrue()    // location picker flags
         ->and(file_exists($base.'/flags/us.svg'))->toBeTrue();
 });
+
+test('blade layouts resolve the Vite manifest from the lowercase production build directory', function () {
+    foreach ([
+        'layouts/app.blade.php',
+        'layouts/guest.blade.php',
+        'components/layout.blade.php',
+    ] as $view) {
+        $contents = file_get_contents(resource_path('views/'.$view));
+
+        expect($contents)->toContain("'asset/marthire/build'")->not->toContain("'asset/MartHire/build'");
+    }
+});

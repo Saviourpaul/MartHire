@@ -135,7 +135,7 @@ test('interviewer workspace excludes document and email activity and keeps the v
 
             return true;
         })->assertDontSee('Document previewed')->assertDontSee('Candidate email sent')
-        ->assertDontSee('Move to Selected');
+        ->assertDontSee('Move to Hired');
 });
 
 test('stage review remarks survive a real move and rejection does not mark unreached stages complete', function () {

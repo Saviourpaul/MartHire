@@ -147,7 +147,7 @@ test('candidate review live actions retain completion and explicit selection req
         ->assertOk()->assertJsonPath('topics', ['interviews', 'candidates']);
     expect($interview->fresh()->status)->toBe(InterviewStatus::Completed)->and($application->fresh()->status)->toBe(CandidatePipelineStage::Interview);
     $response = $this->withHeader('X-Live-Tables', 'candidate-review')->getJson(route('organisations.candidates.show', $application))->assertOk();
-    expect($response->json('regions.candidate-review'))->toContain('Move to Selected', 'Completed')->not->toContain('<!DOCTYPE');
+    expect($response->json('regions.candidate-review'))->toContain('Move to Hired', 'Completed')->not->toContain('<!DOCTYPE');
     $this->patchJson(route('organisations.candidates.move', $application), ['stage' => 'selected'])->assertUnprocessable()->assertJsonValidationErrors('selection_confirmed');
     $this->patchJson(route('organisations.candidates.move', $application), ['stage' => 'selected', 'selection_confirmed' => 1])->assertOk();
     expect($application->fresh()->status)->toBe(CandidatePipelineStage::Selected);

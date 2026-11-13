@@ -3,7 +3,7 @@
 test('how it works is public and links the real recruitment journey to working destinations', function () {
     $response = $this->get(route('how-it-works'))->assertOk()->assertViewIs('HowItWorks')
         ->assertSee('How Marthire')->assertSee('Build a structured workflow')->assertSee('Centralize every application')
-        ->assertSee('Guide candidates forward')->assertSee('Confirm selection and close the role')
+        ->assertSee('Guide candidates forward')->assertSee('Confirm the hire and close the role')
         ->assertSee('Mark the interview completed')->assertSee('href="'.route('contact').'"', false)
         ->assertSee('href="'.route('workable-jobs.index').'"', false)
         ->assertDontSee('NearbyWorks')->assertDontSee('asset/nearbyworks', false);

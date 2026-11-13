@@ -39,6 +39,7 @@ function jobPayload(array $overrides = []): array
         'category' => 'Engineering',
         'country_code' => 'NG',
         'employment_type' => 'full_time',
+        'workplace_type' => 'remote',
         'start_date' => now()->toDateString(),
         'due_date' => now()->addDays(30)->toDateString(),
         'action' => 'publish',
@@ -59,6 +60,7 @@ function createOrgJob(Organization $organization, User $user, array $overrides =
         'company' => 'Acme Co',
         'location' => 'Remote',
         'employment_type' => 'full_time',
+        'workplace_type' => 'remote',
         'start_date' => now(),
         'due_date' => now()->addDays(30),
         'status' => JobStatus::Open,
@@ -115,6 +117,54 @@ test('a job country must be selected from the installed world countries', functi
     'name instead of code' => ['Nigeria'],
     'real country absent from installed dataset' => ['US'],
 ]);
+
+test('workplace type is required and only accepts the supported options', function () {
+    [$organization, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload(['workplace_type' => null]))
+        ->assertSessionHasErrors('workplace_type');
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload(['workplace_type' => 'flexible']))
+        ->assertSessionHasErrors('workplace_type');
+
+    expect(Job::withoutGlobalScope(OrganizationScope::class)->count())->toBe(0);
+});
+
+test('job creation uses the registered organization name and persists workplace type and association', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $organization->update(['name' => 'Registered Company']);
+
+    $this->actingAs($owner)->get(route('organisations.jobs.create'))
+        ->assertOk()
+        ->assertSee('value="Registered Company"', false)
+        ->assertSee('name="company"', false)
+        ->assertSee('readonly', false)
+        ->assertSee('value="remote"', false)
+        ->assertSee('value="hybrid"', false)
+        ->assertSee('value="on_site"', false);
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), jobPayload([
+        'company' => 'Untrusted submitted name',
+        'workplace_type' => 'on_site',
+    ]))->assertRedirect()->assertSessionHasNoErrors();
+
+    $job = latestJob();
+    expect($job->organization_id)->toBe($organization->id)
+        ->and($job->company)->toBe('Registered Company')
+        ->and($job->workplace_type)->toBe('on_site')
+        ->and($job->workplaceTypeLabel())->toBe('On-site');
+});
+
+test('workplace type can be changed when editing a job', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $job = createOrgJob($organization, $owner, ['workplace_type' => 'remote']);
+
+    $this->actingAs($owner)->patch(route('organisations.jobs.update', $job), jobPayload([
+        'workplace_type' => 'hybrid',
+    ]))->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($job->fresh()->workplace_type)->toBe('hybrid')
+        ->and($job->fresh()->workplaceTypeLabel())->toBe('Hybrid');
+});
 
 test('a job stores normalized country codes and ignores submitted country names', function () {
     [$organization, $owner] = organizationWithOwner();

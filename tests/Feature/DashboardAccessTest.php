@@ -23,7 +23,9 @@ test('admin can view the admin dashboard', function () {
 });
 
 test('organization member can view the organisations dashboard', function () {
-    $this->actingAs(User::factory()->organization()->create())
+    [, $owner] = organizationWithOwner();
+
+    $this->actingAs($owner)
         ->get(route('organisations.dashboard'))
         ->assertOk();
 });
