@@ -9,7 +9,7 @@ Rate limiter store unavailable; failing open.
 Connection refused [...redis.io:PORT]
 ```
 
-The current application uses Redis for rate limiting. A Redis outage can reduce abuse protection and, in a few code paths, still cause an application error.
+The application uses Redis as its dedicated rate-limit store. With `RATE_LIMIT_FAIL_OPEN=true`, requests continue during a Redis outage, but counters and cooldowns cannot be reliably enforced until Redis recovers. The rate limiter and `AbuseGuard` share the fail-open repository so a Redis outage does not turn those counter operations into application errors.
 
 ## What the error means
 
@@ -34,21 +34,27 @@ php artisan config:cache
 # Restart PHP-FPM and queue workers using the hosting provider's approved process.
 ```
 
-Then verify that a normal login, password-reset request, and invitation flow complete without Redis exceptions.
+Then verify that a normal login, password-reset request, and invitation flow complete without Redis exceptions. Confirm Redis recovery from the provider's connection/health metrics; absence of a new application warning alone is not proof of recovery because the warning is logged once per PHP process.
 
-## Deferred application hardening
+## Alerts and health checks
 
-The rate limiter's fail-open wrapper protects Laravel's main `RateLimiter`, but `App\Support\RateLimiting\AbuseGuard` currently reads the Redis cache store directly. During an outage, those direct reads/writes can still throw an exception.
+- Treat the structured `Rate limiter store unavailable; failing open.` application warning as an alert signal for the start of an outage. Configure the production log/monitoring provider to page or notify on this warning and configure Redis provider alerts for connection failures, connection-limit saturation, and elevated latency. The application warning is emitted once per PHP process, so provider health metrics must also detect recovery and continuing failures.
+- The Laravel `/up` endpoint is an application liveness check. Keep it independent of Redis: fail-open is intended to keep the application serving requests during a rate-limit-store outage, and taking every web instance out of service because Redis is unavailable would defeat that policy.
+- After Redis recovery, verify provider health and test login, password reset, and invitation flows. The application log warning is useful incident evidence, but Redis provider metrics are needed for proactive availability and recovery alerts.
+- Follow the provider-neutral [production WAF setup guide](production-waf-setup.md) to prepare edge rate limits and origin protections; this repository does not contain live provider rules.
 
-Future implementation:
+## Edge protection during a Redis outage
 
-1. Introduce one shared, guarded rate-limit-store service/repository.
-2. Make both Laravel `RateLimiter` and `AbuseGuard` use it.
-3. Preserve an explicit policy decision:
-   - **Fail open:** keep login/register/reset available, but temporarily skip cooldown/CAPTCHA/token-lock enforcement.
-   - **Fail closed:** retain abuse protection, but block affected flows while Redis is unavailable.
-4. Add monitoring for Redis connection failures, connection-limit saturation, and fail-open activations.
-5. Add tests covering a refused Redis connection for login, password reset, invitation, CAPTCHA, and token-lock flows.
+- Configure request-rate rules at the CDN, WAF, or hosting edge for sensitive POST routes such as login, registration, password reset, demo requests, and application submission. Use per-IP burst limits and managed bot rules to rate-limit or block obvious automation during a Redis incident.
+- Keep the application's per-account/per-email limits as the primary fine-grained controls when Redis is available; edge rules complement them and cannot necessarily reproduce their identity-aware keys.
+- Preserve the real client IP at the edge and configure Laravel trusted proxies to match the actual proxy chain. Do not accept arbitrary client-supplied forwarding headers as the source IP.
+- These rules must be configured in the production edge provider. This repository contains no CDN/WAF deployment configuration, so a code deploy alone cannot activate edge protection.
+
+## Current outage policy
+
+- **Fail open** (`RATE_LIMIT_FAIL_OPEN=true`): keep login and other rate-limited flows available. Redis-backed counters, cooldowns, and token-failure tracking may be unavailable until Redis recovers.
+- **Fail closed** (`RATE_LIMIT_FAIL_OPEN=false`): preserve the rate-limit policy but block affected flows while Redis is unavailable. This is not the selected production policy because it makes authentication unavailable during a Redis incident.
+- Do not switch rate-limit counters to the primary database as an automatic fallback without load testing. The dedicated Redis store is intentionally separated from the main database to avoid adding high-volume counter reads and writes to the authentication/data workload.
 
 ## Evidence to retain for an incident
 
@@ -61,6 +67,7 @@ Future implementation:
 ## Relevant application files
 
 - `app/Support/RateLimiting/FailOpenStore.php`
+- `app/Support/RateLimiting/RateLimitCacheRepository.php`
 - `app/Providers/RateLimitServiceProvider.php`
 - `app/Support/RateLimiting/AbuseGuard.php`
 - `app/Http/Requests/Auth/LoginRequest.php`

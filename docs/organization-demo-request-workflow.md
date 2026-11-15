@@ -24,7 +24,7 @@ After invitation acceptance, `onboarding_status` moves through the existing orga
 
 - The public form collects the contact name, work email, organization name, phone, and organization size. Industry remains optional for compatibility with existing records.
 - Server validation normalizes the email and phone. The public POST is throttled; a hidden `website` honeypot rejects automated submissions.
-- CAPTCHA is optional by configuration. When enabled, the server verifies the token with the configured provider, times out quickly, and fails closed if configuration, verification, or host matching fails.
+- The public POST is throttled and the form includes a hidden `website` honeypot to reject automated submissions.
 - The database stores an active email fingerprint to prevent parallel active requests. A repeat active email returns the same generic confirmation and records a duplicate-submission audit event instead of creating another request or notification.
 - Email domains are hashed for duplicate matching. Common public providers such as Gmail are retained and flagged for additional verification; they are not rejected.
 - The existing notification system creates an idempotent admin notification using a stable event key and queues email through its notification outbox. A requester confirmation is queued through Laravel's notification queue after the request transaction commits.
@@ -62,12 +62,9 @@ Set these values in the deployment environment as needed; do not commit secrets:
 ORGANIZATION_DEMO_SETUP_EXPIRE_DAYS=7
 ORGANIZATION_DEMO_UPDATE_EXPIRE_DAYS=7
 ORGANIZATION_DEMO_BOOKING_URL=https://your-approved-booking-provider.example/...
-ORGANIZATION_DEMO_CAPTCHA_ENABLED=false
-RECAPTCHA_SITE_KEY=
-RECAPTCHA_SECRET_KEY=
 ```
 
-Set `APP_URL` to the canonical HTTPS production origin; Laravel signed invitation and follow-up links must match the host and scheme used by incoming requests. If CAPTCHA is enabled, provide matching provider keys and register that same host with the provider. If no guided-demo booking URL is configured, the admin action is unavailable until one is provided. Apply migrations during deployment and keep the existing Laravel queue worker running for requester/admin email delivery. Review failed jobs and the notification outbox using the platform's existing operations procedures.
+Set `APP_URL` to the canonical HTTPS production origin; Laravel signed invitation and follow-up links must match the host and scheme used by incoming requests. If no guided-demo booking URL is configured, the admin action is unavailable until one is provided. Apply migrations during deployment and keep the existing Laravel queue worker running for requester/admin email delivery. Review failed jobs and the notification outbox using the platform's existing operations procedures.
 
 ## Files changed
 
@@ -75,7 +72,7 @@ Set `APP_URL` to the canonical HTTPS production origin; Laravel signed invitatio
 - Admin list/detail views and dashboard count/notification integration.
 - Public demo form and secure follow-up/setup views.
 - Configuration, environment example, and the additive schema migration.
-- `tests/Feature/OrganizationDemoRequestWorkflowTest.php` for access control, the full-page review route, honeypot and duplicate handling, Gmail risk flags, review decisions, signed one-time follow-up, invitation setup metadata, and CAPTCHA host validation.
+- `tests/Feature/OrganizationDemoRequestWorkflowTest.php` for access control, the full-page review route, honeypot and duplicate handling, Gmail risk flags, review decisions, signed one-time follow-up, and invitation setup metadata.
 
 ## Verification
 
@@ -85,6 +82,6 @@ Run the focused workflow tests and targeted applicant/onboarding regression chec
 php artisan test --filter='OrganizationDemoRequestWorkflowTest|registration presents one applicant Google|new owner onboarding saves progress'
 ```
 
-The workflow tests use the in-memory SQLite test database, Laravel notification fakes, and fake CAPTCHA HTTP responses. No production database or external CAPTCHA service is contacted. On this checkout, the focused command passed 11 tests and 115 assertions.
+The workflow tests use the in-memory SQLite test database and Laravel notification fakes. No production database or external service is contacted.
 
 A separate run of the entire existing `OrganizationOnboardingTest` file exposed two unrelated current-checkout failures: a redirect assertion expects `/register` without setting a Referer header, and the public careers test references the missing `organisations.careers.show` view. Those are outside this demo-request change and should be tracked separately.
