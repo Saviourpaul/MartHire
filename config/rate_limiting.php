@@ -69,18 +69,4 @@ return [
         ],
     ],
 
-    /*
-    | CAPTCHA escalation. The failure counters and "requires CAPTCHA" state are
-    | always tracked; the external provider stays disabled until keys are set.
-    */
-    'captcha' => [
-        'enabled' => (bool) env('RATE_LIMIT_CAPTCHA_ENABLED', false),
-        'provider' => env('RATE_LIMIT_CAPTCHA_PROVIDER', 'recaptcha'),
-        'thresholds' => [
-            'login' => 3,          // CAPTCHA after 3 failed logins
-            'registration' => 2,   // CAPTCHA after 2 rapid registrations
-            'password_reset' => 3, // CAPTCHA on repeat from same IP
-        ],
-        'decay' => 60, // minutes the failure count is remembered
-    ],
 ];
