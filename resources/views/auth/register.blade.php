@@ -9,6 +9,7 @@
 
     <form method="POST" action="{{ route('register') }}" class="nw-form-stack">
         @csrf
+        <x-input-error :messages="$errors->get('throttle')" />
 
         <div class="nw-form-row nw-form-row--fields">
             <div>

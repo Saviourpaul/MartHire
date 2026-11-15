@@ -77,17 +77,7 @@
                             <x-input-error :messages="$errors->get('organization_size')" />
                         </div>
 
-                        @if ($captchaEnabled)
-                            @if ($captchaSiteKey)
-                                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                                <div class="g-recaptcha" data-sitekey="{{ $captchaSiteKey }}"></div>
-                                <x-input-error :messages="$errors->get('captcha')" />
-                            @else
-                                <div class="nw-notice nw-notice--error" role="alert">{{ __('Demo requests are temporarily unavailable. Please try again later.') }}</div>
-                            @endif
-                        @endif
-
-                        <button type="submit" class="nw-button nw-button--primary nw-demo-card__submit" @disabled($captchaEnabled && ! $captchaSiteKey)>Submit <x-icon name="arrow-right" /></button>
+                        <button type="submit" class="nw-button nw-button--primary nw-demo-card__submit">Submit <x-icon name="arrow-right" /></button>
                     </form>
                 @endif
             </section>

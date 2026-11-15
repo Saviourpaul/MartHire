@@ -8,6 +8,7 @@
 
     <form method="POST" action="{{ route('password.email') }}" class="nw-form-stack">
         @csrf
+        <x-input-error :messages="$errors->get('throttle')" />
 
         <div>
             <x-input-label for="email" :value="__('Email address')" />
