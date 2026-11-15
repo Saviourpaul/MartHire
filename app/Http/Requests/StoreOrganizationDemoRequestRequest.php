@@ -4,11 +4,9 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\NormalizesInternationalPhone;
 use App\Rules\InternationalPhoneNumber;
-use App\Services\OrganizationDemoCaptchaService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 
 class StoreOrganizationDemoRequestRequest extends FormRequest
 {
@@ -38,27 +36,10 @@ class StoreOrganizationDemoRequestRequest extends FormRequest
             'industry' => ['nullable', 'string', 'max:100', 'not_regex:/[\x00-\x1f\x7f]/'],
             'organization_size' => ['required', Rule::in(['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'])],
             'website' => ['nullable', 'url', 'max:255'],
-            'g-recaptcha-response' => [app(OrganizationDemoCaptchaService::class)->enabled() ? 'required' : 'nullable', 'string', 'max:4096'],
             ...$this->phonePartRules(),
             'organization_id' => ['prohibited'],
             'role' => ['prohibited'],
             'status' => ['prohibited'],
         ];
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            if (! app(OrganizationDemoCaptchaService::class)->verify(
-                $this->input('g-recaptcha-response'),
-                $this,
-            )) {
-                $validator->errors()->add('captcha', 'Please complete the CAPTCHA challenge and try again.');
-            }
-        });
     }
 }

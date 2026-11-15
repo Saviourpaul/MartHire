@@ -3,7 +3,6 @@
 namespace App\Support\RateLimiting;
 
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -12,13 +11,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Central definition of every named rate limiter plus the shared helpers for
- * resend cooldowns, per-token failure locks, and CAPTCHA escalation.
+ * resend cooldowns and per-token failure locks.
  *
  * All thresholds come from config/rate_limiting.php so they can be tuned in one
  * place without touching controllers or routes.
  */
 class AbuseGuard
 {
+    public function __construct(private readonly RateLimitCacheRepository $rateLimitCache) {}
+
     /**
      * Register all named limiters. Called from RateLimitServiceProvider::boot().
      */
@@ -160,39 +161,6 @@ class AbuseGuard
     }
 
     /* ---------------------------------------------------------------------
-     | CAPTCHA escalation
-     | ------------------------------------------------------------------- */
-
-    public function recordFailure(string $flow, string $identifier): void
-    {
-        $key = $this->failureKey($flow, $identifier);
-        $decay = (int) config('rate_limiting.captcha.decay', 60) * 60;
-        $this->store()->add($key, 0, $decay);
-        $this->store()->increment($key);
-    }
-
-    public function clearFailures(string $flow, string $identifier): void
-    {
-        $this->store()->forget($this->failureKey($flow, $identifier));
-    }
-
-    public function requiresCaptcha(string $flow, string $identifier): bool
-    {
-        $threshold = (int) config('rate_limiting.captcha.thresholds.'.$flow, 0);
-
-        if ($threshold <= 0) {
-            return false;
-        }
-
-        return (int) ($this->store()->get($this->failureKey($flow, $identifier)) ?? 0) >= $threshold;
-    }
-
-    private function failureKey(string $flow, string $identifier): string
-    {
-        return $this->prefixed('captcha:'.$flow.':'.hash('sha256', $identifier));
-    }
-
-    /* ---------------------------------------------------------------------
      | Shared helpers
      | ------------------------------------------------------------------- */
 
@@ -201,9 +169,9 @@ class AbuseGuard
         return Str::transliterate(Str::lower((string) $request->input('email')));
     }
 
-    private function store(): Repository
+    private function store(): RateLimitCacheRepository
     {
-        return cache()->store(config('rate_limiting.store'));
+        return $this->rateLimitCache;
     }
 
     private function prefixed(string $key): string

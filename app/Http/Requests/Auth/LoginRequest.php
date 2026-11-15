@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Support\RateLimiting\AbuseGuard;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,7 +44,6 @@ class LoginRequest extends FormRequest
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             $this->hitRateLimiter();
-            app(AbuseGuard::class)->recordFailure('login', $this->emailIdentifier());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -62,7 +60,6 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
-        app(AbuseGuard::class)->clearFailures('login', $this->emailIdentifier());
     }
 
     /**
@@ -105,14 +102,6 @@ class LoginRequest extends FormRequest
     {
         RateLimiter::hit($this->throttleKey(), (int) config('rate_limiting.limits.login.email_ip.decay', 1) * 60);
         RateLimiter::hit($this->ipThrottleKey(), (int) config('rate_limiting.limits.login.ip.decay', 60) * 60);
-    }
-
-    /**
-     * Whether repeated failures should prompt a CAPTCHA challenge.
-     */
-    public function requiresCaptcha(): bool
-    {
-        return app(AbuseGuard::class)->requiresCaptcha('login', $this->emailIdentifier());
     }
 
     /**

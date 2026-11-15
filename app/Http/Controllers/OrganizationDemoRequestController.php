@@ -3,19 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrganizationDemoRequestRequest;
-use App\Services\OrganizationDemoCaptchaService;
 use App\Services\OrganizationDemoRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class OrganizationDemoRequestController extends Controller
 {
-    public function create(OrganizationDemoCaptchaService $captcha): View
+    public function create(): View
     {
-        return view('organization-demo.create', [
-            'captchaEnabled' => $captcha->enabled(),
-            'captchaSiteKey' => $captcha->siteKey(),
-        ]);
+        return view('organization-demo.create');
     }
 
     public function store(StoreOrganizationDemoRequestRequest $request, OrganizationDemoRequestService $demoRequests): RedirectResponse
