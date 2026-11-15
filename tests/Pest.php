@@ -79,3 +79,25 @@ function addOrganizationMember(Organization $organization, OrganizationRole $rol
         'status' => $status,
     ]));
 }
+
+function useUnavailableRateLimitStore(): void
+{
+    app('cache')->extend('unavailable', function ($app, array $config) {
+        return $app['cache']->repository(new \Tests\Support\UnavailableCacheStore, $config);
+    });
+
+    config([
+        'cache.stores.unavailable' => ['driver' => 'unavailable'],
+        'rate_limiting.store' => 'unavailable',
+        'rate_limiting.fail_open' => true,
+    ]);
+
+    $app = app();
+    $app->forgetInstance(\App\Support\RateLimiting\RateLimitCacheRepository::class);
+    $app->forgetInstance(\App\Support\RateLimiting\AbuseGuard::class);
+    $app->forgetInstance(\Illuminate\Cache\RateLimiter::class);
+    \Illuminate\Support\Facades\RateLimiter::clearResolvedInstance(\Illuminate\Cache\RateLimiter::class);
+
+    \Tests\Support\UnavailableCacheStore::$attempts = 0;
+    $app->make(\App\Support\RateLimiting\AbuseGuard::class)->registerLimiters();
+}

@@ -10,6 +10,27 @@ test('registration screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
+test('registration throttles attempts after the configured per-ip limit', function () {
+    $ip = '198.51.100.47';
+    $allowedAttempts = (int) config('rate_limiting.limits.registration.ip.max');
+
+    $this->withServerVariables(['REMOTE_ADDR' => $ip]);
+
+    for ($attempt = 0; $attempt < $allowedAttempts; $attempt++) {
+        $this->postJson('/register', [])->assertStatus(422);
+    }
+
+    $throttledResponse = $this->postJson('/register', []);
+
+    $throttledResponse->assertStatus(429);
+    $this->assertStringStartsWith(
+        'Too many sign-up attempts from this network. Please try again later.',
+        $throttledResponse->json('message'),
+    );
+
+    $this->assertDatabaseCount('users', 0);
+});
+
 test('new users can register', function (string $firstName, string $lastName, string $fullName) {
     $response = $this->post('/register', [
         'first_name' => $firstName,

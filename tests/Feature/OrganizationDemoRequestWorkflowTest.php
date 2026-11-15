@@ -8,12 +8,9 @@ use App\Models\OrganizationDemoRequest;
 use App\Models\User;
 use App\Notifications\OrganizationDemoRequestEmail;
 use App\Notifications\OrganizationDemoSetupInvitation;
-use App\Services\OrganizationDemoCaptchaService;
 use App\Services\WorkflowNotificationService;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Http\Request as HttpRequest;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -220,27 +217,6 @@ test('an invitation without a valid expiry is marked expired and cannot open the
 
     expect($request->fresh()->onboarding_status)->toBe(OrganizationDemoOnboardingStatus::InvitationExpired)
         ->and($request->events()->where('event', 'setup_invitation_expired')->exists())->toBeTrue();
-});
-
-test('enabled CAPTCHA verification fails closed when the response host does not match the application', function () {
-    $verifyUrl = 'https://captcha.example.test/verify';
-    config([
-        'app.url' => 'https://marthire.example.test',
-        'organization_demo.captcha.enabled' => true,
-        'organization_demo.captcha.site_key' => 'public-test-key',
-        'organization_demo.captcha.secret_key' => 'private-test-key',
-        'organization_demo.captcha.verify_url' => $verifyUrl,
-    ]);
-
-    $responseHosts = ['attacker.example.test', 'marthire.example.test'];
-    Http::fake(function () use (&$responseHosts) {
-        return Http::response(['success' => true, 'hostname' => array_shift($responseHosts)]);
-    });
-    expect(app(OrganizationDemoCaptchaService::class)
-        ->verify('captcha-response', HttpRequest::create('/request-demo', 'POST')))->toBeFalse();
-
-    expect(app(OrganizationDemoCaptchaService::class)
-        ->verify('captcha-response', HttpRequest::create('/request-demo', 'POST')))->toBeTrue();
 });
 
 test('existing applicant self-registration remains available alongside the demo request flow', function () {

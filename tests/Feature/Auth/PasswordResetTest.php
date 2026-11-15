@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Notification;
+use Tests\Support\UnavailableCacheStore;
 
 test('reset password link screen can be rendered', function () {
     $response = $this->get('/forgot-password');
@@ -15,9 +16,73 @@ test('reset password link can be requested', function () {
 
     $user = User::factory()->create();
 
-    $this->post('/forgot-password', ['email' => $user->email]);
+    $this->from('/forgot-password')->post('/forgot-password', ['email' => $user->email])
+        ->assertRedirect('/forgot-password')
+        ->assertSessionHas('status', __('passwords.sent'));
 
     Notification::assertSentTo($user, ResetPassword::class);
+});
+
+test('password reset requests are limited per email', function () {
+    $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.31']);
+    $email = 'unknown-reset-limit@example.test';
+
+    // A nonexistent email avoids the controller's successful-send cooldown,
+    // so this exercises the route limiter itself.
+    foreach (range(1, 3) as $_) {
+        $this->postJson('/forgot-password', ['email' => $email])->assertStatus(302);
+    }
+
+    $response = $this->postJson('/forgot-password', ['email' => $email]);
+
+    $response->assertStatus(429)->assertJsonStructure(['message']);
+    expect($response->json('message'))->toContain('Too many password reset requests.');
+});
+
+test('password reset requests are limited per IP across different email addresses', function () {
+    $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.32']);
+
+    // Different nonexistent addresses keep the per-email limit below its
+    // threshold while exercising the shared IP limit.
+    foreach (range(1, 10) as $attempt) {
+        $this->postJson('/forgot-password', [
+            'email' => "unknown-ip-limit-{$attempt}@example.test",
+        ])->assertStatus(302);
+    }
+
+    $response = $this->postJson('/forgot-password', [
+        'email' => 'unknown-ip-limit-final@example.test',
+    ]);
+
+    $response->assertStatus(429)->assertJsonStructure(['message']);
+    expect($response->json('message'))->toContain('Too many password reset requests.');
+});
+
+test('password reset responses do not reveal whether an email is registered', function () {
+    Notification::fake();
+    $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.33']);
+
+    $user = User::factory()->create();
+    $registered = $this->from('/forgot-password')->post('/forgot-password', ['email' => $user->email]);
+    $unknown = $this->from('/forgot-password')->post('/forgot-password', ['email' => 'not-registered@example.test']);
+
+    $registered->assertRedirect('/forgot-password')->assertSessionHas('status', __('passwords.sent'));
+    $unknown->assertRedirect('/forgot-password')->assertSessionHas('status', __('passwords.sent'));
+    Notification::assertSentTo($user, ResetPassword::class);
+});
+
+test('reset password cooldown remains fail-open when its backing store is unavailable', function () {
+    useUnavailableRateLimitStore();
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->from('/forgot-password')->post('/forgot-password', ['email' => $user->email])
+        ->assertRedirect('/forgot-password')
+        ->assertSessionHas('status');
+
+    Notification::assertSentTo($user, ResetPassword::class);
+    expect(UnavailableCacheStore::$attempts)->toBeGreaterThan(0);
 });
 
 test('reset password screen can be rendered', function () {
