@@ -136,7 +136,7 @@ class UserManagementController extends Controller
     {
         $this->accounts->administer($request->user(), $user, $user->role, $user->status, delete: true);
 
-        return LiveTables::mutation($request, 'User deleted successfully.', back()->with('success', 'User deleted successfully.'), ['users']);
+        return LiveTables::mutation($request, 'User permanently deleted.', back()->with('success', 'User permanently deleted.'), ['users']);
     }
 
     public function sendPasswordReset(Request $request, User $user): RedirectResponse|JsonResponse

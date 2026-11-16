@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
+use App\Services\AccountLifecycleService;
 use App\Services\EmailVerificationService;
 use App\Services\PlatformSettingsService;
 use App\Support\ExpirationResponse;
@@ -38,7 +39,7 @@ class GoogleAuthController extends Controller
             ->redirect();
     }
 
-    public function googleAuthentication(Request $request, EmailVerificationService $emailVerification, PlatformSettingsService $settings): RedirectResponse|Response|JsonResponse
+    public function googleAuthentication(Request $request, EmailVerificationService $emailVerification, PlatformSettingsService $settings, AccountLifecycleService $accounts): RedirectResponse|Response|JsonResponse
     {
         try {
             $googleUser = Socialite::driver('google')->user();
@@ -125,6 +126,7 @@ class GoogleAuthController extends Controller
             }
 
             Auth::login($user);
+            $accounts->recordSuccessfulLogin($user);
             $request->session()->regenerate();
             $request->session()->put('auth.version', (int) $user->authentication_version);
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\AccountDeletionLifecycle;
 use App\Models\Organization;
 use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
@@ -30,7 +31,84 @@ class AccountLifecycleService
         private OrganizationOwnerGuard $ownerGuard,
         private WorkflowNotificationService $workflowNotifications,
         private WorkspaceUpdateBroadcaster $workspaceUpdates,
+        private AccountDataPurgeService $accountDataPurge,
     ) {}
+
+    /** Record only a successful authenticated sign-in and cancel a pending inactivity deletion. */
+    public function recordSuccessfulLogin(User $user): void
+    {
+        DB::transaction(function () use ($user): void {
+            $locked = User::query()->lockForUpdate()->findOrFail($user->id);
+            $loginAt = now();
+            $locked->forceFill(['last_login_at' => $loginAt])->save();
+            $user->forceFill(['last_login_at' => $loginAt]);
+
+            $lifecycle = AccountDeletionLifecycle::query()
+                ->where('active_user_id', $locked->id)
+                ->where('status', 'scheduled')
+                ->lockForUpdate()
+                ->first();
+
+            if ($lifecycle) {
+                $this->cancelScheduledDeletion($lifecycle);
+            }
+        }, 3);
+    }
+
+    /**
+     * Complete a due applicant deletion after rechecking the last login and
+     * seven-day notice while both records are locked.
+     *
+     * @return 'deleted'|'cancelled'|'not_due'|'notice_required'
+     */
+    public function completeScheduledApplicantDeletion(int $lifecycleId): string
+    {
+        return DB::transaction(function () use ($lifecycleId): string {
+            $initialLifecycle = AccountDeletionLifecycle::query()->find($lifecycleId);
+            if (! $initialLifecycle || $initialLifecycle->status !== 'scheduled' || ! $initialLifecycle->active_user_id) {
+                return 'cancelled';
+            }
+
+            $userId = (int) $initialLifecycle->active_user_id;
+            $user = User::query()->lockForUpdate()->find($userId);
+            $lifecycle = AccountDeletionLifecycle::query()->lockForUpdate()->find($lifecycleId);
+            if (! $lifecycle || $lifecycle->status !== 'scheduled' || (int) $lifecycle->active_user_id !== $userId) {
+                return 'cancelled';
+            }
+
+            $inactivityDays = max(2, (int) config('account_deletion.inactivity_days', 30));
+            $warningDays = min($inactivityDays - 1, max(1, (int) config('account_deletion.warning_days', 7)));
+            if (! $user || ! $user->isApplicant() || ! $user->isActive() || ! $user->last_login_at
+                || ! $lifecycle->last_login_at_snapshot
+                || $user->last_login_at->greaterThan($lifecycle->last_login_at_snapshot)
+                || $user->last_login_at->greaterThan(now()->subDays($inactivityDays))) {
+                $this->cancelScheduledDeletion($lifecycle);
+
+                return 'cancelled';
+            }
+
+            if ($lifecycle->scheduled_deletion_at->isFuture()) {
+                return 'not_due';
+            }
+
+            if (! $lifecycle->warning_sent_at
+                || $lifecycle->warning_sent_at->greaterThan($lifecycle->scheduled_deletion_at->copy()->subDays($warningDays))) {
+                return 'notice_required';
+            }
+
+            $this->revoke($user);
+            SettingsAuditEvent::query()->create([
+                'actor_id' => null,
+                'user_id' => $user->id,
+                'scope' => 'personal',
+                'action' => 'account_removed_for_inactivity',
+                'changes' => ['lifecycle_reference' => $lifecycle->reference],
+            ]);
+            $this->accountDataPurge->permanentlyDeleteWithinTransaction($user, null, 'inactive_30_days');
+
+            return 'deleted';
+        }, 3);
+    }
 
     public function changePassword(User $user, #[SensitiveParameter] string $password, ?Request $request = null, bool $reset = false): void
     {
@@ -127,9 +205,7 @@ class AccountLifecycleService
                 if ($changed) {
                     $this->revoke($locked);
                 }
-                if ($delete) {
-                    $locked->delete();
-                } else {
+                if (! $delete) {
                     $locked->role = $role;
                     $locked->status = $status;
                     if ($status === UserStatus::Active) {
@@ -163,6 +239,10 @@ class AccountLifecycleService
                             );
                         }
                     }
+                }
+
+                if ($delete) {
+                    $this->accountDataPurge->permanentlyDeleteWithinTransaction($locked, $actor);
                 }
             });
 
@@ -264,7 +344,7 @@ class AccountLifecycleService
         DB::transaction(function () use ($target, $role, $status, $operation): void {
             $admins = User::query()->role(UserRole::Admin)->active()->whereNotNull('email_verified_at')
                 ->orderBy('id')->lockForUpdate()->get(['id']);
-            $locked = User::query()->lockForUpdate()->findOrFail($target->id);
+            $locked = User::withTrashed()->lockForUpdate()->findOrFail($target->id);
             if ($locked->isAdmin() && $locked->isActive() && $locked->hasVerifiedEmail()
                 && ($role !== UserRole::Admin || $status !== UserStatus::Active)
                 && $admins->where('id', '<>', $locked->id)->isEmpty()) {
@@ -286,6 +366,16 @@ class AccountLifecycleService
         $request->session()->regenerate(true);
         $request->session()->regenerateToken();
         $request->session()->put('auth.version', (int) $user->authentication_version);
+    }
+
+    private function cancelScheduledDeletion(AccountDeletionLifecycle $lifecycle): void
+    {
+        $lifecycle->forceFill([
+            'active_user_id' => null,
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'warning_status' => $lifecycle->warning_sent_at ? 'sent' : 'cancelled',
+        ])->save();
     }
 
     private function audit(User $user, string $action): void

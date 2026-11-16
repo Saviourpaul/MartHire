@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\AccountLifecycleService;
 use App\Services\GlobalLogoutService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,16 +24,13 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request, AccountLifecycleService $accounts): RedirectResponse
     {
         $request->authenticate();
+        $accounts->recordSuccessfulLogin($request->user());
 
         $request->session()->regenerate();
         $request->session()->put('auth.version', (int) $request->user()->authentication_version);
-
-        $request->user()->forceFill([
-            'last_login_at' => now(),
-        ])->save();
 
         if (! $request->user()->hasVerifiedEmail()) {
             return redirect()
