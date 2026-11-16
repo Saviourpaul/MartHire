@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('workable:sync')->everyThirtyMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('accounts:process-inactivity')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AccountDeletionController;
 use App\Http\Controllers\Admin\JobManagementController;
 use App\Http\Controllers\Admin\OrganizationDemoRequestController as AdminOrganizationDemoRequestController;
 use App\Http\Controllers\Admin\PlatformSettingsController;
@@ -179,6 +180,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/applicants', [UserManagementController::class, 'applicants'])->name('users.applicants');
     Route::get('/administrators', [UserManagementController::class, 'administrators'])->name('users.administrators');
     Route::get('/suspended', [UserManagementController::class, 'suspended'])->name('users.suspended');
+    Route::get('users/deletions', [AccountDeletionController::class, 'index'])->name('users.deletions.index');
     Route::get('/organizations/export', [UserManagementController::class, 'exportOrganizations'])->name('users.organizations.export');
     Route::get('/applicants/export', [UserManagementController::class, 'exportApplicants'])->name('users.applicants.export');
     Route::get('/administrators/export', [UserManagementController::class, 'exportAdministrators'])->name('users.administrators.export');
@@ -195,7 +197,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->whereNumber('user')->middleware(['active.account', 'throttle:downloads'])->name('users.identification-document.download');
     Route::post('users/{user}/suspend', [UserManagementController::class, 'suspend'])->name('users.suspend');
     Route::post('users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
-    Route::delete('users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+    Route::delete('users/{user}', [UserManagementController::class, 'destroy'])->withTrashed()->name('users.destroy');
     Route::post('users/{user}/password-reset', [UserManagementController::class, 'sendPasswordReset'])->name('users.password-reset');
 });
 
