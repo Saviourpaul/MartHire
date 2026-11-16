@@ -5,3 +5,7 @@ For work that depends on current or version-specific third-party library APIs, u
 ## Code review
 
 When the user requests a code review in this repository, follow the project skill at `.agents/skills/code-review/SKILL.md`.
+
+## Browser verification
+
+When making code changes, use the installed Playwright setup with Chrome to verify the affected application flow whenever it can be exercised in a browser. Do not rely only on static checks when browser verification is practical. If Chrome or the app environment is unavailable, report that limitation and run the closest relevant checks.
