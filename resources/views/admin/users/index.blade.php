@@ -54,6 +54,7 @@
 
             <x-slot:actions>
                 <button type="submit" class="nw-button nw-button--outline nw-button--small">{{ __('Filter') }}</button>
+                <a href="{{ route('admin.users.deletions.index') }}" class="nw-button nw-button--outline nw-button--small">{{ __('Deletion history') }}</a>
                 @if ($filterValues['search'] || $filterValues['role'] || $filterValues['status'] || $filterValues['created_from'] || $filterValues['created_to'])
                     <a href="{{ request()->url() }}" class="nw-link nw-link--small" data-live-link>{{ __('Clear') }}</a>
                 @endif
@@ -118,7 +119,7 @@
                                             <x-icon name="pencil" /> {{ __('Edit') }}
                                         </button>
                                         @unless ($managedUser->is(auth()->user()))
-                                            <form method="POST" action="{{ route('admin.users.destroy', $managedUser) }}" role="presentation" data-confirm="{{ __('Permanently delete this account? This cannot be undone.') }}" data-confirm-label="{{ __('Delete account') }}" data-confirm-type="error">
+                                            <form method="POST" action="{{ route('admin.users.destroy', $managedUser) }}" role="presentation" data-confirm="{{ __('Permanently delete this account? Recruitment history will remain with personal details anonymized, personal uploads will be removed, and this cannot be undone.') }}" data-confirm-label="{{ __('Delete permanently') }}" data-confirm-type="error">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="nw-row-actions__item nw-row-actions__item--danger" role="menuitem">
