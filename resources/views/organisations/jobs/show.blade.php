@@ -1,3 +1,6 @@
+@use('App\Models\Job')
+@use('App\Support\JobDescription')
+
 <x-app-layout>
     <x-slot name="title">{{ $job->title }}</x-slot>
     <x-slot name="header">
@@ -25,7 +28,7 @@
                     {{ $job->country_code ?: '—' }}
                 @endif
             </dd></div>
-            <div><dt>{{ __('Employment type') }}</dt><dd>{{ \App\Models\Job::employmentTypeOptions()[$job->employment_type] ?? $job->employment_type }}</dd></div>
+            <div><dt>{{ __('Employment type') }}</dt><dd>{{ Job::employmentTypeOptions()[$job->employment_type] ?? $job->employment_type }}</dd></div>
             <div><dt>{{ __('Category') }}</dt><dd>{{ $job->category ?: '—' }}</dd></div>
             <div><dt>{{ __('Start date') }}</dt><dd>{{ $job->start_date?->format('j M Y') }}</dd></div>
             <div><dt>{{ __('Deadline') }}</dt><dd>{{ $job->due_date?->format('j M Y') }}</dd></div>
@@ -33,7 +36,7 @@
         </dl>
 
         <div class="nw-rich-content">
-            {!! app(\App\Support\JobDescription::class)->toHtml($job->description) !!}
+            {!! app(JobDescription::class)->toHtml($job->description) !!}
         </div>
     </section>
 

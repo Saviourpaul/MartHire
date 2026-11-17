@@ -12,6 +12,7 @@ import { registerLocationSelector } from './location-selector';
 import { registerAvatarUpload } from './avatar-upload';
 import { registerCandidateReview } from './candidate-review';
 import { registerInterviewEmailTemplatePicker } from './interview-email-template-picker';
+import { registerOrganizationEmailTemplateStudio } from './organization-email-template-studio';
 import { registerAdminUserDocumentViewer } from './admin-user-document-viewer';
 import { initializeAlerts } from './alerts';
 import { initializeLiveTables } from './live-tables';
@@ -50,6 +51,7 @@ registerLocationSelector(Alpine);
 registerAvatarUpload(Alpine);
 registerCandidateReview(Alpine);
 registerInterviewEmailTemplatePicker(Alpine);
+registerOrganizationEmailTemplateStudio(Alpine);
 registerAdminUserDocumentViewer(Alpine);
 registerOrganizationOnboarding(Alpine);
 registerOrganizationImageUpload(Alpine);
@@ -118,7 +120,7 @@ Alpine.data('resumeAutofill', (messages = {}) => ({
         let changed = false;
 
         const heading = /^(?:professional\s+)?(?:summary|profile|objective|about\s+me)$/i;
-        const nextHeading = /^(?:technical\s+)?(?:skills|key\s+skills|core\s+competencies|experience|work\s+experience|employment\s+history|education|education\s+and\s+qualifications|projects|cer[...]
+        const nextHeading = /^(?:technical\s+)?(?:skills|key\s+skills|core\s+competencies|experience|work\s+experience|employment\s+history|education|education\s+and\s+qualifications|projects|certifications|references)$/i;
         const section = (pattern, stopPattern = nextHeading) => {
             const start = lines.findIndex((line) => pattern.test(line));
             if (start < 0) return [];

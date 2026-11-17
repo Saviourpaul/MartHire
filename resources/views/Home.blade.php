@@ -1,6 +1,9 @@
+@use('App\Support\JobCatalog')
+@use('Illuminate\Support\Str')
+
 @php
     // Real jobs: pass them in from the route/controller as $jobs. Until then, sample listings are shown.
-    $catalog = \App\Support\JobCatalog::make($jobs ?? null);
+    $catalog = JobCatalog::make($jobs ?? null);
     $jobs = $catalog->jobs;
     $categories = $catalog->categories;
     $jobIndex = $catalog->searchIndex();
@@ -66,7 +69,7 @@
                                 data-lat="{{ $pin['lat'] }}" data-lon="{{ $pin['lon'] }}">
                                 <a class="nw-pin__link"
                                     href="{{ route('workable-jobs.index', ['place' => $pin['country']]) }}"
-                                    aria-label="{{ $pin['country'] }}: {{ $pin['count'] }} {{ \Illuminate\Support\Str::plural('role', $pin['count']) }}">
+                                    aria-label="{{ $pin['country'] }}: {{ $pin['count'] }} {{ Str::plural('role', $pin['count']) }}">
                                     @if ($pin['flag_url'])
                                         <img src="{{ $pin['flag_url'] }}" width="40" height="40" alt=""
                                             loading="lazy">
@@ -76,7 +79,7 @@
                                     <span class="nw-pin__label" aria-hidden="true">
                                         <strong>{{ $pin['country'] }}</strong>
                                         <span>{{ $pin['count'] }}
-                                            {{ \Illuminate\Support\Str::plural('role', $pin['count']) }}</span>
+                                            {{ Str::plural('role', $pin['count']) }}</span>
                                         @if ($pin['cities'])
                                             <small>{{ implode(', ', $pin['cities']) }}</small>
                                         @endif
@@ -94,7 +97,7 @@
                         <span class="nw-map-note__icon"><x-icon name="globe" /></span>
                         <div>
                             <strong>Roles in {{ $pins->count() }}
-                                {{ \Illuminate\Support\Str::plural('country', $pins->count()) }}</strong>
+                                {{ Str::plural('country', $pins->count()) }}</strong>
                             <small>Pick a flag to see the roles there</small>
                         </div>
                     </div>
@@ -199,7 +202,7 @@
                                 @endif
                             </span>
                             <span class="nw-category__count">{{ $category['count'] }}
-                                {{ \Illuminate\Support\Str::plural('role', $category['count']) }}</span>
+                                {{ Str::plural('role', $category['count']) }}</span>
                         </a>
                     @endforeach
                 </div>

@@ -1,3 +1,5 @@
+@use('App\Enums\JobStatus')
+
 <x-app-layout>
     <x-slot name="title">{{ __('Jobs') }}</x-slot>
     <x-slot name="header">
@@ -21,7 +23,7 @@
             <x-slot:filters>
                 <select class="nw-select" name="status" aria-label="{{ __('Filter jobs by status') }}">
                     <option value="">{{ __('All statuses') }}</option>
-                    @foreach (\App\Enums\JobStatus::cases() as $jobStatus)
+                    @foreach (JobStatus::cases() as $jobStatus)
                         <option value="{{ $jobStatus->value }}" @selected(request('status') === $jobStatus->value)>{{ $jobStatus->label() }}</option>
                     @endforeach
                 </select>

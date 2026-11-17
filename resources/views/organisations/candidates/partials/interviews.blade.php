@@ -10,7 +10,9 @@
             @include('organisations.interviews._form', ['interview' => null])
         </details>
     @else
-        @if ($canSendCandidateEmail && $application->status !== CandidatePipelineStage::Interview)
+        @if (! $application->hasAvailableApplicantAccount())
+            <p class="nw-hint" role="status">{{ __('This applicant account no longer exists. Interview scheduling is unavailable.') }}</p>
+        @elseif ($canSendCandidateEmail && $application->status !== CandidatePipelineStage::Interview)
             <p class="nw-hint">{{ __('Move this candidate to the Interview stage to schedule an interview.') }}</p>
         @endif
     @endcan

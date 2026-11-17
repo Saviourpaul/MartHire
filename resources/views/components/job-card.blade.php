@@ -1,7 +1,9 @@
+@use('Illuminate\Support\Carbon')
+
 @props(['job'])
 
 @php
-    $posted = ! empty($job['posted_at']) ? \Illuminate\Support\Carbon::parse($job['posted_at'])->diffForHumans() : null;
+    $posted = ! empty($job['posted_at']) ? Carbon::parse($job['posted_at'])->diffForHumans() : null;
     $locationLabel = $job['location_label'] ?? $job['location'] ?? null;
 @endphp
 

@@ -1,7 +1,9 @@
+@use('Illuminate\Support\Str')
+
 @props(['label', 'id' => null])
 
 @php
-    $menuId = $id ?: 'row-actions-'.\Illuminate\Support\Str::uuid();
+    $menuId = $id ?: 'row-actions-'.Str::uuid();
 @endphp
 
 <div class="nw-row-actions" x-data="tableActionMenu" x-on:click.outside="close()" x-on:keydown.escape.stop.prevent="closeAndFocus()" x-on:resize.window="reposition()" x-on:scroll.capture.window="closeOnScroll()">

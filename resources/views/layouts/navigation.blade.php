@@ -1,6 +1,8 @@
+@use('App\Support\OrganizationContext')
+
 @php
     $navUser = auth()->user();
-    $navOrganization = $navUser?->isOrganization() ? app(\App\Support\OrganizationContext::class)->organization() : null;
+    $navOrganization = $navUser?->isOrganization() ? app(OrganizationContext::class)->organization() : null;
 
     $groups = match (true) {
         $navUser->isAdmin() => [

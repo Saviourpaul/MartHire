@@ -1,3 +1,5 @@
+@use('App\Enums\InterviewPlatform')
+
 @php
     $interview = $interview ?? null;
     $formKey = $interview ? 'edit-'.$interview->id : 'schedule';
@@ -60,7 +62,7 @@
             <div class="nw-field">
                 <label class="nw-label" for="{{ $fieldId }}platform">{{ __('Meeting platform') }}</label>
                 <select class="nw-input" id="{{ $fieldId }}platform" name="platform" required>
-                    @foreach (\App\Enums\InterviewPlatform::cases() as $platform)<option value="{{ $platform->value }}" @selected($fieldValue('platform', $interview?->platform?->value ?? 'google_meet') === $platform->value)>{{ $platform->label() }}</option>@endforeach
+                    @foreach (InterviewPlatform::cases() as $platform)<option value="{{ $platform->value }}" @selected($fieldValue('platform', $interview?->platform?->value ?? 'google_meet') === $platform->value)>{{ $platform->label() }}</option>@endforeach
                 </select>
             </div>
             <div class="nw-field">

@@ -1,3 +1,6 @@
+@use('BackedEnum', 'NativeBackedEnum')
+@use('Illuminate\Support\Str')
+
 <x-app-layout>
     <x-slot name="title">{{ __('Account deletion history') }}</x-slot>
     <x-slot name="header">
@@ -12,7 +15,7 @@
             <select class="nw-select" id="deletion-status" name="status">
                 <option value="">{{ __('All lifecycle statuses') }}</option>
                 @foreach ($statuses as $status)
-                    <option value="{{ $status }}" @selected($statusFilter === $status)>{{ __(\Illuminate\Support\Str::headline($status)) }}</option>
+                    <option value="{{ $status }}" @selected($statusFilter === $status)>{{ __(Str::headline($status)) }}</option>
                 @endforeach
             </select>
         </div>
@@ -23,9 +26,9 @@
     </form>
 
     @php
-        $humanizeLifecycleValue = static fn ($value) => $value instanceof \BackedEnum
-            ? \Illuminate\Support\Str::headline((string) $value->value)
-            : ($value ? \Illuminate\Support\Str::headline((string) $value) : '—');
+        $humanizeLifecycleValue = static fn ($value) => $value instanceof NativeBackedEnum
+            ? Str::headline((string) $value->value)
+            : ($value ? Str::headline((string) $value) : '—');
     @endphp
 
     @if ($deletions->isEmpty())

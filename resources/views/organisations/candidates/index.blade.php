@@ -33,10 +33,10 @@
             </div>
 
             <x-slot:filters>
-                <select class="nw-select" name="job_id" aria-label="{{ __('Filter by job') }}">
+                <select class="nw-select" name="job" aria-label="{{ __('Filter by job') }}">
                     <option value="">{{ __('All jobs') }}</option>
                     @foreach ($jobs as $job)
-                        <option value="{{ $job->id }}" @selected((string) request('job_id') === (string) $job->id)>{{ $job->title }}</option>
+                        <option value="{{ $job->slug }}" @selected((string) request('job') === (string) $job->slug)>{{ $job->title }}</option>
                     @endforeach
                 </select>
             </x-slot:filters>

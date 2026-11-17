@@ -1,7 +1,9 @@
+@use('App\Services\PhoneNumberService')
+
 @props(['id' => 'phone', 'name' => 'phone', 'value' => null, 'required' => false, 'country' => null, 'wizard' => false, 'describedBy' => null, 'deferred' => false])
 
 @php
-    $phoneService = app(\App\Services\PhoneNumberService::class);
+    $phoneService = app(PhoneNumberService::class);
     $phoneCountries = $phoneService->countries();
     $countryName = $name.'_country';
     $selectedCountry = old($countryName, $country ?? auth()->user()?->phone_country ?? auth()->user()?->country_code ?? config('phone.default_country', 'NG'));

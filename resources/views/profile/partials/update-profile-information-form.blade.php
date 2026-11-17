@@ -1,3 +1,5 @@
+@use('Illuminate\Contracts\Auth\MustVerifyEmail')
+
 @php
     $profileCountryCode = old('country_code', $user->country_code ?? '');
     $profileState = old('state', $user->state ?? '');
@@ -66,7 +68,7 @@
             <x-text-input id="email" name="email" type="email" :value="$user->email" readonly
                 autocomplete="username" />
 
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())
+            @if ($user instanceof MustVerifyEmail && !$user->hasVerifiedEmail())
                 <div class="nw-notice">
                     <p>{{ __('Your email address is unverified.') }}</p>
                     <button type="submit" form="send-verification" class="nw-link">

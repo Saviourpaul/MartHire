@@ -1,3 +1,5 @@
+@use('App\Enums\JobStatus')
+
 <x-app-layout>
     <x-slot name="title">{{ $job->title }}</x-slot>
 
@@ -76,7 +78,7 @@
             </section>
         @endif
 
-        @if ($job->status === \App\Enums\JobStatus::Open)
+        @if ($job->status === JobStatus::Open)
             <section class="nw-panel" aria-labelledby="moderation-actions-heading">
                 <header class="nw-panel__head">
                     <div>

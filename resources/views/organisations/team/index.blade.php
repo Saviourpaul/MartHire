@@ -1,3 +1,5 @@
+@use('App\Enums\OrganizationMemberStatus')
+
 <x-app-layout>
     <x-slot name="title">{{ __('Hiring team') }}</x-slot>
     <x-slot name="header">
@@ -179,7 +181,7 @@
                         <div>
                             <x-input-label :for="'status-'.$member->id" :value="__('Status')" />
                             <select id="status-{{ $member->id }}" class="nw-select" name="status" required>
-                                @foreach (\App\Enums\OrganizationMemberStatus::cases() as $statusOption)
+                                @foreach (OrganizationMemberStatus::cases() as $statusOption)
                                     <option value="{{ $statusOption->value }}" @selected($member->status->value === $statusOption->value)>{{ $statusOption->label() }}</option>
                                 @endforeach
                             </select>

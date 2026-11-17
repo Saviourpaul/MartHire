@@ -1,8 +1,10 @@
 @use('Illuminate\Support\Str')
+@use('Illuminate\Support\Facades\Route')
+@use('App\Support\JobCatalog')
 
 @php
     // The controller supplies the real posting and normalized application fields.
-    $catalog = \App\Support\JobCatalog::make($jobs ?? null);
+    $catalog = JobCatalog::make($jobs ?? null);
     $job = $job ?? $catalog->jobs->firstWhere('id', $id) ?? abort(404);
     $company = $job['company'] ?? __('the employer');
     $locationLabel = $job['location_label'] ?? $job['location'] ?? null;
@@ -10,7 +12,7 @@
 
     // Whether a particular posting can accept submissions is decided by its
     // controller; having a POST route does not make every import submittable.
-    $preview = $preview ?? ! \Illuminate\Support\Facades\Route::has('workable-jobs.apply.store');
+    $preview = $preview ?? ! Route::has('workable-jobs.apply.store');
     $action = $preview ? route('workable-jobs.apply', $job['id']) : route('workable-jobs.apply.store', $job['id']);
 
     $account = auth()->user();

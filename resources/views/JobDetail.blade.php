@@ -1,12 +1,16 @@
+@use('App\Support\JobCatalog')
+@use('Illuminate\Support\Carbon')
+@use('Illuminate\Support\Str')
+
 @php
     // Real jobs: pass them in from the route/controller as $jobs. Until then, sample listings are shown.
-    $catalog = \App\Support\JobCatalog::make($jobs ?? null);
+    $catalog = JobCatalog::make($jobs ?? null);
     $jobs = $catalog->jobs;
     $job = $job ?? ($jobs->firstWhere('id', $id) ?? abort(404));
     $company = $job['company'] ?? 'Marthire';
     $locationLabel = $job['location_label'] ?? ($job['location'] ?? null);
-    $categorySlug = !empty($job['field']) ? \Illuminate\Support\Str::slug($job['field']) : null;
-    $posted = !empty($job['posted_at']) ? \Illuminate\Support\Carbon::parse($job['posted_at'])->diffForHumans() : null;
+    $categorySlug = !empty($job['field']) ? Str::slug($job['field']) : null;
+    $posted = !empty($job['posted_at']) ? Carbon::parse($job['posted_at'])->diffForHumans() : null;
     $similar = $jobs->where('id', '!=', $job['id']);
     $sameField = empty($job['field']) ? collect() : $similar->where('field', $job['field'])->take(3);
     $similar = $sameField

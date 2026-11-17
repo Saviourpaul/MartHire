@@ -1,3 +1,5 @@
+@use('Illuminate\Support\Str')
+
 @props(['field', 'value' => null])
 
 {{--
@@ -11,7 +13,7 @@
     $name = $field['name'];
     $inputName = $field['input_name'] ?? $name;
     $type = $field['type'];
-    $id = 'field-'.\Illuminate\Support\Str::slug(str_replace(['[', ']', '.'], '-', $name));
+    $id = 'field-'.Str::slug(str_replace(['[', ']', '.'], '-', $name));
     $required = ! empty($field['required']);
     $hint = $field['hint'] ?? null;
     $describedBy = trim(($hint ? "{$id}-hint " : '')."{$id}-error");

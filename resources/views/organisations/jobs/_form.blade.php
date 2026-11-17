@@ -1,9 +1,12 @@
+@use('App\Models\Job')
+@use('App\Support\JobDescription')
+
 @php $isEdit = $job !== null; @endphp
 <form method="POST"
       action="{{ $isEdit ? route('organisations.jobs.update', $job) : route('organisations.jobs.store') }}"
       enctype="multipart/form-data"
       class="nw-form-stack"
-      x-data="jobForm({ maxLength: {{ \App\Support\JobDescription::MAX_LENGTH }}, storageKey: '{{ $isEdit ? 'job-edit-'.$job->slug : 'job-create' }}' })"
+      x-data="jobForm({ maxLength: {{ JobDescription::MAX_LENGTH }}, storageKey: '{{ $isEdit ? 'job-edit-'.$job->slug : 'job-create' }}' })"
       x-on:submit="allowSubmit()">
     @csrf
     @if ($isEdit) @method('PATCH') @endif
@@ -59,7 +62,7 @@
             <x-input-label for="workplace_type" :value="__('Workplace type')" />
             <select id="workplace_type" name="workplace_type" class="nw-select" required>
                 <option value="">{{ __('Select a workplace type') }}</option>
-                @foreach (\App\Models\Job::workplaceTypeOptions() as $value => $label)
+                @foreach (Job::workplaceTypeOptions() as $value => $label)
                     <option value="{{ $value }}" @selected(old('workplace_type', $job?->workplace_type) === $value)>{{ __($label) }}</option>
                 @endforeach
             </select>
@@ -121,7 +124,7 @@
             <div data-job-editor x-ignore class="nw-editor"></div>
         </div>
         <textarea id="description" name="description" x-ref="input" class="nw-input nw-editor__fallback" rows="10">{{ old('description', $job?->description) }}</textarea>
-        <p class="nw-form-hint"><span x-text="count">0</span> / {{ \App\Support\JobDescription::MAX_LENGTH }} {{ __('characters') }}</p>
+        <p class="nw-form-hint"><span x-text="count">0</span> / {{ JobDescription::MAX_LENGTH }} {{ __('characters') }}</p>
         <x-input-error :messages="$errors->get('description')" />
     </div>
 

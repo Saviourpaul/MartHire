@@ -1,7 +1,9 @@
+@use('App\Services\CountryDisplayService')
+
 @props(['country' => null, 'code' => null, 'name' => null])
 
 @php
-    $display = app(\App\Services\CountryDisplayService::class)->present(
+    $display = app(CountryDisplayService::class)->present(
         $code ?? (is_array($country) ? ($country['code'] ?? null) : null),
         $name ?? (is_array($country) ? ($country['name'] ?? null) : null),
     );

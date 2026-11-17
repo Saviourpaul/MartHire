@@ -1,6 +1,9 @@
+@use('App\Support\JobCatalog')
+@use('Illuminate\Support\Str')
+
 @php
     // Real jobs: pass them in from the route/controller as $jobs. Until then, sample listings are shown.
-    $catalog = \App\Support\JobCatalog::make($jobs ?? null);
+    $catalog = JobCatalog::make($jobs ?? null);
     $jobs = $catalog->jobs;
     $categories = $catalog->categories;
     $typeCounts = $catalog->counts('type', ['Full-time', 'Part-time', 'Contract']);
@@ -121,7 +124,7 @@
                             <div class="nw-results__bar">
                                 <p class="nw-jobs__count" role="status" aria-live="polite" x-text="summary">Showing
                                     {{ min($pageSize, $jobs->count()) }} of {{ $jobs->count() }}
-                                    {{ \Illuminate\Support\Str::plural('role', $jobs->count()) }}</p>
+                                    {{ Str::plural('role', $jobs->count()) }}</p>
                                 <label class="nw-sort">
                                     <span>Sort by</span>
                                     <select class="nw-select" x-model="sort">
