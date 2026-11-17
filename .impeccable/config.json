@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-11-17T08:39:00.173Z",
+        "reason": "Project implementation choice: Arial is an email-client-compatible fallback used only in the generated HTML email preview, not the application interface font."
+      }
+    ]
+  }
+}
