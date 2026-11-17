@@ -42,21 +42,31 @@ use App\Models\Interview;
 use App\Models\Job;
 use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
+use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Route;
 
-// Implicit {applicationForm} binding runs before InitializeOrganizationContext
-// sets the active organization, so the model's OrganizationScope would block
-// every lookup (including the owning organization's). Resolve it unscoped here;
-// OrganizationApplicationController/MoveCandidatePipelineRequest already check
-// real ownership via OrganizationPermissions before anything is shown or moved.
-Route::bind('applicationForm', fn (string $value) => ApplicationForm::withoutGlobalScope(OrganizationScope::class)
-    ->findOrFail($value));
+// Application references are stable route identifiers for private application
+// pages. Keep numeric primary keys as lookup-only legacy aliases; the controllers
+// authorize before redirecting safe GET requests to the reference URL.
+Route::bind('applicationForm', function (string $value): ApplicationForm {
+    $application = ApplicationForm::withoutGlobalScope(OrganizationScope::class)
+        ->where('reference', $value)
+        ->first();
+
+    if ($application) {
+        return $application;
+    }
+
+    abort_unless(ctype_digit($value), 404);
+
+    return ApplicationForm::withoutGlobalScope(OrganizationScope::class)->findOrFail($value);
+});
 
 // Bind private resources before organization middleware, then authorize them in
 // the existing document/interview policies after the context is initialized.
 Route::bind('applicationDocument', fn (string $value) => ApplicationDocument::withoutGlobalScope(OrganizationScope::class)->findOrFail($value));
 Route::bind('candidateMessage', fn (string $value) => CandidateMessage::withoutGlobalScope(OrganizationScope::class)->findOrFail($value));
-Route::bind('interview', fn (string $value, Illuminate\Routing\Route $route) => str_starts_with($route->getName() ?? '', 'interviews.response')
+Route::bind('interview', fn (string $value, RoutingRoute $route) => str_starts_with($route->getName() ?? '', 'interviews.response')
     ? (int) $value
     : Interview::withoutGlobalScope(OrganizationScope::class)->findOrFail($value));
 
@@ -103,7 +113,7 @@ Route::get('media/{path}', PublicMediaController::class)
 // Preserve Workable URLs while native jobs use their own slug-based destinations.
 Route::get('jobs', [PublicJobController::class, 'index'])->name('jobs.index');
 Route::get('jobs/{job}', [PublicJobController::class, 'show'])->name('jobs.show');
-Route::get('organizations/{organization:slug}/careers', PublicOrganizationCareerController::class)->name('organizations.careers.show');
+Route::get('organizations/{slug}/careers', PublicOrganizationCareerController::class)->name('organizations.careers.show');
 Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])
     ->middleware(['auth', 'verified', 'active.account', 'role:applicant'])->name('applications.create');
 Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])
