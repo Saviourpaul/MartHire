@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\View\View as ViewInstance;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer('*', function (\Illuminate\View\View $view): void {
+        View::composer('*', function (ViewInstance $view): void {
             $view->with('platformBrand', app(PlatformSettingsService::class)->presentation());
         });
 
@@ -65,7 +66,7 @@ class AppServiceProvider extends ServiceProvider
             // Settings table not ready (e.g. during migrations); keep .env defaults.
         }
 
-        View::composer('interviews._details', function (\Illuminate\View\View $view): void {
+        View::composer('interviews._details', function (ViewInstance $view): void {
             $user = request()->user();
             $view->with('preferredInterviewDisplayTimezone', $user ? app(UserPreferencesService::class)->forUser($user)->timezone : null);
         });
@@ -81,7 +82,7 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour((int) config('interviews.org_send_limit', 100))->by('interview-organization:'.app(OrganizationContext::class)->organizationId()),
         ]);
 
-        View::composer('components.layout', function (\Illuminate\View\View $view): void {
+        View::composer('components.layout', function (ViewInstance $view): void {
             $context = app(OrganizationContext::class);
             $user = request()->user();
             $memberships = $user?->isOrganization()
@@ -99,7 +100,7 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        View::composer('layouts.app', function (\Illuminate\View\View $view): void {
+        View::composer('layouts.app', function (ViewInstance $view): void {
             $user = request()->user();
             $userPreferences = $user ? app(UserPreferencesService::class)->forUser($user) : null;
             $summary = $user && $user->isActive() && $user->hasVerifiedEmail()

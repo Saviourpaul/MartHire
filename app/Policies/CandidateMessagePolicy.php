@@ -15,8 +15,11 @@ class CandidateMessagePolicy
 
     public function retry(User $user, CandidateMessage $message): bool
     {
+        $application = $message->applicationForm;
+
         if ($message->status !== CandidateMessageStatus::Failed
-            || ! $this->permissions->can($user, 'send_candidate_email', application: $message->applicationForm)) {
+            || ! $application?->hasAvailableApplicantAccount()
+            || ! $this->permissions->can($user, 'send_candidate_email', application: $application)) {
             return false;
         }
 

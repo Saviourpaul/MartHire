@@ -25,8 +25,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrganizationApplicationController extends Controller
 {
-    public function applied(Request $request): View|JsonResponse
+    public function applied(Request $request): View|JsonResponse|RedirectResponse
     {
+        if ($legacyFilterRedirect = $this->redirectLegacyJobFilter($request, 'organisations.candidates.index')) {
+            return $legacyFilterRedirect;
+        }
+
         $this->validateTableFilters($request);
         $stage = $request->filled('stage') ? CandidatePipelineStage::tryFrom($request->string('stage')->toString()) : null;
 
@@ -35,8 +39,12 @@ class OrganizationApplicationController extends Controller
         return $this->candidateTable($request, $stage, 'Candidate Pipeline', 'organisations.candidates.index', 'organisations.candidates.index');
     }
 
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): StreamedResponse|RedirectResponse
     {
+        if ($legacyFilterRedirect = $this->redirectLegacyJobFilter($request, 'organisations.candidates.export')) {
+            return $legacyFilterRedirect;
+        }
+
         $this->validateTableFilters($request);
         $stage = $request->filled('stage') ? CandidatePipelineStage::tryFrom($request->string('stage')->toString()) : null;
 
@@ -70,9 +78,20 @@ class OrganizationApplicationController extends Controller
         ]);
     }
 
-    public function show(Request $request, ApplicationForm $applicationForm): Response|JsonResponse
+    public function show(Request $request, ApplicationForm $applicationForm): Response|JsonResponse|RedirectResponse
     {
         $this->ensureOrganizationOwnsApplication($request, $applicationForm);
+
+        if ($this->isLegacyApplicationIdentifier($request)) {
+            $query = $request->query();
+            unset($query['applicationForm']);
+
+            return redirect()->route('organisations.candidates.show', [
+                'applicationForm' => $applicationForm,
+                ...$query,
+            ], 301);
+        }
+
         $canSendEmail = Gate::allows('send_candidate_email', $applicationForm);
         $relations = [
             'applicant',
@@ -185,9 +204,18 @@ class OrganizationApplicationController extends Controller
         $request->validate([
             'stage' => ['sometimes', 'nullable', 'string', 'max:40'],
             'search' => ['sometimes', 'nullable', 'string', 'max:200'],
-            'job_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'job' => ['sometimes', 'nullable', 'string', 'max:255'],
             'page' => ['sometimes', 'integer', 'min:1']
         ]);
+
+        if ($request->filled('job')) {
+            $visibleJob = app(OrganizationPermissions::class)
+                ->scopeJobs(Job::query(), $request->user())
+                ->where('slug', $request->string('job')->toString())
+                ->exists();
+
+            abort_unless($visibleJob, 404);
+        }
     }
 
     private function filteredCandidates(Request $request, ?CandidatePipelineStage $status): Builder
@@ -195,7 +223,7 @@ class OrganizationApplicationController extends Controller
         return ApplicationForm::query()
             ->forEmployer($request->user())
             ->when($status, fn($query) => $query->status($status))
-            ->when($request->filled('job_id'), fn($query) => $query->where('job_id', $request->integer('job_id')))
+            ->when($request->filled('job'), fn($query) => $query->whereHas('job', fn (Builder $jobs) => $jobs->where('slug', $request->string('job')->toString())))
             ->search($request->string('search')->toString());
     }
 
@@ -210,7 +238,7 @@ class OrganizationApplicationController extends Controller
             ->tap(fn($query) => app(OrganizationPermissions::class)->scopeJobs($query, $request->user()))
             ->whereHas('applications')
             ->orderBy('title')
-            ->get(['id', 'title']);
+            ->get(['id', 'title', 'slug']);
 
         return LiveTables::view($request, view($viewName, [
             'applications' => $applications,
@@ -225,5 +253,36 @@ class OrganizationApplicationController extends Controller
     private function ensureOrganizationOwnsApplication(Request $request, ApplicationForm $application): void
     {
         Gate::authorize('viewForEmployer', $application);
+    }
+
+    private function isLegacyApplicationIdentifier(Request $request): bool
+    {
+        $identifier = $request->route()?->originalParameter('applicationForm');
+
+        return is_string($identifier) && ctype_digit($identifier);
+    }
+
+    private function redirectLegacyJobFilter(Request $request, string $routeName): ?RedirectResponse
+    {
+        if ($request->filled('job') && $request->query->has('job_id')) {
+            $query = $request->query();
+            unset($query['job_id']);
+
+            return redirect()->route($routeName, $query, 301);
+        }
+
+        if (! $request->filled('job_id')) {
+            return null;
+        }
+
+        $job = app(OrganizationPermissions::class)
+            ->scopeJobs(Job::query(), $request->user())
+            ->whereKey($request->integer('job_id'))
+            ->firstOrFail();
+        $query = $request->query();
+        unset($query['job_id']);
+        $query['job'] = $job->slug;
+
+        return redirect()->route($routeName, $query, 301);
     }
 }

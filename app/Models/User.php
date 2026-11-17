@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Services\EmailVerificationService;
+use App\Services\PublicMediaUrl;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -186,7 +187,7 @@ class User extends Authenticatable implements MustVerifyEmail
             $path = substr($path, strlen('public/'));
         }
 
-        return app(\App\Services\PublicMediaUrl::class)->url($path)
+        return app(PublicMediaUrl::class)->url($path)
             ?? asset('admin/assets/images/Avatar.png');
     }
 

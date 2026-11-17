@@ -39,7 +39,8 @@ class InterviewPolicy
     public function create(User $user, ApplicationForm $application): bool
     {
         return $application->status === CandidatePipelineStage::Interview
-            && $this->permissions->can($user, 'send_candidate_email', application: $application);
+            && $this->permissions->can($user, 'send_candidate_email', application: $application)
+            && $application->hasAvailableApplicantAccount();
     }
 
     /**
@@ -47,12 +48,14 @@ class InterviewPolicy
      */
     public function update(User $user, Interview $interview): bool
     {
-        return $this->send($user, $interview);
+        return $this->send($user, $interview)
+            && $interview->applicationForm?->hasAvailableApplicantAccount() === true;
     }
 
     public function reschedule(User $user, Interview $interview): bool
     {
-        return $this->send($user, $interview);
+        return $this->send($user, $interview)
+            && $interview->applicationForm?->hasAvailableApplicantAccount() === true;
     }
 
     public function cancel(User $user, Interview $interview): bool

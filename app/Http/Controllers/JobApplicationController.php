@@ -283,9 +283,14 @@ class JobApplicationController extends Controller
             ->with('success', 'Your application has been submitted successfully.');
     }
 
-    public function show(Request $request, ApplicationForm $applicationForm): View|JsonResponse
+    public function show(Request $request, ApplicationForm $applicationForm): View|JsonResponse|RedirectResponse
     {
         $this->authorize('view', $applicationForm);
+
+        $identifier = $request->route()?->originalParameter('applicationForm');
+        if (is_string($identifier) && ctype_digit($identifier)) {
+            return redirect()->route('client.applications.show', $applicationForm, 301);
+        }
 
         return LiveTables::view($request, view('client.application-show', [
             'application' => $applicationForm->load(['job', 'applicant', 'documents', 'statusHistories.changedBy', 'interviews']),

@@ -8,6 +8,7 @@ use App\Integrations\Workable\WorkableClient;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\SyncRun;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -43,7 +44,7 @@ class SyncCompanyJobs
         }
     }
 
-    private function reconcile(Company $company, SyncRun $run, \Illuminate\Support\Carbon $startedAt): SyncRun
+    private function reconcile(Company $company, SyncRun $run, Carbon $startedAt): SyncRun
     {
         try {
             $jobs = $this->client->listPublishedJobs($company);

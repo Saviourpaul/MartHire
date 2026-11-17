@@ -38,19 +38,30 @@ class CandidateMessageService
         private readonly WorkflowNotificationService $notifications,
     ) {}
 
-    public function queue(Interview $interview, User $actor, InterviewTemplateType $type, ?string $subject = null, ?string $body = null): CandidateMessage
+    public function queue(Interview $interview, User $actor, InterviewTemplateType $type, ?string $subject = null, ?string $body = null): ?CandidateMessage
     {
         $interview->loadMissing('applicationForm');
         Gate::forUser($actor)->authorize('send_candidate_email', $interview->applicationForm);
 
-        return DB::transaction(function () use ($interview, $actor, $type, $subject, $body): CandidateMessage {
+        return DB::transaction(function () use ($interview, $actor, $type, $subject, $body): ?CandidateMessage {
             $organization = Organization::whereKey($interview->organization_id)->lockForUpdate()->firstOrFail();
 
-            return $this->context->runInOrganization($organization, function () use ($interview, $actor, $type, $subject, $body): CandidateMessage {
-                ApplicationForm::whereKey($interview->application_form_id)->lockForUpdate()->firstOrFail();
+            return $this->context->runInOrganization($organization, function () use ($interview, $actor, $type, $subject, $body): ?CandidateMessage {
+                $application = ApplicationForm::whereKey($interview->application_form_id)->lockForUpdate()->firstOrFail();
                 $interview = Interview::query()->with('applicationForm.job', 'organization')->lockForUpdate()->findOrFail($interview->id);
                 Gate::forUser($actor)->authorize('send_candidate_email', $interview->applicationForm);
                 $this->ensureSendableInterview($interview, $type);
+
+                if (! $application->hasAvailableApplicantAccount()) {
+                    if ($type === InterviewTemplateType::InterviewCancel) {
+                        return null;
+                    }
+
+                    throw ValidationException::withMessages([
+                        'applicant' => 'This applicant account no longer exists. Interview emails cannot be sent.',
+                    ]);
+                }
+
                 $recipient = $interview->applicationForm->email;
 
                 if (! filter_var($recipient, FILTER_VALIDATE_EMAIL) || ! filter_var($actor->email, FILTER_VALIDATE_EMAIL)) {
@@ -97,10 +108,16 @@ class CandidateMessageService
             $organization = Organization::whereKey($message->organization_id)->lockForUpdate()->firstOrFail();
 
             return $this->context->runInOrganization($organization, function () use ($message, $actor): CandidateMessage {
-                ApplicationForm::whereKey($message->application_form_id)->lockForUpdate()->firstOrFail();
+                $application = ApplicationForm::whereKey($message->application_form_id)->lockForUpdate()->firstOrFail();
                 $interview = Interview::query()->lockForUpdate()->findOrFail($message->interview_id);
                 $message = CandidateMessage::query()->lockForUpdate()->findOrFail($message->id);
                 Gate::forUser($actor)->authorize('retry', $message);
+
+                if (! $application->hasAvailableApplicantAccount()) {
+                    throw ValidationException::withMessages([
+                        'applicant' => 'This applicant account no longer exists. The email cannot be retried.',
+                    ]);
+                }
 
                 if ($message->status !== CandidateMessageStatus::Failed || $message->interview_version !== $interview->version || $this->linksExpired($message)) {
                     throw ValidationException::withMessages(['message' => 'Only a failed message for the current interview with valid response links can be retried.']);
@@ -131,11 +148,18 @@ class CandidateMessageService
             $deliveryNotice = null;
             DB::transaction(function () use ($initialMessage, &$failure, &$deliveryNotice): void {
                 Organization::whereKey($initialMessage->organization_id)->lockForUpdate()->firstOrFail();
-                ApplicationForm::whereKey($initialMessage->application_form_id)->lockForUpdate()->firstOrFail();
+                $application = ApplicationForm::whereKey($initialMessage->application_form_id)->lockForUpdate()->firstOrFail();
                 $interview = Interview::query()->lockForUpdate()->find($initialMessage->interview_id);
                 $message = CandidateMessage::query()->lockForUpdate()->findOrFail($initialMessage->id);
 
                 if ($message->status !== CandidateMessageStatus::Queued) {
+                    return;
+                }
+
+                if (! $application->hasAvailableApplicantAccount()) {
+                    $activity = $this->failMessage($message, 'This message was not sent because the applicant account no longer exists.');
+                    $deliveryNotice = ['message_id' => $message->id, 'activity_id' => (int) $activity->id, 'sent' => false];
+
                     return;
                 }
 

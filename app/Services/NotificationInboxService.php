@@ -153,11 +153,11 @@ class NotificationInboxService
                 NotificationCategory::CandidateEmailSent->value,
             ], true)
             && $notification->subject_type === 'application'
-            && $this->permissions->scopeApplications(
+            && ($application = $this->permissions->scopeApplications(
                 ApplicationForm::query()->whereKey($notification->subject_id),
                 $user,
-            )->exists()) {
-            return route('organisations.candidates.show', $notification->subject_id);
+            )->first())) {
+            return route('organisations.candidates.show', $application);
         }
 
         if ($notification->category === NotificationCategory::OrganizationModeration->value) {

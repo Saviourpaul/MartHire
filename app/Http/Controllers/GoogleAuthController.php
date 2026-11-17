@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
+use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 use Throwable;
 
 class GoogleAuthController extends Controller
@@ -28,7 +29,7 @@ class GoogleAuthController extends Controller
      * Direct user to Google for authentication.
      *
      */
-    public function googleLogin(Request $request): \Symfony\Component\HttpFoundation\RedirectResponse
+    public function googleLogin(Request $request): SymfonyRedirectResponse
     {
         // Legacy account_type query strings are ignored. Existing Google-linked
         // employers still authenticate as their stored role in the callback.

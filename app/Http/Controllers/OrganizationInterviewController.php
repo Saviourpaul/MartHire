@@ -9,6 +9,7 @@ use App\Http\Requests\SaveInterviewRequest;
 use App\Models\ApplicationForm;
 use App\Models\CandidateMessage;
 use App\Models\Interview;
+use App\Models\Scopes\OrganizationScope;
 use App\Services\CandidateMessageService;
 use App\Services\InterviewService;
 use App\Services\InterviewTemplateRenderer;
@@ -28,9 +29,14 @@ class OrganizationInterviewController extends Controller
         private InterviewWorkspaceData $workspace,
     ) {}
 
-    public function create(ApplicationForm $applicationForm): View
+    public function create(Request $request, ApplicationForm $applicationForm): View|RedirectResponse
     {
         Gate::authorize('create', [Interview::class, $applicationForm]);
+
+        $identifier = $request->route()?->originalParameter('applicationForm');
+        if (is_string($identifier) && ctype_digit($identifier)) {
+            return redirect()->route('organisations.interviews.create', $applicationForm, 301);
+        }
 
         return $this->form($applicationForm);
     }
@@ -62,9 +68,11 @@ class OrganizationInterviewController extends Controller
 
     public function cancel(CancelInterviewRequest $request, Interview $interview): RedirectResponse|JsonResponse
     {
-        $this->interviews->cancel($interview, $request->user(), $request->validated());
+        $interview = $this->interviews->cancel($interview, $request->user(), $request->validated());
 
-        $message = 'Interview cancelled. Check the cancellation email delivery status below.';
+        $message = $interview->applicationForm?->hasAvailableApplicantAccount()
+            ? 'Interview cancelled. Check the cancellation email delivery status below.'
+            : 'Interview cancelled. The applicant account no longer exists, so no email was sent.';
 
         return LiveTables::mutation($request, $message, $this->backToWorkspace($interview->application_form_id)->with('success', $message), ['interviews', 'candidates']);
     }
@@ -110,7 +118,9 @@ class OrganizationInterviewController extends Controller
 
     private function backToWorkspace(int $applicationId): RedirectResponse
     {
-        return redirect()->to(route('organisations.candidates.show', ['applicationForm' => $applicationId, 'tab' => 'interviews']).'#candidate-interviews');
+        $application = ApplicationForm::withoutGlobalScope(OrganizationScope::class)->findOrFail($applicationId);
+
+        return redirect()->to(route('organisations.candidates.show', ['applicationForm' => $application, 'tab' => 'interviews']).'#candidate-interviews');
     }
 
     private function form(ApplicationForm $application, ?Interview $interview = null): View

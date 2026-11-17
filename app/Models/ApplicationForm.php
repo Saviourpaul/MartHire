@@ -61,6 +61,11 @@ class ApplicationForm extends Model
         ];
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'reference';
+    }
+
     public function job(): BelongsTo
     {
         return $this->belongsTo(Job::class);
@@ -69,6 +74,11 @@ class ApplicationForm extends Model
     public function applicant(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function hasAvailableApplicantAccount(): bool
+    {
+        return $this->user_id !== null && $this->applicant()->exists();
     }
 
     public function reviewer(): BelongsTo

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\JobStatus;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Scopes\OrganizationScope;
+use App\Services\PublicMediaUrl;
 use Database\Factories\JobFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -223,7 +224,7 @@ class Job extends Model
         }
 
         if (Storage::disk('public')->exists($path)) {
-            return app(\App\Services\PublicMediaUrl::class)->url($path);
+            return app(PublicMediaUrl::class)->url($path);
         }
 
         if (is_file(public_path($path))) {
