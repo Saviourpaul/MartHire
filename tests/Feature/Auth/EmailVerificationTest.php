@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Notifications\VerifyEmailCode;
+use App\Services\EmailVerificationService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
@@ -20,7 +21,7 @@ test('email can be verified with the code from the notification', function () {
 
     $user = User::factory()->unverified()->create();
 
-    app(App\Services\EmailVerificationService::class)->sendCode($user);
+    app(EmailVerificationService::class)->sendCode($user);
 
     Notification::assertSentTo($user, VerifyEmailCode::class, function (VerifyEmailCode $notification) use ($user) {
         $response = $this->actingAs($user)->post('/verify-email', [
@@ -43,7 +44,7 @@ test('email is not verified with an incorrect code', function () {
 
     $user = User::factory()->unverified()->create();
 
-    app(App\Services\EmailVerificationService::class)->sendCode($user);
+    app(EmailVerificationService::class)->sendCode($user);
 
     $this->actingAs($user)->post('/verify-email', ['code' => '000000'])
         ->assertSessionHasErrors('code');

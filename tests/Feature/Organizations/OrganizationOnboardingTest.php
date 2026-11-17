@@ -8,13 +8,16 @@ use App\Models\Job;
 use App\Models\Organization;
 use App\Models\OrganizationMember;
 use App\Models\OrganizationOnboardingProgress;
+use App\Models\OrganizationSlugAlias;
 use App\Models\OrganizationSetting;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\OrganizationOnboardingService;
 use App\Support\OrganizationContext;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 function onboardingJob(Organization $organization, User $owner, string $title, JobStatus $status = JobStatus::Open, ?string $dueDate = null): Job
@@ -277,6 +280,66 @@ test('public organization career page shows only its published unexpired jobs', 
         ->assertDontSee('Expired Private Career Role')->assertDontSee('Different Organization Career Role')
         ->assertDontSee('private-internal-check@example.test')
         ->assertSee(route('jobs.show', Job::withoutGlobalScope(OrganizationScope::class)->where('title', 'Open Public Career Role')->firstOrFail()), false);
+});
+
+test('organization career slugs are name based and preserve old slugs as canonical redirects', function () {
+    $first = Organization::create(['name' => 'Northstar Works']);
+    $duplicate = Organization::create(['name' => 'Northstar Works']);
+
+    expect($first->slug)->toBe('northstar-works')
+        ->and($duplicate->slug)->toBe('northstar-works-2');
+
+    $legacySlug = 'northstar-works-'.$first->id;
+    OrganizationSlugAlias::create([
+        'organization_id' => $first->id,
+        'slug' => $legacySlug,
+    ]);
+
+    $this->get(route('organizations.careers.show', $first))
+        ->assertOk();
+    $this->get(route('organizations.careers.show', $legacySlug))
+        ->assertStatus(301)
+        ->assertRedirect(route('organizations.careers.show', $first));
+    $this->get(route('organizations.careers.show', 'no-such-organization'))
+        ->assertNotFound();
+});
+
+test('new organization slugs avoid names reserved by legacy slug aliases', function () {
+    $existing = Organization::create(['name' => 'Existing Workspace']);
+    OrganizationSlugAlias::create([
+        'organization_id' => $existing->id,
+        'slug' => 'global-enterprise',
+    ]);
+
+    $newOrganization = Organization::create(['name' => 'Global Enterprise']);
+
+    expect($newOrganization->slug)->toBe('global-enterprise-2');
+});
+
+test('organization career slug migration restores null slugs when rolled back', function () {
+    $legacy = Organization::create(['name' => 'Legacy Company']);
+    $previouslyUnsluggable = Organization::create(['name' => 'Unnamed Slug Company']);
+
+    DB::table('organizations')->where('id', $legacy->id)->update(['slug' => 'legacy-company-'.$legacy->id]);
+    DB::table('organizations')->where('id', $previouslyUnsluggable->id)->update(['slug' => null]);
+    Schema::drop('organization_slug_aliases');
+
+    $migration = require database_path('migrations/2026_11_17_120000_standardize_organization_career_slugs.php');
+    $migration->up();
+
+    expect(DB::table('organizations')->where('id', $legacy->id)->value('slug'))->toBe('legacy-company')
+        ->and(DB::table('organizations')->where('id', $previouslyUnsluggable->id)->value('slug'))->toBe('unnamed-slug-company');
+
+    $migration->down();
+
+    $this->assertDatabaseHas('organizations', [
+        'id' => $legacy->id,
+        'slug' => 'legacy-company-'.$legacy->id,
+    ]);
+    $this->assertDatabaseHas('organizations', [
+        'id' => $previouslyUnsluggable->id,
+        'slug' => null,
+    ]);
 });
 
 test('completed legacy memberships skip onboarding and non-owner personas do not gain permissions', function () {

@@ -3,6 +3,7 @@
 use App\Enums\InterviewTemplateType;
 use App\Enums\OrganizationRole;
 use App\Models\EmailTemplate;
+use App\Services\OrganizationOnboardingService;
 use App\Support\OrganizationContext;
 use Illuminate\Support\Facades\DB;
 
@@ -22,8 +23,21 @@ test('an authorized organization member can view and override interview email te
 
     $this->actingAs($owner)->get(route('organisations.email-templates.index'))
         ->assertOk()
-        ->assertSee('Interview email templates')
+        ->assertSee('Candidate email studio')
+        ->assertSee('Interview messages')
+        ->assertSee('Customize message')
         ->assertSee('Online interview invitation');
+
+    $this->actingAs($owner)->get(route('organisations.email-templates.index', ['template' => InterviewTemplateType::InterviewOnline->value]))
+        ->assertOk()
+        ->assertSee('Message content')
+        ->assertSee('Sample information')
+        ->assertSee('Preview')
+        ->assertSee('HTML')
+        ->assertSee('Plain text')
+        ->assertSee('Usage')
+        ->assertSee('Confirm attendance')
+        ->assertSee('Disabled templates use the system default.');
 
     $payload = [
         'subject' => 'Interview with {{ organization_name }} for {{ job_title }}',
@@ -32,7 +46,7 @@ test('an authorized organization member can view and override interview email te
     ];
 
     $this->actingAs($owner)->put(route('organisations.email-templates.update', InterviewTemplateType::InterviewOnline), $payload)
-        ->assertRedirect(route('organisations.email-templates.index'))
+        ->assertRedirect(route('organisations.email-templates.index', ['template' => InterviewTemplateType::InterviewOnline->value]))
         ->assertSessionHasNoErrors();
 
     $override = app(OrganizationContext::class)->runInOrganization($organization, fn () => EmailTemplate::query()
@@ -46,7 +60,11 @@ test('an authorized organization member can view and override interview email te
 test('organization members without email-template permission cannot access or change templates', function () {
     [$organization] = organizationWithOwner();
     installSystemInterviewTemplates();
-    $recruiter = addOrganizationMember($organization, OrganizationRole::Recruiter)->user;
+    $membership = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    app(OrganizationOnboardingService::class)->initialize($membership)->forceFill([
+        'current_step' => 'complete', 'completed_steps' => ['welcome', 'finish'], 'completed_at' => now(),
+    ])->save();
+    $recruiter = $membership->user;
 
     $this->actingAs($recruiter)->get(route('organisations.email-templates.index'))->assertForbidden();
     $this->actingAs($recruiter)->put(route('organisations.email-templates.update', InterviewTemplateType::InterviewOnline), [

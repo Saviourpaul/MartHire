@@ -6,8 +6,11 @@ use App\Integrations\Workable\Exceptions\JobNotFound;
 use App\Integrations\Workable\Exceptions\PayloadRejected;
 use App\Integrations\Workable\Exceptions\RateLimited;
 use App\Integrations\Workable\Exceptions\TransientFailure;
+use App\Integrations\Workable\Exceptions\WorkableException;
 use App\Integrations\Workable\WorkableClient;
 use App\Models\Company;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -26,7 +29,7 @@ function wkCompany(): Company
 
 function wkClient(): WorkableClient
 {
-    return new WorkableClient(app(\Illuminate\Http\Client\Factory::class));
+    return new WorkableClient(app(Factory::class));
 }
 
 beforeEach(fn () => config(['workable.fake' => false]));
@@ -149,13 +152,13 @@ it('terminates when paging.next points to itself', function () {
 });
 
 it('maps a POST timeout to AmbiguousOutcome', function () {
-    Http::fake(fn () => throw new \Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out'));
+    Http::fake(fn () => throw new ConnectionException('cURL error 28: Operation timed out'));
 
     expect(fn () => wkClient()->createCandidate(wkCompany(), 'SENIO001', []))->toThrow(AmbiguousOutcome::class);
 });
 
 it('maps a POST connect failure to TransientFailure', function () {
-    Http::fake(fn () => throw new \Illuminate\Http\Client\ConnectionException('cURL error 7: Failed to connect'));
+    Http::fake(fn () => throw new ConnectionException('cURL error 7: Failed to connect'));
 
     expect(fn () => wkClient()->createCandidate(wkCompany(), 'SENIO001', []))->toThrow(TransientFailure::class);
 });
@@ -169,7 +172,7 @@ it('maps unmapped 4xx to a non-transient error', function () {
     } catch (Throwable $t) {
         $e = $t;
     }
-    expect($e)->toBeInstanceOf(\App\Integrations\Workable\Exceptions\WorkableException::class)
+    expect($e)->toBeInstanceOf(WorkableException::class)
         ->and($e)->not->toBeInstanceOf(TransientFailure::class);
 
     expect(fn () => wkClient()->createCandidate(wkCompany(), 'SENIO001', []))->toThrow(PayloadRejected::class);

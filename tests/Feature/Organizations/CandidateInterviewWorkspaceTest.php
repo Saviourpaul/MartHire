@@ -10,6 +10,7 @@ use App\Models\CandidateMessage;
 use App\Models\Interview;
 use App\Models\User;
 use App\Models\WorkflowNotification;
+use App\Services\AccountDataPurgeService;
 use App\Services\CandidateMessageService;
 use App\Support\OrganizationContext;
 use Illuminate\Support\Facades\Mail;
@@ -84,6 +85,68 @@ test('interview scheduling stays in the candidate workspace and queues a complet
     $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Interview scheduled');
     $this->actingAs($applicant)->get(route('notifications.index'))->assertOk()->assertSee('Interview scheduled');
     Mail::assertNothingSent();
+});
+
+test('soft-deleted applicants cannot be scheduled and the workspace explains why', function () {
+    [$owner, $applicant, $application] = interviewWorkspaceApplication();
+    $applicant->delete();
+
+    $this->actingAs($owner)->get(route('organisations.candidates.show', $application))
+        ->assertOk()
+        ->assertSee('This applicant account no longer exists. Interview scheduling is unavailable.')
+        ->assertDontSee('id="schedule-interview"', false);
+
+    $this->actingAs($owner)->post(route('organisations.interviews.store', $application), interviewWorkspacePayload())
+        ->assertForbidden();
+
+    expect(Interview::withoutGlobalScopes()->count())->toBe(0)
+        ->and(CandidateMessage::withoutGlobalScopes()->count())->toBe(0);
+});
+
+test('permanently deleted applicants cannot be scheduled from retained application history', function () {
+    [$owner, $applicant, $application] = interviewWorkspaceApplication();
+    app(AccountDataPurgeService::class)->permanentlyDeleteWithinTransaction($applicant, null, 'test');
+
+    $this->actingAs($owner)->get(route('organisations.candidates.show', $application))
+        ->assertOk()
+        ->assertSee('Deleted Applicant')
+        ->assertSee('This applicant account no longer exists. Interview scheduling is unavailable.')
+        ->assertDontSee('id="schedule-interview"', false);
+
+    $this->actingAs($owner)->post(route('organisations.interviews.store', $application), interviewWorkspacePayload())
+        ->assertForbidden();
+
+    expect(Interview::withoutGlobalScopes()->count())->toBe(0)
+        ->and(CandidateMessage::withoutGlobalScopes()->count())->toBe(0);
+});
+
+test('deleted applicants cannot receive reschedules while organizations can still cancel without emailing them', function () {
+    [$owner, $applicant, $application] = interviewWorkspaceApplication();
+    $this->actingAs($owner)->post(route('organisations.interviews.store', $application), interviewWorkspacePayload())
+        ->assertSessionHasNoErrors();
+
+    $interview = Interview::withoutGlobalScopes()->sole();
+    $message = CandidateMessage::withoutGlobalScopes()->sole();
+    $applicant->delete();
+
+    app(CandidateMessageService::class)->deliver($message->id, $application->organization_id);
+
+    expect($message->fresh()->status->value)->toBe('failed');
+    Mail::assertNothingSent();
+
+    $this->actingAs($owner)->patch(route('organisations.interviews.update', $interview), interviewWorkspacePayload([
+        '_interview_form' => 'edit-'.$interview->id,
+        'version' => $interview->version,
+        'start_time' => '12:00',
+        'end_time' => '13:00',
+    ]))->assertForbidden();
+
+    $this->actingAs($owner)->post(route('organisations.interviews.cancel', $interview), ['version' => $interview->version])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('success', 'Interview cancelled. The applicant account no longer exists, so no email was sent.');
+
+    expect($interview->fresh()->status)->toBe(InterviewStatus::Cancelled)
+        ->and(CandidateMessage::withoutGlobalScopes()->count())->toBe(1);
 });
 
 test('interviews require ownership and the interview pipeline stage', function () {

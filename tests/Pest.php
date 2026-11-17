@@ -52,6 +52,11 @@ use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\OrganizationProvisioner;
 use App\Support\OrganizationContext;
+use App\Support\RateLimiting\AbuseGuard;
+use App\Support\RateLimiting\RateLimitCacheRepository;
+use Illuminate\Cache\RateLimiter as RateLimiterManager;
+use Illuminate\Support\Facades\RateLimiter as RateLimiterFacade;
+use Tests\Support\UnavailableCacheStore;
 
 /** @return array{0: Organization, 1: User} */
 function organizationWithOwner(): array
@@ -83,7 +88,7 @@ function addOrganizationMember(Organization $organization, OrganizationRole $rol
 function useUnavailableRateLimitStore(): void
 {
     app('cache')->extend('unavailable', function ($app, array $config) {
-        return $app['cache']->repository(new \Tests\Support\UnavailableCacheStore, $config);
+        return $app['cache']->repository(new UnavailableCacheStore, $config);
     });
 
     config([
@@ -93,11 +98,11 @@ function useUnavailableRateLimitStore(): void
     ]);
 
     $app = app();
-    $app->forgetInstance(\App\Support\RateLimiting\RateLimitCacheRepository::class);
-    $app->forgetInstance(\App\Support\RateLimiting\AbuseGuard::class);
-    $app->forgetInstance(\Illuminate\Cache\RateLimiter::class);
-    \Illuminate\Support\Facades\RateLimiter::clearResolvedInstance(\Illuminate\Cache\RateLimiter::class);
+    $app->forgetInstance(RateLimitCacheRepository::class);
+    $app->forgetInstance(AbuseGuard::class);
+    $app->forgetInstance(RateLimiterManager::class);
+    RateLimiterFacade::clearResolvedInstance(RateLimiterManager::class);
 
-    \Tests\Support\UnavailableCacheStore::$attempts = 0;
-    $app->make(\App\Support\RateLimiting\AbuseGuard::class)->registerLimiters();
+    UnavailableCacheStore::$attempts = 0;
+    $app->make(AbuseGuard::class)->registerLimiters();
 }

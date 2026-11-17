@@ -10,6 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Validator as ValidatorInstance;
 use Nnjeim\World\Models\City;
 use Nnjeim\World\Models\Country;
 use Nnjeim\World\Models\State;
@@ -94,7 +95,7 @@ beforeEach(function () {
     $this->actingAs(User::factory()->create());
 });
 
-function locationSelectionValidator(array $input): Illuminate\Validation\Validator
+function locationSelectionValidator(array $input): ValidatorInstance
 {
     $request = new class($input) extends FormRequest
     {

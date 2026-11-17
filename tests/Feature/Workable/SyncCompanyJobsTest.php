@@ -1,8 +1,10 @@
 <?php
 
 use App\Actions\Workable\SyncCompanyJobs;
+use App\Integrations\Workable\WorkableClient;
 use App\Models\Company;
 use App\Models\JobPosting;
+use App\Models\SyncRun;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
@@ -115,13 +117,13 @@ it('does not sweep when the fetch fails', function () {
 });
 
 it('marks the run failed and rethrows on an unexpected crash', function () {
-    $client = Mockery::mock(App\Integrations\Workable\WorkableClient::class);
+    $client = Mockery::mock(WorkableClient::class);
     $client->shouldReceive('listPublishedJobs')->once()->andThrow(new RuntimeException('boom'));
 
     expect(fn () => (new SyncCompanyJobs($client))($this->company))
         ->toThrow(RuntimeException::class, 'boom');
 
-    $run = App\Models\SyncRun::where('company_id', $this->company->id)->latest('id')->first();
+    $run = SyncRun::where('company_id', $this->company->id)->latest('id')->first();
     expect($run->status)->toBe('failed')
         ->and($run->finished_at)->not->toBeNull()
         ->and($run->error)->toBe(RuntimeException::class);
