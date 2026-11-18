@@ -1,6 +1,6 @@
 {
-  "_pdf.worker.min-BrZ5xJmk.js": {
-    "file": "assets/pdf.worker.min-BrZ5xJmk.js",
+  "_pdf.worker.min-2BiM_jyt.js": {
+    "file": "assets/pdf.worker.min-2BiM_jyt.js",
     "name": "pdf.worker.min",
     "assets": [
       "assets/pdf.worker.min-Dkey6ZUl.mjs"
@@ -23,16 +23,12 @@
     "src": "public/asset/marthire/how-it-works/cta-bg.png"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CTR3Ut19.css",
+    "file": "assets/app-2akFa6dl.css",
     "src": "resources/css/app.css",
-    "isEntry": true,
-    "name": "app",
-    "names": [
-      "app.css"
-    ]
+    "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-eUsPqI_Q.js",
+    "file": "assets/app-DMnP7bn2.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -42,29 +38,29 @@
       "resources/js/candidate-resume-autofill.js"
     ],
     "css": [
-      "assets/app-CQ7DNbul.css"
+      "assets/app-MPWXhL5q.css"
     ]
   },
   "resources/js/candidate-pdf.js": {
-    "file": "assets/candidate-pdf-Bk76uDWt.js",
+    "file": "assets/candidate-pdf-KQLNk8O2.js",
     "name": "candidate-pdf",
     "src": "resources/js/candidate-pdf.js",
     "isDynamicEntry": true,
     "imports": [
-      "_pdf.worker.min-BrZ5xJmk.js"
+      "_pdf.worker.min-2BiM_jyt.js"
     ]
   },
   "resources/js/candidate-resume-autofill.js": {
-    "file": "assets/candidate-resume-autofill-CBxBDr2u.js",
+    "file": "assets/candidate-resume-autofill-CEK8vk7-.js",
     "name": "candidate-resume-autofill",
     "src": "resources/js/candidate-resume-autofill.js",
     "isDynamicEntry": true,
     "imports": [
-      "_pdf.worker.min-BrZ5xJmk.js"
+      "_pdf.worker.min-2BiM_jyt.js"
     ]
   },
   "resources/js/international-phone.js": {
-    "file": "assets/international-phone-Ke99Mi54.js",
+    "file": "assets/international-phone-05Ymbysy.js",
     "name": "international-phone",
     "src": "resources/js/international-phone.js",
     "isDynamicEntry": true
