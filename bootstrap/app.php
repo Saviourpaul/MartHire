@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureAuthenticationVersion;
 use App\Http\Middleware\EnsureOrganizationOnboardingIsComplete;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\InitializeOrganizationContext;
+use App\Http\Middleware\SecurityHeaders;
 use App\Support\ExpirationResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Reject forged Host headers so password-reset and signed email links
+        // can only be generated for the configured application domain.
+        $middleware->trustHosts();
+        $middleware->append(SecurityHeaders::class);
+
         $middleware->web(append: [EnsureAuthenticationVersion::class, InitializeOrganizationContext::class]);
         $middleware->prependToPriorityList(
             before: ThrottleRequests::class,
