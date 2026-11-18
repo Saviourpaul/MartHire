@@ -117,17 +117,17 @@ Route::get('organizations/{slug}/careers', PublicOrganizationCareerController::c
 Route::get('jobs/{job}/apply', [JobApplicationController::class, 'create'])
     ->middleware(['auth', 'verified', 'active.account', 'role:applicant'])->name('applications.create');
 Route::post('jobs/{job}/apply', [JobApplicationController::class, 'store'])
-    ->middleware(['auth', 'verified', 'active.account', 'role:applicant', 'throttle:10,1'])->name('applications.store');
+    ->middleware(['auth', 'verified', 'active.account', 'role:applicant', 'throttle:application-submit'])->name('applications.store');
 Route::get('workable-jobs', [PublicJobController::class, 'index'])->name('workable-jobs.index');
 Route::get('workable-jobs/{id}', [WorkableJobController::class, 'show'])->name('workable-jobs.show');
 
 // Hosted applications keep their destination; roles without one show the form preview.
 Route::get('workable-jobs/{id}/apply', [WorkableJobController::class, 'apply'])
-    ->middleware('auth')->name('workable-jobs.apply');
+    ->middleware(['auth', 'verified', 'active.account', 'role:applicant'])->name('workable-jobs.apply');
 
 // Native apply submission: validates, queues the application, dispatches the outbox job.
 Route::post('workable-jobs/{id}/apply', [WorkableJobController::class, 'store'])
-    ->middleware('auth')->name('workable-jobs.apply.store');
+    ->middleware(['auth', 'verified', 'active.account', 'role:applicant', 'throttle:application-submit'])->name('workable-jobs.apply.store');
 
 // Public, token-based: reachable whether or not the invited person already
 // has an account. InitializeOrganizationContext special-cases this prefix.
