@@ -8,8 +8,12 @@
                 <p>{{ __('Received :date', ['date' => $demoRequest->created_at->format('j M Y, g:i A')]) }}</p>
             </div>
             <div class="nw-demo-review-heading__badges">
-                <x-status-badge :status="$demoRequest->status->label()" />
-                <x-status-badge :status="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? __('Invitation expired') : $demoRequest->onboarding_status->label()" />
+                <x-status-badge :status="$demoRequest->status" />
+                <x-status-badge
+                    :status="$demoRequest->onboarding_status"
+                    :label="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? __('Invitation expired') : null"
+                    :tone="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? 'danger' : null"
+                />
             </div>
         </div>
     </x-slot>
@@ -149,7 +153,13 @@
                 <section class="nw-panel nw-demo-review-card">
                     <h2>{{ __('Account setup') }}</h2>
                     <p>{{ __('The request is approved. The contact creates their password after accepting the secure invitation.') }}</p>
-                    <p><strong>{{ __('Invitation status') }}:</strong> {{ $demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? __('Expired') : $demoRequest->onboarding_status->label() }}</p>
+                    <p><strong>{{ __('Invitation status') }}:</strong>
+                        <x-status-badge
+                            :status="$demoRequest->onboarding_status"
+                            :label="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? __('Expired') : null"
+                            :tone="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? 'danger' : null"
+                        />
+                    </p>
                     @if ($demoRequest->setup_sent_at)<p class="nw-hint">{{ __('Last sent :date', ['date' => $demoRequest->setup_sent_at->format('j M Y, g:i A')]) }}</p>@endif
                     <form method="POST" action="{{ route('admin.demo-requests.resend', $demoRequest) }}">@csrf<button class="nw-button nw-button--primary nw-button--block" type="submit">{{ __('Send or resend invitation') }}</button></form>
                 </section>

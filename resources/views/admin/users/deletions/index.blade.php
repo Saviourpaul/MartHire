@@ -61,6 +61,26 @@
                                     ?? (is_object($userRole) && method_exists($userRole, 'label')
                                         ? $userRole->label()
                                         : (is_object($userRole) ? ($userRole->value ?? null) : $userRole));
+                                $warningTone = match ($deletion->warning_status) {
+                                    'sent' => 'success',
+                                    'queued', 'sending' => 'processing',
+                                    'pending' => 'pending',
+                                    'failed' => 'danger',
+                                    default => 'neutral',
+                                };
+                                $lifecycleTone = match ($deletion->status) {
+                                    'scheduled' => 'pending',
+                                    'completed' => 'success',
+                                    'cancelled' => 'danger',
+                                    default => 'neutral',
+                                };
+                                $purgeTone = match ($deletion->purge_status) {
+                                    'processing' => 'processing',
+                                    'pending' => 'pending',
+                                    'complete' => 'success',
+                                    'failed' => 'danger',
+                                    default => 'neutral',
+                                };
                             @endphp
                             <tr>
                                 <td class="nw-table__main">
@@ -83,7 +103,7 @@
                                 <td>{{ $deletion->last_login_at_snapshot?->format('j M Y, H:i') ?? '—' }}</td>
                                 <td>{{ $deletion->scheduled_deletion_at?->format('j M Y, H:i') ?? '—' }}</td>
                                 <td>
-                                    <x-status-badge :status="$humanizeLifecycleValue($deletion->warning_status)" />
+                                    <x-status-badge :status="$humanizeLifecycleValue($deletion->warning_status)" :tone="$warningTone" />
                                     @if ($deletion->warning_queued_at)
                                         <small>{{ __('Queued') }}: {{ $deletion->warning_queued_at->format('j M Y, H:i') }}</small>
                                     @endif
@@ -96,7 +116,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <x-status-badge :status="$humanizeLifecycleValue($deletion->status)" />
+                                    <x-status-badge :status="$humanizeLifecycleValue($deletion->status)" :tone="$lifecycleTone" />
                                     @if ($deletion->completed_at)
                                         <small>{{ __('Completed') }}: {{ $deletion->completed_at->format('j M Y, H:i') }}</small>
                                     @endif
@@ -105,7 +125,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <x-status-badge :status="$humanizeLifecycleValue($deletion->purge_status)" />
+                                    <x-status-badge :status="$humanizeLifecycleValue($deletion->purge_status)" :tone="$purgeTone" />
                                     <small>{{ __('Attempts') }}: {{ $deletion->purge_attempts }}</small>
                                     @if ($deletion->purge_error)
                                         <small class="nw-error">{{ $deletion->purge_error }}</small>

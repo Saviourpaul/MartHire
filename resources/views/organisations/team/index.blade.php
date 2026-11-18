@@ -70,7 +70,7 @@
                         @foreach ($invitations as $invitation)
                             <tr>
                                 <td class="nw-table__main">{{ $invitation->email }}</td>
-                                <td><x-status-badge :status="$invitation->role->label()" /></td>
+                                <td><x-status-badge :status="$invitation->role->label()" tone="neutral" /></td>
                                 <td><x-status-badge :status="$invitation->status" /></td>
                                 <td>{{ trim(($invitation->invitedBy?->first_name ?? '').' '.($invitation->invitedBy?->last_name ?? '')) ?: '—' }}</td>
                                 <td>{{ $invitation->expires_at->format('j M Y') }}</td>
@@ -119,7 +119,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td><x-status-badge :status="$member->role->label()" /></td>
+                                <td><x-status-badge :status="$member->role->label()" tone="neutral" /></td>
                                 <td><x-status-badge :status="$member->status" /></td>
                                 <td>{{ $member->jobs_count }}</td>
                                 <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
@@ -160,7 +160,7 @@
                         <h2 id="manage-member-{{ $member->id }}-title" class="nw-modal-profile__name">{{ trim($member->user->first_name.' '.$member->user->last_name) }}</h2>
                         <p id="manage-member-{{ $member->id }}-description" class="nw-modal-profile__email">{{ $member->user->email }}</p>
                         <div class="nw-modal-profile__badges">
-                            <x-status-badge :status="$member->role->label()" />
+                            <x-status-badge :status="$member->role->label()" tone="neutral" />
                             <x-status-badge :status="$member->status" />
                         </div>
                     </div>

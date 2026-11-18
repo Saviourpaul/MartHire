@@ -20,7 +20,7 @@
         <article class="nw-review-interview" aria-labelledby="interview-heading-{{ $interview->id }}">
             <header class="nw-panel__head"><div><h3 id="interview-heading-{{ $interview->id }}">{{ $interview->mode->label() }} {{ __('interview') }}</h3><p>{{ $interview->start_at->setTimezone($interview->timezone)->format('D, j M Y · g:i A') }} – {{ $interview->end_at->setTimezone($interview->timezone)->format('g:i A') }} ({{ $interview->timezone }})</p></div><x-status-badge :status="$interview->status" /></header>
             <dl class="nw-detail-list">
-                <div><dt>{{ __('Candidate response') }}</dt><dd>{{ $interview->candidate_response->label() }}</dd></div>
+                <div><dt>{{ __('Candidate response') }}</dt><dd><x-status-badge :status="$interview->candidate_response" /></dd></div>
                 @if ($interview->mode === InterviewMode::Online)
                     <div><dt>{{ __('Platform') }}</dt><dd>{{ $interview->platform?->label() }}</dd></div>
                     <div><dt>{{ __('Meeting') }}</dt><dd><a class="nw-link" href="{{ $interview->meeting_link }}" target="_blank" rel="noopener noreferrer">{{ __('Join meeting') }}</a></dd></div>
@@ -55,7 +55,7 @@
             @if ($canSendCandidateEmail && $interview->relationLoaded('messages'))
                 <details class="nw-review-disclosure"><summary>{{ __('Invitation delivery') }}</summary>
                     @forelse ($interview->messages as $message)
-                        <div class="nw-review-delivery"><strong>{{ $message->rendered_subject }}</strong><p>{{ $message->status->label() }} · {{ ($message->sent_at ?? $message->queued_at ?? $message->created_at)?->format('j M Y, g:i A') }}</p>
+                        <div class="nw-review-delivery"><strong>{{ $message->rendered_subject }}</strong><p><x-status-badge :status="$message->status" /> · {{ ($message->sent_at ?? $message->queued_at ?? $message->created_at)?->format('j M Y, g:i A') }}</p>
                             @if ($message->error_message)<p class="nw-hint">{{ $message->error_message }}</p>@endif
                             @can('retry', $message)<form method="POST" action="{{ route('organisations.interviews.retry', $message) }}">@csrf<button type="submit" class="nw-button nw-button--small">{{ __('Retry email') }}</button></form>@endcan
                         </div>

@@ -1,34 +1,21 @@
 <section aria-labelledby="password-heading">
     <header class="nw-panel-heading">
-        <span class="nw-eyebrow">{{ __('Peace of mind') }}</span>
         <h2 id="password-heading">{{ __('Change password') }}</h2>
-        <p>{{ __('Use a long, unique password to help keep your account secure.') }}</p>
+        <p>{{ __('password changes are completed through a link sent to your email.') }}</p>
     </header>
 
-    <form method="post" action="{{ route('password.update') }}" class="nw-form-stack">
+    <form method="post" action="{{ route('password.reset-link.authenticated') }}" class="nw-form-stack">
         @csrf
-        @method('put')
 
-        <div>
-            <x-input-label for="update_password_current_password" :value="__('Current password')" />
-            <x-text-input id="update_password_current_password" name="current_password" error-bag="updatePassword" type="password" autocomplete="current-password" />
-            <x-input-error id="update_password_current_password-error" :messages="$errors->updatePassword->get('current_password')" />
-        </div>
+        <p class="nw-form-hint">
+            {{ __('We will send the reset link to your registered email address:') }}
+            <strong>{{ $user->email }}</strong>
+        </p>
 
-        <div>
-            <x-input-label for="update_password_password" :value="__('New password')" />
-            <x-text-input id="update_password_password" name="password" error-bag="updatePassword" type="password" autocomplete="new-password" />
-            <x-input-error id="update_password_password-error" :messages="$errors->updatePassword->get('password')" />
-        </div>
-
-        <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm new password')" />
-            <x-text-input id="update_password_password_confirmation" name="password_confirmation" error-bag="updatePassword" type="password" autocomplete="new-password" />
-            <x-input-error id="update_password_password_confirmation-error" :messages="$errors->updatePassword->get('password_confirmation')" />
-        </div>
+        <x-input-error id="password_reset-error" :messages="$errors->get('password_reset')" />
 
         <x-form.actions>
-            <x-primary-button>{{ __('Update password') }}</x-primary-button>
+            <x-primary-button>{{ __(' password reset link') }}</x-primary-button>
         </x-form.actions>
     </form>
 </section>

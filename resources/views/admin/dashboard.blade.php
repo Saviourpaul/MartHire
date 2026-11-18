@@ -5,7 +5,6 @@
     </x-slot>
 
     @fragment('admin-dashboard')
-    <div data-live-table="admin-dashboard" data-live-topics="users,notifications,demo-requests" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-stats">
         <div class="nw-stat">
             <div class="nw-stat__top">
@@ -74,7 +73,7 @@
                                 <tr>
                                     <td class="nw-table__main">{{ trim($recentUser->first_name.' '.$recentUser->last_name) }}</td>
                                     <td>{{ $recentUser->email }}</td>
-                                    <td><x-status-badge :status="$recentUser->role->value" /></td>
+                                    <td><x-status-badge :status="$recentUser->role->label()" tone="neutral" /></td>
                                     <td>{{ $recentUser->created_at->format('j M Y') }}</td>
                                 </tr>
                             @endforeach
@@ -112,7 +111,7 @@
                                 <tr>
                                     <td class="nw-table__main">{{ $recentJob->title }}</td>
                                     <td>{{ $recentJob->company }}</td>
-                                    <td><x-status-badge :status="$recentJob->status->value" /></td>
+                                    <td><x-status-badge :status="$recentJob->status" /></td>
                                     <td>{{ $recentJob->created_at->format('j M Y') }}</td>
                                 </tr>
                             @endforeach

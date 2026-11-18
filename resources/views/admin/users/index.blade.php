@@ -107,7 +107,7 @@
                                     </div>
                                 </td>
                                 <td>{{ $managedUser->phone ?: '—' }}</td>
-                                <td><x-status-badge :status="$managedUser->role->label()" /></td>
+                                <td><x-status-badge :status="$managedUser->role->label()" tone="neutral" /></td>
                                 <td><x-status-badge :status="$managedUser->status" /></td>
                                 <td>{{ $managedUser->created_at->format('j M Y') }}</td>
                                 <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
@@ -148,7 +148,7 @@
                         <h2 id="manage-user-{{ $managedUser->id }}-title" class="nw-modal-profile__name">{{ trim($managedUser->first_name.' '.$managedUser->last_name) }}</h2>
                         <p id="manage-user-{{ $managedUser->id }}-description" class="nw-modal-profile__email">{{ $managedUser->email }}</p>
                         <div class="nw-modal-profile__badges">
-                            <x-status-badge :status="$managedUser->role->label()" />
+                            <x-status-badge :status="$managedUser->role->label()" tone="neutral" />
                             <x-status-badge :status="$managedUser->status" />
                         </div>
                     </div>

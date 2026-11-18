@@ -12,7 +12,8 @@
     $status = session('status');
     if (is_string($status) && trim($status) !== '') {
         [$type, $message] = match ($status) {
-            'password-updated' => ['success', __('Your password has been updated.')],
+            'password-reset-link-sent' => ['success', __('A password reset link has been sent to your registered email address.')],
+            'password-reset-link-cooldown' => ['info', __('A reset link was requested recently. Check your email or try again in a minute.')],
             'profile-updated' => ['success', __('Profile updated successfully.')],
             'verification-code-sent' => ['success', __('A new verification code has been sent to your email address.')],
             'verification-link-sent' => ['success', __('A new verification link has been sent to your email address.')],

@@ -4,7 +4,7 @@
 
     @fragment('client-application')
     <section class="nw-panel nw-form-stack" data-live-table="client-application" data-live-topics="applications,interviews,notifications" data-live-interval="0" data-live-url="{{ request()->fullUrl() }}">
-        <header class="nw-panel-heading"><span class="nw-eyebrow">{{ $application->reference }}</span><h2 class="nw-heading">{{ $application->status->label() }}</h2><p>{{ __('Submitted :date', ['date' => $application->submitted_at?->format('j F Y, H:i')]) }}</p></header>
+        <header class="nw-panel-heading"><span class="nw-eyebrow">{{ $application->reference }}</span><h2 class="nw-heading">{{ __('Application status') }}</h2><p><x-status-badge :status="$application->status" /> {{ __('Submitted :date', ['date' => $application->submitted_at?->format('j F Y, H:i')]) }}</p></header>
         @if ($publicJob)<div><span class="nw-label">{{ __('Job country') }}</span><x-job-country :job="$publicJob" /></div>@endif
         <dl class="nw-form-stack">
             <div><dt class="nw-label">{{ __('Applicant') }}</dt><dd>{{ trim($application->first_name.' '.$application->last_name) }}</dd></div>

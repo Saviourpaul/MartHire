@@ -61,8 +61,14 @@
                                         <strong>{{ trim($demoRequest->contact_first_name.' '.$demoRequest->contact_last_name) }}</strong>
                                         <small>{{ $demoRequest->business_email }}</small>
                                     </td>
-                                    <td><x-status-badge :status="$demoRequest->status->label()" /></td>
-                                    <td><x-status-badge :status="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? __('Invitation expired') : $demoRequest->onboarding_status->label()" /></td>
+                                    <td><x-status-badge :status="$demoRequest->status" /></td>
+                                    <td>
+                                        <x-status-badge
+                                            :status="$demoRequest->onboarding_status"
+                                            :label="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? __('Invitation expired') : null"
+                                            :tone="$demoRequest->setup_expires_at?->isPast() && $demoRequest->onboarding_status->value === 'invitation_sent' ? 'danger' : null"
+                                        />
+                                    </td>
                                     <td>{{ $demoRequest->assignedAdmin ? trim($demoRequest->assignedAdmin->first_name.' '.$demoRequest->assignedAdmin->last_name) : __('Unassigned') }}</td>
                                     <td>{{ $demoRequest->created_at->format('j M Y') }}</td>
                                     <td class="nw-table__go nw-table__go--persist nw-table__actions-cell">
