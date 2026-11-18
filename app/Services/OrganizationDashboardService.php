@@ -159,13 +159,7 @@ class OrganizationDashboardService
         foreach (CandidatePipelineStage::cases() as $status) {
             $labels[] = $status->label();
             $series[] = (int) ($counts[$status->value] ?? 0);
-            $colors[] = match ($status) {
-                CandidatePipelineStage::Submitted => '#64748b',
-                CandidatePipelineStage::Shortlisted => '#3641f5',
-                CandidatePipelineStage::Interview => '#f59e0b',
-                CandidatePipelineStage::Selected => '#22c55e',
-                CandidatePipelineStage::Rejected => '#ef4444',
-            };
+            $colors[] = $status->badgeTone()->chartColor();
         }
 
         return [

@@ -12,6 +12,7 @@ use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\AccountLifecycleService;
 use App\Services\ApplicationDocumentFileService;
+use App\Support\CsvCellSanitizer;
 use App\Support\LiveTables;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -592,14 +593,14 @@ class UserManagementController extends Controller
             fputcsv($handle, ['Name', 'Email', 'Phone', 'Role', 'Status', 'Joined']);
 
             foreach ($users as $user) {
-                fputcsv($handle, [
+                fputcsv($handle, CsvCellSanitizer::sanitizeRow([
                     trim($user->first_name.' '.$user->last_name),
                     $user->email,
                     $user->phone ?? '',
                     $user->role->label(),
                     $user->status->label(),
                     $user->created_at->toDateString(),
-                ]);
+                ]));
             }
 
             fclose($handle);

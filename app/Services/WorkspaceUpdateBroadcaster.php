@@ -32,6 +32,12 @@ class WorkspaceUpdateBroadcaster
     /** @param list<string> $topics */
     public function applicant(int $userId, array $topics, ?string $message = null, string $type = 'info'): void
     {
+        $this->user($userId, $topics, $message, $type);
+    }
+
+    /** @param list<string> $topics */
+    public function user(int $userId, array $topics, ?string $message = null, string $type = 'info'): void
+    {
         if ($userId < 1) {
             return;
         }

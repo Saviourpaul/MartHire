@@ -11,6 +11,7 @@ use App\Services\ApplicationFormService;
 use App\Services\CandidateReviewService;
 use App\Services\EmailTemplateService;
 use App\Services\InterviewWorkspaceData;
+use App\Support\CsvCellSanitizer;
 use App\Support\LiveTables;
 use App\Support\OrganizationPermissions;
 use Illuminate\Database\Eloquent\Builder;
@@ -62,13 +63,13 @@ class OrganizationApplicationController extends Controller
             fputcsv($handle, ['Candidate', 'Email', 'Job', 'Stage', 'Applied']);
 
             foreach ($applications as $application) {
-                fputcsv($handle, [
+                fputcsv($handle, CsvCellSanitizer::sanitizeRow([
                     trim(($application->applicant?->first_name ?? '') . ' ' . ($application->applicant?->last_name ?? '')),
                     $application->applicant?->email ?? '',
                     $application->job?->title ?? '',
                     $application->status->label(),
                     $application->submitted_at?->toDateString() ?? '',
-                ]);
+                ]));
             }
 
             fclose($handle);

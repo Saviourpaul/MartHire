@@ -13,6 +13,15 @@ enum InterviewCandidateResponse: string
         return ucfirst($this->value);
     }
 
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Pending => StatusBadgeTone::Pending,
+            self::Confirmed => StatusBadgeTone::Success,
+            self::Declined => StatusBadgeTone::Danger,
+        };
+    }
+
     /** @return list<string> */
     public static function values(): array
     {

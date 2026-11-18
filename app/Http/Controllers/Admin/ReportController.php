@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminReportRequest;
 use App\Services\AdminReportService;
+use App\Support\CsvCellSanitizer;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -30,7 +31,7 @@ class ReportController extends Controller
             $handle = fopen('php://output', 'w');
 
             foreach ($this->reports->csvRows($report) as $row) {
-                fputcsv($handle, $row);
+                fputcsv($handle, CsvCellSanitizer::sanitizeRow($row));
             }
 
             fclose($handle);

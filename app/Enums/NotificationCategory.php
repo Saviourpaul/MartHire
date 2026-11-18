@@ -17,6 +17,7 @@ enum NotificationCategory: string
     case AdminApplicantAccount = 'admin_applicant_account';
     case AdminDemoRequest = 'admin_demo_request';
     case ApplicantAccountStatus = 'applicant_account_status';
+    case AccountSecurity = 'account_security';
 
     public function label(): string
     {
@@ -32,6 +33,7 @@ enum NotificationCategory: string
             self::AdminApplicantAccount => 'Applicant account updates',
             self::AdminDemoRequest => 'Organization demo requests',
             self::ApplicantAccountStatus => 'Applicant account status',
+            self::AccountSecurity => 'Account security updates',
         };
     }
 
@@ -49,6 +51,7 @@ enum NotificationCategory: string
             self::AdminApplicantAccount => 'Applicant registrations, profile updates, and moderation changes.',
             self::AdminDemoRequest => 'New organization demo requests requiring administrative review.',
             self::ApplicantAccountStatus => 'Important changes to your Marthire account access.',
+            self::AccountSecurity => 'Important changes to your account security settings.',
         };
     }
 

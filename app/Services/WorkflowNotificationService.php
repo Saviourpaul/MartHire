@@ -31,6 +31,34 @@ class WorkflowNotificationService
         private WorkspaceUpdateBroadcaster $workspaceUpdates,
     ) {}
 
+    /** Publish an in-app password event without adding a second email. */
+    public function accountPasswordUpdated(User $user, int $auditId, bool $reset): void
+    {
+        if ($auditId < 1) {
+            return;
+        }
+
+        $action = $reset ? 'password-reset-completed' : 'password-changed';
+        $title = $reset ? 'Password reset completed' : 'Password changed';
+        $message = $reset
+            ? 'Your account password was reset successfully.'
+            : 'Your account password was changed successfully.';
+
+        $this->publish(
+            NotificationCategory::AccountSecurity,
+            $action.':'.$auditId,
+            collect([$user]),
+            'account',
+            null,
+            'user',
+            $user->id,
+            $title,
+            $message,
+        );
+
+        $this->workspaceUpdates->user((int) $user->id, ['notifications']);
+    }
+
     public function applicationSubmitted(ApplicationForm $application): void
     {
         $this->publish(

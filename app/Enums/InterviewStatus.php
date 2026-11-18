@@ -19,6 +19,15 @@ enum InterviewStatus: string
         return in_array($this, [self::Scheduled, self::Rescheduled], true);
     }
 
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Scheduled, self::Rescheduled => StatusBadgeTone::Processing,
+            self::Cancelled => StatusBadgeTone::Danger,
+            self::Completed => StatusBadgeTone::Success,
+        };
+    }
+
     /** @return list<string> */
     public static function values(): array
     {

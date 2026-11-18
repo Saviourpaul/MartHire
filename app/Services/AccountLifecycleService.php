@@ -116,7 +116,8 @@ class AccountLifecycleService
             $user = User::query()->lockForUpdate()->findOrFail($user->id);
             $user->forceFill(['password' => Hash::make($password)])->save();
             $this->revoke($user);
-            $this->audit($user, $reset ? 'password_reset' : 'password_changed');
+            $audit = $this->audit($user, $reset ? 'password_reset' : 'password_changed');
+            $this->workflowNotifications->accountPasswordUpdated($user, (int) $audit->id, $reset);
             $this->notifyAfterCommit($user, $reset ? 'Your password was reset.' : 'Your password was changed.');
             if ($request !== null) {
                 DB::afterCommit(fn () => $this->retainCurrentSession($request, $user));
@@ -378,9 +379,15 @@ class AccountLifecycleService
         ])->save();
     }
 
-    private function audit(User $user, string $action): void
+    private function audit(User $user, string $action): SettingsAuditEvent
     {
-        SettingsAuditEvent::query()->create(['actor_id' => $user->id, 'user_id' => $user->id, 'scope' => 'personal', 'action' => $action, 'changes' => []]);
+        return SettingsAuditEvent::query()->create([
+            'actor_id' => $user->id,
+            'user_id' => $user->id,
+            'scope' => 'personal',
+            'action' => $action,
+            'changes' => [],
+        ]);
     }
 
     private function notifyAfterCommit(User $user, string $message): void

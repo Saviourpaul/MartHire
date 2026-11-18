@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\RateLimiting\AbuseGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,8 +34,25 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
+        return $this->sendResetLink($request, (string) $request->input('email'));
+    }
+
+    /**
+     * Send a reset link to the signed-in user's registered email address.
+     */
+    public function storeForAuthenticatedUser(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        return $this->sendResetLink($request, $user->getEmailForPasswordReset(), authenticated: true);
+    }
+
+    private function sendResetLink(Request $request, string $email, bool $authenticated = false): RedirectResponse
+    {
         $guard = app(AbuseGuard::class);
-        $cooldownKey = 'password-reset:'.Str::lower((string) $request->string('email'));
+        $email = trim($email);
+        $cooldownKey = 'password-reset:'.Str::lower($email);
         $cooldown = (int) config('rate_limiting.limits.password_reset.cooldown_seconds', 60);
 
         // Identical response whether or not the account exists, so the flow never
@@ -43,16 +61,24 @@ class PasswordResetLinkController extends Controller
 
         // Honour a short per-email cooldown before sending another link.
         if ($guard->onCooldown($cooldownKey, $cooldown)) {
-            return $neutral();
+            return $authenticated
+                ? back()->with('status', 'password-reset-link-cooldown')
+                : $neutral();
         }
 
         try {
-            $status = Password::sendResetLink($request->only('email'));
+            $status = Password::sendResetLink(['email' => $email]);
         } catch (TransportExceptionInterface $exception) {
             report($exception);
 
+            if ($authenticated) {
+                return back()->withErrors([
+                    'password_reset' => __('Unable to connect at the moment. An error occurred while processing your request. Please try again later.'),
+                ]);
+            }
+
             return redirect()->route('password.request')
-                ->withInput($request->only('email'))
+                ->withInput(['email' => $email])
                 ->withErrors([
                     'mail' => __('Unable to connect at the moment. An error occurred while processing your request. Please try again later.'),
                 ]);
@@ -60,6 +86,20 @@ class PasswordResetLinkController extends Controller
 
         if ($status === Password::RESET_LINK_SENT) {
             $guard->touchCooldown($cooldownKey, $cooldown);
+
+            return $authenticated
+                ? back()->with('status', 'password-reset-link-sent')
+                : $neutral();
+        }
+
+        if ($authenticated) {
+            if ($status === Password::RESET_THROTTLED) {
+                return back()->with('status', 'password-reset-link-cooldown');
+            }
+
+            return back()->withErrors([
+                'password_reset' => __('Unable to send a password reset link right now. Please try again later.'),
+            ]);
         }
 
         return $neutral();

@@ -18,4 +18,13 @@ enum CandidateMessageStatus: string
             self::Bounced => 'Bounced',
         };
     }
+
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Queued => StatusBadgeTone::Processing,
+            self::Sent => StatusBadgeTone::Success,
+            self::Failed, self::Bounced => StatusBadgeTone::Danger,
+        };
+    }
 }

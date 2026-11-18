@@ -68,6 +68,7 @@ class NewPasswordController extends Controller
     public function store(Request $request, ExpirationResponse $expiration): RedirectResponse|Response|JsonResponse
     {
         $request->session()->forget('password_reset_success');
+        $wasAuthenticated = $request->user() !== null;
 
         $validator = Validator::make($request->all(), [
             'token' => ['required', 'string'],
@@ -123,6 +124,14 @@ class NewPasswordController extends Controller
 
         if ($status !== Password::PASSWORD_RESET) {
             return $expiration->gone($request, 'password_reset');
+        }
+
+        // Password reset revokes existing sessions. Render success directly for
+        // a signed-in user because auth-version middleware may clear that session
+        // before a follow-up redirect can consume the one-time success flash.
+        if ($wasAuthenticated) {
+            return response()->view('auth.reset-password', ['resetSuccessful' => true])
+                ->header('Cache-Control', 'no-store, private');
         }
 
         return redirect()->route('password.reset.success')->with('password_reset_success', true);

@@ -24,4 +24,15 @@ enum OrganizationDemoRequestStatus: string
             self::Duplicate => 'Duplicate',
         };
     }
+
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Submitted, self::InformationRequested => StatusBadgeTone::Pending,
+            self::UnderReview, self::GuidedDemoOffered => StatusBadgeTone::Processing,
+            self::Approved => StatusBadgeTone::Success,
+            self::Rejected => StatusBadgeTone::Danger,
+            self::Duplicate => StatusBadgeTone::Neutral,
+        };
+    }
 }

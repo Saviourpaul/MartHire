@@ -12,6 +12,14 @@ enum OrganizationMemberStatus: string
         return ucfirst($this->value);
     }
 
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Active => StatusBadgeTone::Success,
+            self::Suspended => StatusBadgeTone::Danger,
+        };
+    }
+
     /** @return list<string> */
     public static function values(): array
     {

@@ -47,4 +47,13 @@ enum JobStatus: string
             self::Draft => 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
         };
     }
+
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Open => StatusBadgeTone::Success,
+            self::Suspended => StatusBadgeTone::Pending,
+            self::Draft, self::Closed => StatusBadgeTone::Neutral,
+        };
+    }
 }

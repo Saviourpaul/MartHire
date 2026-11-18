@@ -22,4 +22,14 @@ enum OrganizationDemoOnboardingStatus: string
             self::Completed => 'Completed',
         };
     }
+
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::NotStarted => StatusBadgeTone::Neutral,
+            self::InvitationSent, self::InProgress => StatusBadgeTone::Processing,
+            self::InvitationFailed, self::InvitationExpired => StatusBadgeTone::Danger,
+            self::Completed => StatusBadgeTone::Success,
+        };
+    }
 }

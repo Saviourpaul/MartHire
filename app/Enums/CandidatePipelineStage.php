@@ -54,4 +54,14 @@ enum CandidatePipelineStage: string
             self::Rejected => 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400',
         };
     }
+
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Submitted => StatusBadgeTone::Pending,
+            self::Shortlisted, self::Interview => StatusBadgeTone::Processing,
+            self::Selected => StatusBadgeTone::Success,
+            self::Rejected => StatusBadgeTone::Danger,
+        };
+    }
 }

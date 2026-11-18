@@ -33,4 +33,13 @@ enum UserStatus: string
             self::Pending => 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400',
         };
     }
+
+    public function badgeTone(): StatusBadgeTone
+    {
+        return match ($this) {
+            self::Active => StatusBadgeTone::Success,
+            self::Pending => StatusBadgeTone::Pending,
+            self::Suspended => StatusBadgeTone::Danger,
+        };
+    }
 }

@@ -39,7 +39,10 @@ class AbuseGuard
         RateLimiter::for('password-reset', fn (Request $request): array => [
             $this->limit('password_reset.ip', $request)->by('pwd-reset-ip:'.$request->ip())
                 ->response(fn (Request $r, array $h) => $this->response($r, $h, 'Too many password reset requests. Please try again later.')),
-            $this->limit('password_reset.email', $request)->by('pwd-reset-email:'.$this->emailKey($request))
+            $this->limit('password_reset.email', $request)->by('pwd-reset-email:'.$this->emailKey(
+                $request,
+                $request->user()?->getEmailForPasswordReset()
+            ))
                 ->response(fn (Request $r, array $h) => $this->response($r, $h, 'Too many password reset requests. Please try again later.')),
         ]);
 
@@ -164,9 +167,9 @@ class AbuseGuard
      | Shared helpers
      | ------------------------------------------------------------------- */
 
-    private function emailKey(Request $request): string
+    private function emailKey(Request $request, ?string $email = null): string
     {
-        return Str::transliterate(Str::lower((string) $request->input('email')));
+        return Str::transliterate(Str::lower($email ?? (string) $request->input('email')));
     }
 
     private function store(): RateLimitCacheRepository
