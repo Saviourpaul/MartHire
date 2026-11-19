@@ -156,6 +156,68 @@ it('requires authentication to submit', function () {
     expect(JobApplication::count())->toBe(0);
 });
 
+it('denies organization and admin accounts from viewing or submitting applicant Workable forms', function () {
+    Bus::fake();
+    Http::fake();
+    nativePosting();
+
+    $organization = User::factory()->organization()->create();
+    $admin = User::factory()->admin()->create();
+
+    foreach ([$organization, $admin] as $account) {
+        $this->actingAs($account)->get('/workable-jobs/SENIO001/apply')->assertForbidden();
+        $this->actingAs($account)->post('/workable-jobs/SENIO001/apply', bladePayload())->assertForbidden();
+    }
+
+    expect(JobApplication::count())->toBe(0);
+    Bus::assertNotDispatched(SubmitJobApplicationJob::class);
+    Http::assertNothingSent();
+});
+
+it('denies unverified and suspended accounts before Workable application side effects', function () {
+    Bus::fake();
+    Http::fake();
+    nativePosting();
+
+    $unverified = User::factory()->unverified()->create();
+    $this->actingAs($unverified)->get('/workable-jobs/SENIO001/apply')
+        ->assertRedirect(route('verification.notice'));
+    $this->actingAs($unverified)->post('/workable-jobs/SENIO001/apply', bladePayload())
+        ->assertRedirect(route('verification.notice'));
+
+    $suspended = User::factory()->create(['status' => 'suspended']);
+    $this->actingAs($suspended)->get('/workable-jobs/SENIO001/apply')
+        ->assertRedirect(route('login'));
+
+    expect(JobApplication::count())->toBe(0);
+    Bus::assertNotDispatched(SubmitJobApplicationJob::class);
+    Http::assertNothingSent();
+});
+
+it('rate limits native Workable submissions per applicant', function () {
+    Bus::fake();
+    Storage::fake('local');
+    fakeApplicationForm();
+    nativePosting();
+    $applicant = User::factory()->create();
+
+    foreach (range(1, 3) as $attempt) {
+        $payload = bladePayload();
+        $payload['email'] = "candidate{$attempt}@example.com";
+
+        $this->actingAs($applicant)
+            ->postJson('/workable-jobs/SENIO001/apply', $payload)
+            ->assertCreated();
+    }
+
+    $this->actingAs($applicant)
+        ->postJson('/workable-jobs/SENIO001/apply', bladePayload())
+        ->assertTooManyRequests();
+
+    expect(JobApplication::count())->toBe(3);
+    Bus::assertDispatchedTimes(SubmitJobApplicationJob::class, 3);
+});
+
 it('normalizes Workable phone numbers and retains split parts outside the provider payload', function () {
     Bus::fake();
     Storage::fake('local');

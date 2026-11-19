@@ -38,10 +38,10 @@ test('the auth layout renders each flash severity and translates machine statuse
         'error' => 'Could not complete that action.',
         'warning' => 'Check the details before continuing.',
         'info' => 'Your request is being processed.',
-        'status' => 'password-updated',
+        'status' => 'password-reset-link-sent',
     ])->get(route('login'))->assertOk()
-        ->assertSee('Your password has been updated.')
-        ->assertDontSee('password-updated');
+        ->assertSee('A password reset link has been sent to your registered email address.')
+        ->assertDontSee('password-reset-link-sent');
 
     foreach (['success', 'error', 'warning', 'info'] as $type) {
         $response->assertSee('data-toast-type="'.$type.'"', false);

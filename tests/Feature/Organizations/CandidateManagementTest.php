@@ -210,6 +210,22 @@ test('an organization can export its own candidate list as csv', function () {
     $this->assertStringContainsString($applicant->email, $csv);
 });
 
+test('organization candidate csv exports neutralize spreadsheet formulas in applicant names', function () {
+    $organizationUser = User::factory()->organization()->create();
+    $applicant = User::factory()->applicant()->create([
+        'first_name' => '@SUM(A1:A2)',
+        'last_name' => 'Formula',
+    ]);
+    createApplicationForOrganization($organizationUser, $applicant);
+
+    $csv = $this->actingAs($organizationUser)
+        ->get(route('organisations.candidates.export'))
+        ->assertOk()
+        ->streamedContent();
+
+    $this->assertStringContainsString("'@SUM(A1:A2) Formula", $csv);
+});
+
 test('admin and applicant users cannot export the candidate list', function () {
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('organisations.candidates.export'))

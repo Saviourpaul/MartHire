@@ -20,7 +20,14 @@ test('reset password link can be requested', function () {
         ->assertRedirect('/forgot-password')
         ->assertSessionHas('status', __('passwords.sent'));
 
-    Notification::assertSentTo($user, ResetPassword::class);
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user): bool {
+        $html = $notification->toMail($user)->render();
+
+        expect(str_contains($html, 'Reset your password'))->toBeTrue()
+            ->and(str_contains($html, 'Reset password'))->toBeTrue();
+
+        return true;
+    });
 });
 
 test('password reset requests are limited per email', function () {
@@ -121,6 +128,48 @@ test('password can be reset with valid token', function () {
             ->assertRedirect(route('password.reset.success'));
 
         $this->get(route('password.reset.success'))->assertOk();
+
+        return true;
+    });
+});
+
+test('password reset links expire after the configured broker lifetime', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+    $this->post('/forgot-password', ['email' => $user->email]);
+
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user): bool {
+        $this->travel(config('auth.passwords.users.expire') + 1)->minutes();
+
+        $this->get(route('password.reset', [
+            'token' => $notification->token,
+            'email' => $user->email,
+        ]))->assertStatus(410);
+
+        return true;
+    });
+});
+
+test('a password reset token cannot be reused after the password is changed', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+    $this->post('/forgot-password', ['email' => $user->email]);
+
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user): bool {
+        $credentials = [
+            'token' => $notification->token,
+            'email' => $user->email,
+            'password' => 'Single-use-reset-Password-123!',
+            'password_confirmation' => 'Single-use-reset-Password-123!',
+        ];
+
+        $this->post(route('password.store'), $credentials)
+            ->assertRedirect(route('password.reset.success'));
+
+        $this->post(route('password.store'), $credentials)
+            ->assertStatus(410);
 
         return true;
     });

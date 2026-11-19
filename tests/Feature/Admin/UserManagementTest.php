@@ -125,6 +125,21 @@ test('admin can export each user category as csv', function () {
     $this->assertStringContainsString($applicant->email, $csv);
 });
 
+test('admin user csv exports neutralize spreadsheet formulas in applicant names', function () {
+    $admin = User::factory()->admin()->create();
+    User::factory()->applicant()->create([
+        'first_name' => '=HYPERLINK("https://example.test","open")',
+        'last_name' => 'Formula',
+    ]);
+
+    $csv = $this->actingAs($admin)
+        ->get(route('admin.users.applicants.export'))
+        ->assertOk()
+        ->streamedContent();
+
+    $this->assertStringContainsString("'=HYPERLINK", $csv);
+});
+
 test('organization and applicant users cannot export the admin user list', function () {
     $this->actingAs(User::factory()->organization()->create())
         ->get(route('admin.users.applicants.export'))
