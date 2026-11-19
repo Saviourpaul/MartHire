@@ -102,9 +102,29 @@ class GoogleAuthController extends Controller
                         }
                         $settings->assertPublicRegistrationEnabled();
 
+                        $givenName = trim((string) ($googleUser->user['given_name'] ?? ''));
+                        $familyName = trim((string) ($googleUser->user['family_name'] ?? ''));
+                        $displayName = trim((string) $googleUser->getName());
+                        $emailName = trim((string) Str::before($email, '@'));
+
+                        $firstName = $givenName ?: ($displayName ?: ($emailName ?: 'Applicant'));
+                        $lastName = $familyName;
+                        $name = $givenName !== '' && $familyName !== ''
+                            ? trim($givenName.' '.$familyName)
+                            : $displayName;
+
+                        if ($name === '') {
+                            $name = trim($givenName.' '.$familyName);
+                        }
+
+                        if ($name === '') {
+                            $name = $emailName ?: 'Google applicant';
+                        }
+
                         return User::create([
-                            'first_name' => $googleUser->user['given_name'] ?? $googleUser->getName(),
-                            'last_name' => $googleUser->user['family_name'] ?? '',
+                            'name' => $name,
+                            'first_name' => $firstName,
+                            'last_name' => $lastName,
                             'email' => $email,
                             'google_id' => $googleId,
                             'password' => Hash::make(Str::random(40)),

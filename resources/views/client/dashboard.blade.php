@@ -1,5 +1,4 @@
 <x-app-layout>
-    <x-slot name="title">{{ $greeting }}</x-slot>
     <x-slot name="header">
         <h1 class="nw-heading">{{ $greeting }} <span aria-hidden="true">{{ $greetingEmoji }}</span></h1>
         <p>{{ __('Track your applications and find your next role.') }}</p>
@@ -7,7 +6,6 @@
 
     <div class="nw-applicant-dashboard" x-data="applicantProfileChecklistEditor" x-on:open-applicant-profile-editor.window="open($event.detail)" x-on:submit="submitForm($event)" x-on:input="clearFieldError($event)" x-on:change="clearFieldError($event)">
     @fragment('client-dashboard')
-    <div data-live-table="client-dashboard" data-live-topics="applications,interviews,notifications,jobs" data-live-pages="applications_page" data-live-interval="30000" data-live-url="{{ request()->fullUrl() }}">
     <div class="nw-applicant-dashboard-grid">
         <main class="nw-applicant-dashboard-main">
 
@@ -17,7 +15,6 @@
                 <h2 id="applications-heading">{{ __('Your applications') }}</h2>
                 <p>{{ __('The roles you\'ve applied for, newest first.') }}</p>
             </div>
-            <a class="nw-link nw-link--small" href="{{ route('workable-jobs.index') }}">{{ __('Browse jobs') }} <x-icon name="arrow-up-right" /></a>
         </header>
 
         @if ($applications->isEmpty())
@@ -58,43 +55,7 @@
         @endif
     </section>
 
-    <section id="recommended" class="nw-dash-section" aria-labelledby="recommended-heading">
-        <div class="nw-dash-section__head">
-            <div>
-                <h2 id="recommended-heading">{{ __('New roles to look at') }}</h2>
-                <p>{{ __('Fresh listings you haven\'t applied for yet.') }}</p>
-            </div>
-            <a class="nw-link" href="{{ route('workable-jobs.index') }}">{{ __('Browse all jobs') }} <x-icon name="arrow-right" /></a>
-        </div>
-
-        @if ($suggestedJobs->isEmpty())
-            <div class="nw-empty">
-                <h3>{{ __('No open roles right now.') }}</h3>
-                <p>{{ __('Check back soon — new roles are posted regularly.') }}</p>
-            </div>
-        @else
-            <div class="nw-job-grid">
-                @foreach ($suggestedJobs as $job)
-                    <article class="nw-job">
-                        <header class="nw-job__top">
-                            <div>
-                                <p class="nw-job__company">{{ $job->company }}</p>
-                            </div>
-                        </header>
-                        <h3 class="nw-job__title">{{ $job->title }}</h3>
-                        <ul class="nw-job__meta" aria-label="{{ __('Role details') }}">
-                            @if ($job->location)
-                                <li><x-icon name="map-pin" /> {{ $job->location }}</li>
-                            @endif
-                            @if ($job->employment_type)
-                                <li><x-icon name="briefcase" /> {{ $job->employment_type }}</li>
-                            @endif
-                        </ul>
-                    </article>
-                @endforeach
-            </div>
-        @endif
-    </section>
+    
         </main>
 
         <aside class="nw-dashboard-profile-sidebar" aria-label="{{ __('Applicant profile progress') }}">
