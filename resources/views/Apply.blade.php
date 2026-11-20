@@ -104,7 +104,11 @@
 
                         <div class="nw-error-summary" x-ref="submissionError" tabindex="-1" role="alert" x-show="submissionError" x-text="submissionError" x-cloak></div>
 
-                        <form method="POST" action="{{ $action }}" enctype="multipart/form-data" novalidate x-ref="form" x-on:submit="submit($event)">
+                        <form method="POST" action="{{ $action }}" enctype="multipart/form-data"
+                            data-max-total-upload-bytes="{{ $maxTotalUploadBytes }}"
+                            data-max-single-upload-bytes="{{ $maxSingleUploadBytes }}"
+                            data-max-upload-files="{{ $maxUploadFiles }}"
+                            novalidate x-ref="form" x-on:submit="submit($event)">
                             @csrf
 
                             @foreach ($sections as $index => $section)

@@ -5,8 +5,8 @@
                 <h2>{{ __('Notifications') }}</h2>
                 <span class="nw-notification-dropdown__count nw-notification-count" data-notification-count
                     data-notification-count-value="{{ $unreadNotificationCount }}"
-                    aria-label="{{ trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) }}"
-                    @if ($unreadNotificationCount < 1) hidden @endif>{{ $unreadNotificationCount > 99 ? '99+' : ($unreadNotificationCount ?: '') }}</span>
+                    aria-label="{{ $unreadNotificationCount > 10 ? __('10+ unread notifications') : trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) }}"
+                    @if ($unreadNotificationCount < 1) hidden @endif>{{ $unreadNotificationCount > 10 ? '10+' : ($unreadNotificationCount ?: '') }}</span>
             </div>
 
             <div class="nw-notification-dropdown__actions">

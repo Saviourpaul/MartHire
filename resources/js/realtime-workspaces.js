@@ -58,13 +58,15 @@ export function initializeRealtimeWorkspaces({
                 doc.querySelectorAll("[data-notification-count]").forEach(
                     (badge) => {
                         badge.dataset.notificationCountValue = String(count);
-                        badge.textContent = count > 99 ? "99+" : String(count);
+                        badge.textContent = count > 10 ? "10+" : String(count || "");
                         badge.hidden = count === 0;
                         badge.setAttribute(
                             "aria-label",
-                            count === 1
-                                ? "1 unread notification"
-                                : `${count} unread notifications`,
+                            count > 10
+                                ? "10+ unread notifications"
+                                : count === 1
+                                  ? "1 unread notification"
+                                  : `${count} unread notifications`,
                         );
                     },
                 );
@@ -73,6 +75,8 @@ export function initializeRealtimeWorkspaces({
                         "aria-label",
                         count === 0
                             ? link.dataset.notificationLabel || "Notifications"
+                            : count > 10
+                              ? "10+ unread notifications"
                             : count === 1
                               ? "1 unread notification"
                               : `${count} unread notifications`,

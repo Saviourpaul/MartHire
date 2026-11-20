@@ -56,6 +56,9 @@
                 @endif
 
                 <form method="POST" action="{{ route('applications.store', $job) }}" enctype="multipart/form-data"
+                    data-max-total-upload-bytes="{{ $maxTotalUploadBytes }}"
+                    data-max-single-upload-bytes="{{ $maxSingleUploadBytes }}"
+                    data-max-upload-files="{{ $maxUploadFiles }}"
                     class="nw-wizard__form" novalidate x-ref="form" x-on:submit="submit($event)"
                     x-on:input="handleInput($event)" x-on:change="handleInput($event)">
                     @csrf

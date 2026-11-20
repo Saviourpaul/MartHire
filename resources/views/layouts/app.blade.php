@@ -154,7 +154,7 @@
                     x-on:keydown.escape.window="closeAndFocus()" x-on:click.outside="close()">
                     <button type="button"
                         class="nw-icon-button nw-topbar__notification{{ request()->routeIs('notifications.*') ? ' is-active' : '' }}"
-                        aria-label="{{ $unreadNotificationCount > 0 ? trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) : __('Notifications') }}"
+                        aria-label="{{ $unreadNotificationCount > 10 ? __('10+ unread notifications') : ($unreadNotificationCount > 0 ? trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) : __('Notifications')) }}"
                         aria-controls="header-notifications" x-bind:aria-expanded="open.toString()"
                         x-ref="notificationToggle" data-notification-link
                         data-notification-label="{{ __('Notifications') }}" x-on:click.stop="toggle()"
@@ -162,8 +162,8 @@
                         <x-icon name="bell" />
                         <span class="nw-notification-count" data-notification-count
                             data-notification-count-value="{{ $unreadNotificationCount }}"
-                            aria-label="{{ trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) }}"
-                            @if ($unreadNotificationCount < 1) hidden @endif>{{ $unreadNotificationCount > 99 ? '99+' : ($unreadNotificationCount ?: '') }}</span>
+                            aria-label="{{ $unreadNotificationCount > 10 ? __('10+ unread notifications') : trans_choice(':count unread notification|:count unread notifications', $unreadNotificationCount, ['count' => $unreadNotificationCount]) }}"
+                            @if ($unreadNotificationCount < 1) hidden @endif>{{ $unreadNotificationCount > 10 ? '10+' : ($unreadNotificationCount ?: '') }}</span>
                     </button>
                     <div id="header-notifications" class="nw-notification-dropdown" x-show="open"
                         x-transition.opacity.duration.150ms x-cloak>

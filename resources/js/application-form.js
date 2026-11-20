@@ -5,6 +5,29 @@ import { createLocationSelector } from './location-selector.js';
 
 const readableSize = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 
+function submitMultipartForm(form, onProgress) {
+    return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open('POST', form.action, true);
+        request.withCredentials = true;
+        request.timeout = 300000;
+        request.setRequestHeader('Accept', 'application/json');
+        request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        request.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+        });
+        request.addEventListener('load', () => resolve({
+            status: request.status,
+            ok: request.status >= 200 && request.status < 300,
+            headers: { get: (name) => request.getResponseHeader(name) },
+            json: async () => JSON.parse(request.responseText),
+        }));
+        request.addEventListener('error', () => reject(new TypeError('The application request could not connect.')));
+        request.addEventListener('timeout', () => reject(new Error('The upload took too long. Check your connection and try again.')));
+        request.send(new FormData(form));
+    });
+}
+
 // Laravel reports errors as "answers.q-why"; the form names them "answers[q-why]".
 const errorKey = (name) => name.replace(/\[\]$/, '').replace(/\[([^\]]+)\]/g, '.$1');
 
@@ -26,6 +49,7 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
         files: {},
         over: null,
         submitting: false,
+        uploadProgress: null,
         submissionError: '',
         done: false,
         get isLastStep() { return this.isLast(); },
@@ -175,13 +199,46 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
                 this.$nextTick(() => this.$refs.success?.focus());
                 return;
             }
+            const fileInputs = [...this.$refs.form.querySelectorAll('input[type="file"]')]
+                .filter((input) => !input.disabled && input.name);
+            const maxTotalUploadBytes = Number(this.$refs.form.dataset.maxTotalUploadBytes);
+            const maxUploadFiles = Number(this.$refs.form.dataset.maxUploadFiles);
+            const selectedUploadBytes = fileInputs
+                .reduce((total, input) => total + [...(input.files || [])].reduce((size, file) => size + file.size, 0), 0);
+            const selectedUploadCount = fileInputs.reduce((total, input) => total + (input.files?.length || 0), 0);
+            if (Number.isFinite(maxUploadFiles) && selectedUploadCount > maxUploadFiles) {
+                this.submissionError = `You selected ${selectedUploadCount} files. This form can send up to ${maxUploadFiles} files at once. Remove a file and try again.`;
+                this.$nextTick(() => this.$refs.submissionError?.focus());
+                return;
+            }
+            if (Number.isFinite(maxTotalUploadBytes) && maxTotalUploadBytes >= 0 && selectedUploadBytes > maxTotalUploadBytes) {
+                this.submissionError = `Your selected files total ${readableSize(selectedUploadBytes)}. This form can send up to ${readableSize(maxTotalUploadBytes)} at once. Remove a file or choose smaller files, then try again.`;
+                this.$nextTick(() => this.$refs.submissionError?.focus());
+                return;
+            }
             this.submitting = true;
+            this.uploadProgress = null;
             try {
-                const response = await fetch(this.$refs.form.action, {
-                    method: 'POST', body: new FormData(this.$refs.form), credentials: 'same-origin',
-                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                const response = await submitMultipartForm(this.$refs.form, (progress) => {
+                    this.uploadProgress = progress;
                 });
-                if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('Please refresh this page and sign in again if your session has expired.');
+                if (response.status === 413) {
+                    let message = 'The upload is larger than the server allows. Remove a file or choose smaller files, then try again.';
+                    try {
+                        const result = await response.json();
+                        if (typeof result.message === 'string') message = result.message;
+                    } catch {}
+                    throw new Error(message);
+                }
+                if (!response.headers.get('content-type')?.includes('application/json')) {
+                    if (response.status === 401 || response.status === 419 || (response.status >= 200 && response.status < 300)) {
+                        throw new Error('Please refresh this page and sign in again if your session has expired.');
+                    }
+                    if (response.status === 403) throw new Error('Your account does not have permission to submit this application.');
+                    if (response.status === 404) throw new Error('This job is no longer accepting applications.');
+                    if (response.status >= 500) throw new Error('The server could not complete your application. Your entries are still here; please try again.');
+                    throw new Error('We could not submit your application. Your entries are still here; please try again.');
+                }
                 const result = await response.json();
                 if (response.status === 422) { this.restoreErrors(result.errors || {}); return; }
                 if (result.redirect && (response.ok || response.status === 409)) {
@@ -197,7 +254,16 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
             } catch (error) {
                 this.submissionError = error instanceof TypeError ? 'We could not connect. Your entries are still here; please try again.' : error.message;
                 this.$nextTick(() => this.$refs.submissionError?.focus());
-            } finally { this.submitting = false; }
+            } finally {
+                this.submitting = false;
+                this.uploadProgress = null;
+            }
+        },
+        submissionProgressLabel() {
+            const labels = this.$refs.progressStatus?.dataset ?? {};
+            if (this.uploadProgress === null) return labels.progressPreparing ?? 'Preparing your application…';
+            if (this.uploadProgress >= 100) return labels.progressFinishing ?? 'Files uploaded. Finishing your submission…';
+            return `${labels.progressUploading ?? 'Uploading your application…'} ${this.uploadProgress}%`;
         },
         goTo(item) {
             if (Number.isInteger(item.step) && item.step >= 0) this.moveTo(item.step, false);
@@ -210,7 +276,12 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
         },
         fileProblem(field, file) {
             const allowed = (field.dataset.accept || '').split(',').map((extension) => extension.trim().replace(/^\./, '').toLowerCase()).filter(Boolean);
-            const limit = Number(field.dataset.max) || 0;
+            const fieldLimit = Number(field.dataset.max) || 0;
+            const runtimeLimit = Number(this.$refs.form?.dataset.maxSingleUploadBytes);
+            if (Number.isFinite(runtimeLimit) && runtimeLimit === 0) return 'The server is not configured to accept file uploads. Try again later.';
+            const limit = Number.isFinite(runtimeLimit) && runtimeLimit >= 0
+                ? (fieldLimit ? Math.min(fieldLimit, runtimeLimit) : runtimeLimit)
+                : fieldLimit;
             const extension = file.name.split('.').pop().toLowerCase();
             const accepted = allowed.some((rule) => rule.includes('/')
                 ? (rule.endsWith('/*') ? file.type?.startsWith(rule.slice(0, -1)) : file.type === rule)
