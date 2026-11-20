@@ -6,11 +6,13 @@ use App\Http\Middleware\EnsureOrganizationOnboardingIsComplete;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\InitializeOrganizationContext;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\ValidateApplicationPostSize;
 use App\Support\ExpirationResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\ValidatePostSize;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -24,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->replace(
+            ValidatePostSize::class,
+            ValidateApplicationPostSize::class,
+        );
         // Reject forged Host headers so password-reset and signed email links
         // can only be generated for the configured application domain.
         $middleware->trustHosts();
