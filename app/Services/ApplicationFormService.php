@@ -4,12 +4,13 @@ namespace App\Services;
 
 use App\Enums\ApplicationDocumentType;
 use App\Enums\CandidatePipelineStage;
+use App\Models\ApplicantProfile;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
-use App\Models\ApplicantProfile;
 use App\Models\Job;
 use App\Models\User;
 use App\Models\UserIdentificationDocument;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -50,14 +51,15 @@ class ApplicationFormService
 
         try {
             $application = DB::transaction(function () use ($job, $applicant, $data, &$storedFiles, &$newProfileImagePath): ApplicationForm {
-                $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
+                $currentJob = Job::query()->sharedLock()->findOrFail($job->id);
 
                 if (! $currentJob->isAcceptingApplications()) {
                     throw ValidationException::withMessages(['job' => 'This job is not accepting applications.']);
                 }
 
-                // The job lock serializes submissions. Repeat this check here
-                // so concurrent attempts cannot race into the unique index.
+                // Shared locks let applicants proceed in parallel, while a
+                // concurrent job closure waits until this submission commits.
+                // The unique (job_id, user_id) index handles duplicate races.
                 if ($currentJob->applications()->where('user_id', $applicant->id)->exists()) {
                     throw ValidationException::withMessages(['job' => 'You have already applied for this job.']);
                 }
@@ -161,6 +163,12 @@ class ApplicationFormService
         } catch (Throwable $throwable) {
             $this->deleteStoredFiles($storedFiles);
 
+            if ($throwable instanceof QueryException && $this->isDuplicateApplicationConflict($throwable)) {
+                throw ValidationException::withMessages([
+                    'job' => 'You have already applied for this job.',
+                ]);
+            }
+
             throw $throwable;
         }
 
@@ -169,6 +177,15 @@ class ApplicationFormService
         }
 
         return $application;
+    }
+
+    private function isDuplicateApplicationConflict(QueryException $exception): bool
+    {
+        $message = strtolower($exception->getMessage());
+
+        return str_contains($message, 'application_forms')
+            && (str_contains($message, 'job_id_user_id_unique')
+                || str_contains($message, 'unique constraint failed: application_forms.job_id, application_forms.user_id'));
     }
 
     public function moveCandidate(ApplicationForm $application, User $employer, CandidatePipelineStage $stage, ?string $remarks = null, bool $selectionConfirmed = false): ApplicationForm
@@ -231,7 +248,7 @@ class ApplicationFormService
      * Copy a private saved résumé into this application's private document
      * snapshot. Later profile edits must not change a submitted application.
      *
-     * @param array<int, array{disk: string, path: string}> $storedFiles
+     * @param  array<int, array{disk: string, path: string}>  $storedFiles
      */
     private function createDocumentFromProfileResume(ApplicationForm $application, ApplicantProfile $profile, array &$storedFiles): ApplicationDocument
     {

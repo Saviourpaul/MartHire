@@ -16,6 +16,7 @@ use App\Services\ApplicationFormService;
 use App\Services\CandidateJobPreferenceService;
 use App\Services\LocationService;
 use App\Services\PublicJobService;
+use App\Support\ApplicationUploadLimits;
 use App\Support\LiveTables;
 use App\Support\OrganizationContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -154,6 +155,9 @@ class JobApplicationController extends Controller
                         : '',
                 ]),
             'serverErrors' => $serverErrors,
+            'maxTotalUploadBytes' => ApplicationUploadLimits::maxTotalFileBytes(),
+            'maxSingleUploadBytes' => ApplicationUploadLimits::maxSingleFileBytes(),
+            'maxUploadFiles' => ApplicationUploadLimits::maxFileCount(),
             'profileStepEnabled' => $profileRequirements['has_additional_fields'],
             'employmentTypeChoices' => collect(Job::EMPLOYMENT_TYPES)
                 ->map(fn (string $label, string $value): array => ['id' => $value, 'body' => __($label)])

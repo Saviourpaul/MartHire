@@ -12,6 +12,7 @@ use App\Services\ApplicantProfileChecklistService;
 use App\Services\ApplicantProfileService;
 use App\Services\CandidateJobPreferenceService;
 use App\Services\LocationService;
+use App\Support\ApplicationUploadLimits;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
@@ -20,6 +21,9 @@ use Illuminate\Validation\Validator;
 class StoreApplicationFormRequest extends FormRequest
 {
     use NormalizesInternationalPhone, ValidatesLocationSelection;
+
+    /** @var array<string, mixed>|null */
+    private ?array $resolvedApplicationProfileRequirements = null;
 
     public const PROFILE_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'webp'];
 
@@ -270,6 +274,12 @@ class StoreApplicationFormRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            foreach (ApplicationUploadLimits::messagesForUploadViolations(
+                ApplicationUploadLimits::violationsForFiles($this->allFiles())
+            ) as $message) {
+                $validator->errors()->add('uploads', $message);
+            }
+
             $job = $this->route('job');
             $user = $this->user();
 
@@ -369,10 +379,14 @@ class StoreApplicationFormRequest extends FormRequest
     /** @return array<string, mixed> */
     private function applicationProfileRequirements(): array
     {
+        if ($this->resolvedApplicationProfileRequirements !== null) {
+            return $this->resolvedApplicationProfileRequirements;
+        }
+
         $user = $this->user();
 
         if (! $user) {
-            return [
+            return $this->resolvedApplicationProfileRequirements = [
                 'resume' => true,
                 'identification' => true,
                 'contact' => array_fill_keys(['professional_headline', 'about', 'disability_status', 'disability_details'], true),
@@ -388,7 +402,7 @@ class StoreApplicationFormRequest extends FormRequest
         $profiles = app(ApplicantProfileService::class);
         $profile = $profiles->forUser($user);
 
-        return app(ApplicantProfileChecklistService::class)->applicationRequirements(
+        return $this->resolvedApplicationProfileRequirements = app(ApplicantProfileChecklistService::class)->applicationRequirements(
             $user,
             $profile,
             app(CandidateJobPreferenceService::class)->forUser($user)

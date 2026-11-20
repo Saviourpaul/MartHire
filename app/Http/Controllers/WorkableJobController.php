@@ -12,15 +12,22 @@ use App\Models\JobPosting;
 use App\Rules\InternationalPhoneNumber;
 use App\Services\PhoneNumberService;
 use App\Services\PublicJobService;
+use App\Support\ApplicationUploadLimits;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use RuntimeException;
+use Throwable;
 
 /**
  * Public job board pages (design W2) and native apply (design W3), reading
@@ -83,13 +90,16 @@ class WorkableJobController extends Controller
         // else continues to the employer's hosted form.
         if ($company !== null && $company->apply_mode === 'native') {
             $schema = $resolve($company, $posting);
-            if ($posting->apply_supported) {
+            if ($posting->apply_supported && $this->supportsNativeFileFieldCount($schema)) {
                 return view('Apply', [
                     'job' => $job,
                     'jobs' => $this->openJobs(),
                     'id' => $id,
                     'form' => $this->presentApplicationForm($schema),
                     'preview' => false,
+                    'maxTotalUploadBytes' => ApplicationUploadLimits::maxTotalFileBytes(),
+                    'maxSingleUploadBytes' => ApplicationUploadLimits::maxSingleFileBytes(),
+                    'maxUploadFiles' => ApplicationUploadLimits::maxFileCount(),
                 ]);
             }
         }
@@ -104,6 +114,9 @@ class WorkableJobController extends Controller
             'id' => $id,
             'form' => $this->presentApplicationForm(new ApplicationSchema([], [])),
             'preview' => true,
+            'maxTotalUploadBytes' => ApplicationUploadLimits::maxTotalFileBytes(),
+            'maxSingleUploadBytes' => ApplicationUploadLimits::maxSingleFileBytes(),
+            'maxUploadFiles' => ApplicationUploadLimits::maxFileCount(),
         ]);
     }
 
@@ -131,7 +144,7 @@ class WorkableJobController extends Controller
         // Resolving refreshes apply_supported: if the live schema has a required
         // field we can't render/submit, don't accept a submission we'd mangle.
         $schema = $resolve($company, $posting);
-        if (! $posting->apply_supported) {
+        if (! $posting->apply_supported || ! $this->supportsNativeFileFieldCount($schema)) {
             return $this->redirectToHosted($request, $posting, $id);
         }
 
@@ -145,35 +158,62 @@ class WorkableJobController extends Controller
         $phoneParts = app(PhoneNumberService::class)->prepare($request->all(), $fallback);
         $input = array_replace($input, $phoneParts);
         $rules['phone'] = ['nullable', 'string', 'max:80', new InternationalPhoneNumber($input['phone_country'] ?? null)];
+        $input['email'] = mb_strtolower(trim((string) ($input['email'] ?? '')));
+        $rules['email'][] = Rule::unique('job_applications', 'email')->where('job_posting_id', $posting->id);
         $validated = Validator::make($input + $fileInputs, $rules)->validate();
 
-        // File answers go to the PRIVATE disk; only path+name ride in the payload.
-        $fileKeys = array_keys(array_filter(
-            $rules,
-            fn ($rule) => is_array($rule) && in_array('file', $rule, true),
-        ));
-        $files = [];
-        foreach ($fileKeys as $key) {
-            if (isset($fileInputs[$key])) {
-                $upload = $fileInputs[$key];
-                $path = $upload->store('applications/'.$posting->id, config('workable.application.disk'));
-                $files[$key] = ['path' => $path, 'name' => $upload->getClientOriginalName()];
-            }
-            unset($validated[$key]); // the uploaded file never lives in the data payload
+        $uploadErrors = ApplicationUploadLimits::messagesForUploadViolations(
+            ApplicationUploadLimits::violationsForFiles($fileInputs)
+        );
+        if ($uploadErrors !== []) {
+            throw ValidationException::withMessages(['uploads' => $uploadErrors]);
         }
+
+        // File answers go to the PRIVATE disk; only path+name ride in the payload.
+        $files = [];
         unset($validated['confirm']); // consent is recorded below, never sent to Workable
 
-        $application = JobApplication::create([
-            'job_posting_id' => $posting->id,
-            'idempotency_key' => (string) Str::uuid(),
-            'email' => $validated['email'],
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'status' => 'queued',
-            'payload' => ['data' => $validated, 'files' => $files, 'phone' => Arr::only($phoneParts, ['phone_country', 'phone_dial_code', 'phone_national_number'])],
-            'consent_version' => config('workable.application.consent_version'),
-            'consented_at' => now(),
-        ]);
+        try {
+            $fileKeys = array_keys(array_filter(
+                $rules,
+                fn ($rule) => is_array($rule) && in_array('file', $rule, true),
+            ));
+            foreach ($fileKeys as $key) {
+                if (isset($fileInputs[$key])) {
+                    $upload = $fileInputs[$key];
+                    $path = $upload->store('applications/'.$posting->id, config('workable.application.disk'));
+                    if (! is_string($path) || $path === '') {
+                        throw new RuntimeException('The application file could not be stored.');
+                    }
+                    $files[$key] = ['path' => $path, 'name' => $upload->getClientOriginalName()];
+                }
+                unset($validated[$key]); // the uploaded file never lives in the data payload
+            }
+
+            $application = JobApplication::create([
+                'job_posting_id' => $posting->id,
+                'idempotency_key' => (string) Str::uuid(),
+                'email' => $validated['email'],
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'status' => 'queued',
+                'payload' => ['data' => $validated, 'files' => $files, 'phone' => Arr::only($phoneParts, ['phone_country', 'phone_dial_code', 'phone_national_number'])],
+                'consent_version' => config('workable.application.consent_version'),
+                'consented_at' => now(),
+            ]);
+        } catch (Throwable $exception) {
+            foreach ($files as $file) {
+                Storage::disk(config('workable.application.disk'))->delete($file['path']);
+            }
+
+            if ($exception instanceof QueryException && $this->isDuplicateWorkableApplication($exception)) {
+                throw ValidationException::withMessages([
+                    'email' => __('This email has already been used to apply for this job.'),
+                ]);
+            }
+
+            throw $exception;
+        }
 
         SubmitJobApplicationJob::dispatch($application);
 
@@ -202,6 +242,25 @@ class WorkableJobController extends Controller
         }
 
         return $hosted ? redirect()->away($hosted) : redirect()->route('workable-jobs.show', $id);
+    }
+
+    private function isDuplicateWorkableApplication(QueryException $exception): bool
+    {
+        $message = strtolower($exception->getMessage());
+
+        return str_contains($message, 'job_applications')
+            && (str_contains($message, 'job_posting_id_email_unique')
+                || str_contains($message, 'unique constraint failed: job_applications.job_posting_id, job_applications.email'));
+    }
+
+    private function supportsNativeFileFieldCount(ApplicationSchema $schema): bool
+    {
+        $fileQuestionCount = collect($schema->questions)
+            ->filter(fn (QuestionData $question): bool => $question->type === 'file')
+            ->count();
+
+        // The native form always renders one resume input.
+        return 1 + $fileQuestionCount <= ApplicationUploadLimits::maxFileCount();
     }
 
     /**
