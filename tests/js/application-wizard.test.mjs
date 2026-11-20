@@ -2,7 +2,7 @@ import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createApplicationForm } from '../../resources/js/application-form.js';
 
-const originalGlobals = Object.fromEntries(['fetch', 'FormData', 'window', 'document', 'CSS'].map((name) => [name, globalThis[name]]));
+const originalGlobals = Object.fromEntries(['fetch', 'FormData', 'XMLHttpRequest', 'window', 'document', 'CSS'].map((name) => [name, globalThis[name]]));
 afterEach(() => {
     for (const [name, value] of Object.entries(originalGlobals)) {
         if (value === undefined) delete globalThis[name];
@@ -77,9 +77,15 @@ function fixture(groups, options = {}) {
     const fields = panels.flatMap((panel) => panel.fields);
     const form = {
         action: 'https://marthire.test/workable-jobs/ROLE/apply', panels, fields,
+        dataset: {
+            maxTotalUploadBytes: String(options.maxTotalUploadBytes ?? (65 * 1024 * 1024)),
+            maxSingleUploadBytes: String(options.maxSingleUploadBytes ?? (5 * 1024 * 1024)),
+            maxUploadFiles: String(options.maxUploadFiles ?? 20),
+        },
         querySelectorAll(selector) {
             if (selector === '[data-wizard-step]') return this.panels;
             if (selector === '[data-field]') return this.fields;
+            if (selector === 'input[type="file"]') return this.fields.flatMap((item) => item.controls).filter((input) => input.type === 'file');
             return [];
         },
         querySelector(selector) {
@@ -87,14 +93,57 @@ function fixture(groups, options = {}) {
             return match ? this.fields.find((item) => item.dataset.field === match[1])?.controls.find((input) => input.type === 'file') ?? null : null;
         },
     };
+    globalThis.FormData = class {
+        constructor(element) { this.element = element; }
+    };
     const app = createApplicationForm(options);
-    app.$refs = { form, summary: focusTarget(), success: focusTarget(), submissionError: focusTarget() };
+    app.$refs = {
+        form, summary: focusTarget(), success: focusTarget(), submissionError: focusTarget(),
+        progressStatus: { dataset: {
+            progressPreparing: 'Preparing your application…',
+            progressUploading: 'Uploading your application…',
+            progressFinishing: 'Files uploaded. Finishing your submission…',
+        } },
+    };
     app.$nextTick = (callback) => callback();
     globalThis.window = { location: { href: 'https://marthire.test/apply', assign() {} }, matchMedia: () => ({ matches: true }) };
     globalThis.document = { getElementById: (id) => fields.flatMap((item) => item.controls).find((input) => input.id === id) ?? null };
     globalThis.CSS = { escape: (value) => value };
     app.init();
     return { app, panels, fields, form };
+}
+
+function installXhrResponse({ status = 201, payload = { submitted: true, redirect: '/applications/receipt' }, contentType = 'application/json; charset=utf-8', progress = [], autoRespond = true } = {}) {
+    const requests = [];
+    class FakeXhr {
+        uploadListeners = {};
+        listeners = {};
+        headers = {};
+        status = 0;
+        responseText = '';
+        open(method, url) { this.method = method; this.url = url; }
+        setRequestHeader(name, value) { this.headers[name] = value; }
+        getResponseHeader(name) { return name.toLowerCase() === 'content-type' ? contentType : null; }
+        addEventListener(name, callback) { this.listeners[name] = callback; }
+        send(body) {
+            this.body = body;
+            requests.push(this);
+            progress.forEach((loaded) => this.uploadListeners.progress?.({ lengthComputable: true, loaded, total: 100 }));
+            if (autoRespond) this.respond();
+        }
+        respond() {
+            this.status = status;
+            this.responseText = JSON.stringify(payload);
+            this.listeners.load();
+        }
+        constructor() {
+            this.upload = { addEventListener: (name, callback) => { this.uploadListeners[name] = callback; } };
+            this.autoRespond = autoRespond;
+        }
+    }
+    globalThis.XMLHttpRequest = FakeXhr;
+
+    return { requests, respond: () => requests[0]?.respond() };
 }
 
 const event = () => ({ prevented: false, preventDefault() { this.prevented = true; } });
@@ -234,6 +283,84 @@ test('final submission validates every step and opens the first invalid earlier 
     assert.equal(app.done, false);
 });
 
+test('a completed form blocks file sets larger than the PHP request budget with a useful message', async () => {
+    const resume = field('resume', { type: 'file', required: true, selectedFile: file('resume.pdf', 4 * 1024 * 1024), accept: 'pdf', max: 5 * 1024 * 1024 });
+    const certificate = field('certificate', { type: 'file', required: true, selectedFile: file('certificate.pdf', 4 * 1024 * 1024), accept: 'pdf', max: 5 * 1024 * 1024 });
+    const { app } = fixture([[resume, certificate], [confirmation()]], { preview: false, maxTotalUploadBytes: 7 * 1024 * 1024 });
+    let requests = 0;
+    globalThis.XMLHttpRequest = class { constructor() { requests += 1; } };
+    app.moveTo(1, false);
+
+    await app.submit(event());
+
+    assert.equal(requests, 0);
+    assert.match(app.submissionError, /8\.0 MB.*7\.0 MB/);
+    assert.equal(app.$refs.submissionError.focused, 1);
+    assert.equal(app.submitting, false);
+});
+
+test('a completed form blocks file counts above the PHP upload limit', async () => {
+    const resume = field('resume', { type: 'file', required: true, selectedFile: file('resume.pdf', 1024), accept: 'pdf', max: 5 * 1024 * 1024 });
+    const certificate = field('certificate', { type: 'file', required: true, selectedFile: file('certificate.pdf', 1024), accept: 'pdf', max: 5 * 1024 * 1024 });
+    const { app } = fixture([[resume, certificate], [confirmation()]], { preview: false, maxUploadFiles: 1 });
+    let requests = 0;
+    globalThis.XMLHttpRequest = class { constructor() { requests += 1; } };
+    app.moveTo(1, false);
+
+    await app.submit(event());
+
+    assert.equal(requests, 0);
+    assert.match(app.submissionError, /2 files.*up to 1 files/);
+    assert.equal(app.submitting, false);
+});
+
+test('successful application upload reports progress and redirects to the receipt', async () => {
+    const { app, form } = fixture([[field('firstname', { value: 'Ada' })], [confirmation()]], { preview: false });
+    const xhr = installXhrResponse({ progress: [35, 76], autoRespond: false });
+    app.moveTo(1, false);
+
+    const pending = app.submit(event());
+    await Promise.resolve();
+
+    assert.equal(app.submitting, true);
+    assert.equal(app.uploadProgress, 76);
+    assert.match(app.submissionProgressLabel(), /76%/);
+    xhr.respond();
+    await pending;
+
+    assert.equal(xhr.requests.length, 1);
+    assert.equal(xhr.requests[0].method, 'POST');
+    assert.equal(xhr.requests[0].url, form.action);
+    assert.equal(xhr.requests[0].headers.Accept, 'application/json');
+    assert.equal(xhr.requests[0].headers['X-Requested-With'], 'XMLHttpRequest');
+    assert.equal(xhr.requests[0].withCredentials, true);
+    assert.equal(app.submitting, false);
+    assert.equal(app.uploadProgress, null);
+});
+
+test('HTTP 413 explains that the combined upload exceeds the request limit', async () => {
+    const { app } = fixture([[], [confirmation()]], { preview: false, maxTotalUploadBytes: 7 * 1024 * 1024 });
+    installXhrResponse({ status: 413, payload: {} });
+    app.moveTo(1, false);
+
+    await app.submit(event());
+
+    assert.match(app.submissionError, /larger than the server allows/);
+    assert.equal(app.submitting, false);
+});
+
+test('non-JSON server failures do not masquerade as expired sessions', async () => {
+    const { app } = fixture([[], [confirmation()]], { preview: false });
+    installXhrResponse({ status: 500, payload: 'server error', contentType: 'text/html; charset=utf-8' });
+    app.moveTo(1, false);
+
+    await app.submit(event());
+
+    assert.match(app.submissionError, /server could not complete your application/);
+    assert.doesNotMatch(app.submissionError, /sign in again/);
+    assert.equal(app.submitting, false);
+});
+
 test('current-step validation preserves errors in other steps', () => {
     const name = field('firstname', { required: true, value: 'Ada' });
     const resume = field('resume', { type: 'file', required: true });
@@ -289,24 +416,23 @@ test('JSON 422 responses retain input values and selected files while reopening 
     const originalValue = input.value;
     app.pick({ target: input });
     app.moveTo(2, false);
-    let request;
+    let body;
     globalThis.FormData = class {
         constructor(element) {
             assert.equal(element, form);
+            body = this;
             this.resume = element.fields.find((item) => item.dataset.field === 'resume').controls[0].files[0];
         }
     };
-    globalThis.fetch = async (url, options) => {
-        request = { url, ...options };
-        return {
-            ok: false, status: 422, headers: { get: () => 'application/json; charset=utf-8' },
-            json: async () => ({ errors: { first_name: ['This name needs review.'], resume: ['Please provide a more recent résumé.'] } }),
-        };
-    };
+    const xhr = installXhrResponse({
+        status: 422,
+        payload: { errors: { first_name: ['This name needs review.'], resume: ['Please provide a more recent résumé.'] } },
+        progress: [50],
+    });
     await app.submit(event());
-    assert.equal(request.method, 'POST');
-    assert.equal(request.body.resume, attachment);
-    assert.equal(request.credentials, 'same-origin');
+    assert.equal(xhr.requests[0].method, 'POST');
+    assert.equal(xhr.requests[0].body, body);
+    assert.equal(xhr.requests[0].withCredentials, true);
     assert.equal(app.step, 0);
     assert.equal(app.submitting, false);
     assert.equal(app.done, false);
@@ -382,6 +508,15 @@ test('invalid file type and size errors stay useful after validation until a val
     assert.equal(app.progress, 0);
 });
 
+test('a lower runtime PHP per-file limit is applied to the selected document', () => {
+    const resume = field('resume', { type: 'file', required: true, selectedFile: file('resume.pdf', 3 * 1024 * 1024), accept: 'pdf', max: 5 * 1024 * 1024 });
+    const { app } = fixture([[resume], [confirmation()]], { preview: false, maxSingleUploadBytes: 2 * 1024 * 1024 });
+
+    app.pick({ target: resume.controls[0] });
+
+    assert.match(app.error('resume'), /3\.0 MB.*2\.0 MB/);
+});
+
 test('file accept lists support MIME types, wildcards, extensions and conventional comma whitespace', () => {
     const upload = field('photo', { type: 'file', accept: 'application/pdf, image/*, .docx' });
     const { app } = fixture([[upload], [confirmation()]]);
@@ -395,13 +530,10 @@ test('native country changes after JSON 422 clear dependent errors in both Niger
     for (const [from, to, rejectedField] of [['NG', 'GB', 'local_government_area'], ['GB', 'NG', 'city']]) {
         const { app, country, setLocation } = nativeLocationFixture(from);
         globalThis.FormData = class {};
-        globalThis.fetch = async () => ({
-            ok: false, status: 422, headers: { get: () => 'application/json' },
-            json: async () => ({ errors: {
+        installXhrResponse({ status: 422, payload: { errors: {
                 state: ['Choose a state in the selected country.'],
                 [rejectedField]: ['Choose a valid location within that state.'],
-            } }),
-        });
+            } } });
         app.moveTo(1, false);
         await app.submit(event());
         assert.ok(app.serverErrors.state);

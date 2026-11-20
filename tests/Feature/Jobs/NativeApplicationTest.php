@@ -12,6 +12,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Models\UserIdentificationDocument;
 use App\Services\ApplicantProfileChecklistService;
+use App\Support\ApplicationUploadLimits;
 use App\Support\OrganizationContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -147,9 +148,26 @@ test('an applicant can open a real native job application form', function () {
         ->assertViewIs('client.job-application')
         ->assertSee($job->title)
         ->assertSee(route('applications.store', $job), false)
+        ->assertSee('data-max-total-upload-bytes="'.ApplicationUploadLimits::maxTotalFileBytes().'"', false)
+        ->assertSee('data-max-single-upload-bytes="'.ApplicationUploadLimits::maxSingleFileBytes().'"', false)
+        ->assertSee('data-max-upload-files="'.ApplicationUploadLimits::maxFileCount().'"', false)
         ->assertSee('identification_document', false)
         ->assertSee('education_documents[', false)
         ->assertSee('Submit application');
+});
+
+test('an oversized PHP request is rejected with a clear upload error before form validation', function () {
+    [$job] = nativeApplicationJob();
+    $requestLimit = ApplicationUploadLimits::requestBodyLimitBytes();
+    expect($requestLimit)->not->toBeNull();
+
+    $this->actingAs(User::factory()->create())
+        ->withServerVariables(['CONTENT_LENGTH' => (string) ($requestLimit + 1)])
+        ->postJson(route('applications.store', $job), [])
+        ->assertStatus(413)
+        ->assertJsonPath('message', 'The application upload is larger than the server allows. Remove a file or choose smaller files, then try again.');
+
+    expect(ApplicationForm::count())->toBe(0);
 });
 
 test('the native application includes a profile completion step and shared location lookups for an incomplete profile', function () {

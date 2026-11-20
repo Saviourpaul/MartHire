@@ -5,11 +5,15 @@ use App\Models\Company;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\User;
+use App\Support\ApplicationUploadLimits;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -65,8 +69,35 @@ it('serves the native form fed with the live schema questions', function () {
         ->assertSee('data-step-title="Review and send"', false)
         ->assertSee('data-error-key="first_name"', false)
         ->assertSee('data-error-key="question_q_free"', false);
+    $response->assertSee('data-max-total-upload-bytes="'.ApplicationUploadLimits::maxTotalFileBytes().'"', false)
+        ->assertSee('data-max-single-upload-bytes="'.ApplicationUploadLimits::maxSingleFileBytes().'"', false)
+        ->assertSee('data-max-upload-files="'.ApplicationUploadLimits::maxFileCount().'"', false);
     expect(substr_count($response->getContent(), 'data-wizard-step'))->toBe(4);
     expect(collect($form['fields'])->firstWhere('key', 'resume')['max_file_size'])->toBe(5 * 1024 * 1024);
+});
+
+it('falls back to the hosted form when PHP would truncate its file input fields', function () {
+    $questions = [];
+    for ($index = 0; $index < ApplicationUploadLimits::maxFileCount(); $index++) {
+        $questions[] = [
+            'id' => 'file_'.$index,
+            'body' => 'Supporting file '.$index,
+            'type' => 'file',
+            'required' => false,
+            'supported_file_types' => ['pdf'],
+        ];
+    }
+    fakeApplicationForm([
+        'form_fields' => [['key' => 'resume', 'type' => 'file', 'required' => true]],
+        'questions' => $questions,
+    ]);
+    $posting = nativePosting();
+    $posting->update(['application_url' => 'https://employer.workable.com/j/SENIO001']);
+    Cache::forget('workable:schema:'.$posting->id);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('workable-jobs.apply', 'SENIO001'))
+        ->assertRedirect('https://employer.workable.com/j/SENIO001');
 });
 
 it('queues a native application from the blade field names, stores the resume privately, dispatches the job', function () {
@@ -263,6 +294,60 @@ it('accepts a multipart wizard submission as JSON without redirecting or changin
         ->and($application->payload['data']['first_name'])->toBe('Cand');
     Storage::disk('local')->assertExists($application->payload['files']['resume']['path']);
     Bus::assertDispatched(SubmitJobApplicationJob::class, fn ($job) => $job->application->is($application));
+});
+
+it('returns an inline duplicate message without storing retry uploads', function () {
+    Bus::fake();
+    Storage::fake('local');
+    fakeApplicationForm();
+    $posting = nativePosting();
+    JobApplication::create([
+        'job_posting_id' => $posting->id,
+        'idempotency_key' => (string) Str::uuid(),
+        'email' => 'cand@example.com',
+        'first_name' => 'Cand',
+        'last_name' => 'Idate',
+        'status' => 'queued',
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->postJson(route('workable-jobs.apply.store', 'SENIO001'), bladePayload())
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('email');
+
+    expect(JobApplication::count())->toBe(1)
+        ->and(Storage::disk('local')->allFiles())->toBe([]);
+    Bus::assertNotDispatched(SubmitJobApplicationJob::class);
+});
+
+it('cleans up earlier Workable files if a later file cannot be stored', function () {
+    Bus::fake();
+    fakeApplicationForm();
+    $posting = nativePosting();
+    $diskName = config('workable.application.disk');
+    $disk = Mockery::mock(FilesystemAdapter::class);
+    $disk->shouldReceive('putFileAs')->twice()->andReturnUsing(
+        static function (...$arguments) use (&$storedPath, $posting): string {
+            if (! isset($storedPath)) {
+                return $storedPath = 'applications/'.$posting->id.'/resume.pdf';
+            }
+
+            throw new RuntimeException('Simulated storage failure.');
+        }
+    );
+    $disk->shouldReceive('delete')->once()->with('applications/'.$posting->id.'/resume.pdf')->andReturn(true);
+    Storage::shouldReceive('disk')->with($diskName)->times(3)->andReturn($disk);
+
+    $payload = bladePayload();
+    $payload['answer_files'] = ['q_file' => UploadedFile::fake()->create('portfolio.pdf', 10, 'application/pdf')];
+
+    $this->withoutExceptionHandling();
+    expect(fn () => $this->actingAs(User::factory()->create())
+        ->postJson(route('workable-jobs.apply.store', 'SENIO001'), $payload))
+        ->toThrow(RuntimeException::class, 'Simulated storage failure.');
+
+    expect(JobApplication::count())->toBe(0);
+    Bus::assertNotDispatched(SubmitJobApplicationJob::class);
 });
 
 it('returns canonical inline validation errors to the wizard without creating an application', function () {
