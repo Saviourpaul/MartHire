@@ -28,6 +28,15 @@ class CandidateReviewService
 
         return [
             'profile' => $this->profile($application),
+            'screening_answers' => $application->screeningAnswers()
+                ->get()
+                ->map(fn ($answer): array => [
+                    'prompt' => $answer->prompt,
+                    'type' => $answer->type,
+                    'answer' => $answer->answer,
+                    'is_required' => $answer->is_required,
+                ])
+                ->all(),
             'pipeline' => $this->pipeline($application, $histories),
             'activity' => $this->activity($application, $viewer, $histories),
         ];
@@ -36,15 +45,18 @@ class CandidateReviewService
     private function profile(ApplicationForm $application): array
     {
         $values = [];
+        $accountFallbackFields = ['first_name', 'middle_name', 'last_name', 'email', 'phone'];
         foreach (['first_name', 'middle_name', 'last_name', 'email', 'phone', 'gender', 'marital_status',
             'address', 'country_code', 'country', 'state', 'city', 'local_government_area', 'profile_image_path'] as $field) {
             $snapshot = $application->getAttribute($field);
-            $fallback = $application->applicant?->getAttribute($field);
+            $fallback = in_array($field, $accountFallbackFields, true)
+                ? $application->applicant?->getAttribute($field)
+                : null;
             $values[$field] = is_string($snapshot) && trim($snapshot) !== '' ? trim($snapshot)
                 : (is_string($fallback) && trim($fallback) !== '' ? trim($fallback) : null);
         }
         $name = trim(implode(' ', array_filter([$values['first_name'], $values['middle_name'], $values['last_name']])));
-        $birthDate = $application->date_of_birth ?? $application->applicant?->date_of_birth;
+        $birthDate = $application->date_of_birth;
         // Resolve legacy snapshots as a pair, rather than combining a submitted
         // country name with a country code from a later account edit.
         $snapshotCode = trim((string) $application->country_code);

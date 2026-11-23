@@ -29,6 +29,16 @@ class WorkspaceUpdateBroadcaster
         $this->afterCommit('organizations.'.$organizationId, $topics, $message, $type);
     }
 
+    /** Defer a non-critical application submission invalidation until after the HTTP response. */
+    public function organizationAfterResponse(int $organizationId, array $topics, ?string $message = null, string $type = 'info'): void
+    {
+        if ($organizationId < 1) {
+            return;
+        }
+
+        $this->afterResponse('organizations.'.$organizationId, $topics, $message, $type);
+    }
+
     /** @param list<string> $topics */
     public function applicant(int $userId, array $topics, ?string $message = null, string $type = 'info'): void
     {
@@ -63,6 +73,27 @@ class WorkspaceUpdateBroadcaster
         }
 
         $dispatch();
+    }
+
+    /** @param list<string> $topics */
+    private function afterResponse(string $channel, array $topics, ?string $message, string $type): void
+    {
+        $topics = array_values(array_unique(array_intersect(self::TOPICS, $topics)));
+        if ($topics === []) {
+            return;
+        }
+
+        $type = in_array($type, ['success', 'error', 'warning', 'info'], true) ? $type : 'info';
+        $defer = fn () => app()->terminating(fn () => $this->dispatchSafely($channel, $topics, $message, $type));
+        $afterCommit = app()->runningInConsole() ? fn () => $this->dispatchSafely($channel, $topics, $message, $type) : $defer;
+
+        if (DB::transactionLevel() > 0) {
+            DB::afterCommit($afterCommit);
+
+            return;
+        }
+
+        $afterCommit();
     }
 
     /** @param list<string> $topics */

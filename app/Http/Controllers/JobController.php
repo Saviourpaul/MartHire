@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\JobStatus;
+use App\Enums\JobScreeningQuestionType;
 use App\Http\Requests\CloseJobRequest;
 use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
@@ -104,6 +105,8 @@ class JobController extends Controller
         return view('organisations.jobs.create', [
             'job' => null,
             'organization' => $organization,
+            'screeningQuestions' => collect(),
+            'screeningQuestionTypes' => JobScreeningQuestionType::options(),
             'countries' => app(LocationService::class)->jobCountries(),
             'categories' => $this->orgCategories($request),
             'employmentTypes' => Job::employmentTypeOptions(),
@@ -115,7 +118,9 @@ class JobController extends Controller
         Gate::authorize('update', $job);
 
         return view('organisations.jobs.edit', [
-            'job' => $job,
+            'job' => $job->load('screeningQuestions'),
+            'screeningQuestions' => $job->screeningQuestions,
+            'screeningQuestionTypes' => JobScreeningQuestionType::options(),
             'countries' => app(LocationService::class)->jobCountries(),
             'categories' => $this->orgCategories($request),
             'employmentTypes' => Job::employmentTypeOptions(),
@@ -130,10 +135,52 @@ class JobController extends Controller
             ->distinct()->orderBy('category')->pluck('category')->all();
     }
 
+    /** @param array<int, array<string, mixed>> $questions */
+    private function syncScreeningQuestions(Job $job, array $questions): void
+    {
+        $existing = $job->screeningQuestions()->get()->keyBy('id');
+        $retainedIds = [];
+
+        foreach (array_values($questions) as $position => $question) {
+            $attributes = [
+                'prompt' => trim($question['prompt']),
+                'type' => $question['type'],
+                'options' => in_array($question['type'], ['single_select', 'multi_select'], true)
+                    ? array_values(array_map('trim', $question['options']))
+                    : null,
+                'is_required' => true,
+                'position' => $position,
+            ];
+
+            if (! empty($question['id'])) {
+                $record = $existing->get((int) $question['id']);
+                if (! $record) {
+                    continue;
+                }
+                $record->fill($attributes)->save();
+                $retainedIds[] = $record->id;
+                continue;
+            }
+
+            $record = $job->screeningQuestions()->create($attributes);
+            $retainedIds[] = $record->id;
+        }
+
+        $job->screeningQuestions()
+            ->when($retainedIds !== [], fn ($query) => $query->whereNotIn('id', $retainedIds))
+            ->get()
+            ->each->delete();
+    }
+
     public function store(StoreJobRequest $request, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        unset($data['action'], $data['location']);
+        $screeningQuestions = $data['screening_questions'] ?? [];
+        $screeningQuestionsSubmitted = $request->boolean('screening_questions_submitted');
+        unset($data['action'], $data['location'], $data['screening_questions'], $data['screening_questions_submitted']);
+        if (! $data['requires_identity_document']) {
+            $data['identity_requirement_reason'] = null;
+        }
         $data['description'] = app(JobDescription::class)->toHtml($data['description']);
 
         if ($request->hasFile('logo')) {
@@ -143,12 +190,15 @@ class JobController extends Controller
         $data['status'] = $request->resolvedStatus();
         $data['organization_id'] = app(OrganizationContext::class)->organizationId();
 
-        $job = DB::transaction(function () use ($request, $data): Job {
+        $job = DB::transaction(function () use ($request, $data, $screeningQuestions, $screeningQuestionsSubmitted): Job {
             $organization = Organization::whereKey($data['organization_id'])->lockForUpdate()->firstOrFail();
             $data['company'] = $organization->name;
             Gate::authorize('create', Job::class);
             $job = $request->user()->jobs()->create($data);
             JobPostMember::create(['organization_id' => $job->organization_id, 'job_id' => $job->id, 'user_id' => $request->user()->id]);
+            if ($screeningQuestionsSubmitted) {
+                $this->syncScreeningQuestions($job, $screeningQuestions);
+            }
 
             return $job;
         });
@@ -182,7 +232,12 @@ class JobController extends Controller
     public function update(UpdateJobRequest $request, Job $job, WorkspaceUpdateBroadcaster $workspaceUpdates): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        unset($data['action'], $data['location'], $data['remove_logo']);
+        $screeningQuestions = $data['screening_questions'] ?? [];
+        $screeningQuestionsSubmitted = $request->boolean('screening_questions_submitted');
+        unset($data['action'], $data['location'], $data['remove_logo'], $data['screening_questions'], $data['screening_questions_submitted']);
+        if (! $data['requires_identity_document']) {
+            $data['identity_requirement_reason'] = null;
+        }
         $data['description'] = app(JobDescription::class)->toHtml($data['description']);
         if ($request->hasFile('logo')) {
             unset($data['logo']);
@@ -194,7 +249,7 @@ class JobController extends Controller
         $oldLogoPath = null;
         $newLogoPath = null;
         try {
-            DB::transaction(function () use ($request, $job, $data, $status, $removeLogo, &$oldLogoPath, &$newLogoPath): void {
+            DB::transaction(function () use ($request, $job, $data, $screeningQuestions, $screeningQuestionsSubmitted, $status, $removeLogo, &$oldLogoPath, &$newLogoPath): void {
                 $currentJob = Job::query()->lockForUpdate()->findOrFail($job->id);
 
                 if ($currentJob->status === JobStatus::Suspended) {
@@ -222,6 +277,9 @@ class JobController extends Controller
                     $oldLogoPath = $previousLogoPath;
                 }
                 $currentJob->save();
+                if ($screeningQuestionsSubmitted) {
+                    $this->syncScreeningQuestions($currentJob, $screeningQuestions);
+                }
             });
         } catch (Throwable $exception) {
             if ($newLogoPath !== null) {

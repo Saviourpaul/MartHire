@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Workable\DispatchQueuedApplication;
 use App\Actions\Workable\BuildApplicationValidator;
 use App\Actions\Workable\ResolveApplicationSchema;
 use App\Integrations\Workable\DTO\ApplicationSchema;
 use App\Integrations\Workable\DTO\QuestionData;
-use App\Jobs\Workable\SubmitJobApplicationJob;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Rules\InternationalPhoneNumber;
@@ -132,6 +132,7 @@ class WorkableJobController extends Controller
         string $id,
         ResolveApplicationSchema $resolve,
         BuildApplicationValidator $validator,
+        DispatchQueuedApplication $dispatchQueuedApplication,
     ): RedirectResponse|JsonResponse {
         $posting = JobPosting::with('company')->where('shortcode', $id)->firstOrFail();
         abort_if($posting->status !== 'open', 404);
@@ -215,7 +216,7 @@ class WorkableJobController extends Controller
             throw $exception;
         }
 
-        SubmitJobApplicationJob::dispatch($application);
+        $dispatchQueuedApplication->dispatch($application->id, afterResponseWhenSynchronous: true);
 
         if ($request->expectsJson()) {
             return response()->json([

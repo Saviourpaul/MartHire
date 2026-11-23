@@ -91,6 +91,11 @@ class ApplicationForm extends Model
         return $this->hasMany(ApplicationDocument::class);
     }
 
+    public function screeningAnswers(): HasMany
+    {
+        return $this->hasMany(ApplicationScreeningAnswer::class)->orderBy('position')->orderBy('id');
+    }
+
     public function statusHistories(): HasMany
     {
         return $this->hasMany(ApplicationStatusHistory::class);

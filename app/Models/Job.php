@@ -36,6 +36,8 @@ class Job extends Model
         'employment_type',
         'workplace_type',
         'logo',
+        'requires_identity_document',
+        'identity_requirement_reason',
         'start_date',
         'due_date',
         'status',
@@ -69,6 +71,7 @@ class Job extends Model
             'due_date' => 'date',
             'status' => JobStatus::class,
             'suspended_at' => 'datetime',
+            'requires_identity_document' => 'boolean',
         ];
     }
 
@@ -126,6 +129,16 @@ class Job extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(ApplicationForm::class);
+    }
+
+    public function screeningQuestions(): HasMany
+    {
+        return $this->hasMany(JobScreeningQuestion::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function requiresIdentityDocument(): bool
+    {
+        return (bool) $this->requires_identity_document;
     }
 
     public function suspendedBy(): BelongsTo

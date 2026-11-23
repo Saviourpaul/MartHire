@@ -13,7 +13,6 @@ use App\Models\UserIdentificationDocument;
 use App\Services\ApplicantProfileChecklistService;
 use App\Services\ApplicantProfileService;
 use App\Services\ApplicationFormService;
-use App\Services\CandidateJobPreferenceService;
 use App\Services\LocationService;
 use App\Services\PublicJobService;
 use App\Support\ApplicationUploadLimits;
@@ -80,13 +79,12 @@ class JobApplicationController extends Controller
         $locations = app(LocationService::class);
         $profiles = app(ApplicantProfileService::class);
         $applicantProfile = $profiles->forUser($user);
-        $jobPreferences = app(CandidateJobPreferenceService::class)->forUser($user);
         $savedIdentityDocument = $profiles->availableIdentificationDocument($user);
         $profileRequirements = app(ApplicantProfileChecklistService::class)->applicationRequirements(
             $user,
             $applicantProfile,
-            $jobPreferences
         );
+        $screeningQuestions = $job->screeningQuestions;
         $countryCode = $request->old('country_code', $user->country_code ?? '');
         $state = $request->old('state', $user->state ?? '');
 
@@ -95,9 +93,12 @@ class JobApplicationController extends Controller
             'publicJob' => app(PublicJobService::class)->native($job),
             'user' => $user,
             'applicantProfile' => $applicantProfile,
-            'jobPreferences' => $jobPreferences,
             'savedIdentityDocument' => $savedIdentityDocument,
             'profileRequirements' => $profileRequirements,
+            'screeningQuestions' => $screeningQuestions,
+            'screeningStepEnabled' => $screeningQuestions->isNotEmpty(),
+            'documentsStepIndex' => 2 + ($screeningQuestions->isNotEmpty() ? 1 : 0),
+            'reviewStepIndex' => 3 + ($screeningQuestions->isNotEmpty() ? 1 : 0),
             'countries' => $locations->countries(),
             'states' => is_string($countryCode) ? $locations->states($countryCode) : [],
             'cities' => is_string($countryCode) && is_string($state) ? $locations->cities($countryCode, $state) : [],
@@ -106,7 +107,9 @@ class JobApplicationController extends Controller
                 $user,
                 $applicantProfile,
                 $profileRequirements,
-                $savedIdentityDocument
+                $savedIdentityDocument,
+                $job,
+                $locations->countries(),
             ),
         ]);
     }
@@ -120,7 +123,9 @@ class JobApplicationController extends Controller
         User $user,
         ApplicantProfile $applicantProfile,
         array $profileRequirements,
-        ?UserIdentificationDocument $savedIdentityDocument
+        ?UserIdentificationDocument $savedIdentityDocument,
+        Job $job,
+        array $countries,
     ): array {
         $errorBag = $request->session()->get('errors');
         $serverErrors = collect($errorBag?->getBag('default')->messages() ?? [])
@@ -140,29 +145,17 @@ class JobApplicationController extends Controller
             ]);
         }
 
+        $savedIssuerCountry = collect($countries)->firstWhere('value', $savedIdentityDocument?->issuing_country_code);
+
         $viewData = [
             'initialCountry' => $request->old('country_code', $user->country_code ?? ''),
             'initialState' => $request->old('state', $user->state ?? ''),
             'initialCity' => $request->old('city', $user->city ?? ''),
             'initialLga' => $request->old('local_government_area', $user->local_government_area ?? ''),
-            'educationDocuments' => collect($request->old('education_documents', [['name' => '']]))
-                ->take(10)
-                ->values()
-                ->map(fn ($document, $index): array => [
-                    'key' => $index,
-                    'name' => is_array($document) && is_string($document['name'] ?? null)
-                        ? $document['name']
-                        : '',
-                ]),
             'serverErrors' => $serverErrors,
             'maxTotalUploadBytes' => ApplicationUploadLimits::maxTotalFileBytes(),
             'maxSingleUploadBytes' => ApplicationUploadLimits::maxSingleFileBytes(),
             'maxUploadFiles' => ApplicationUploadLimits::maxFileCount(),
-            'profileStepEnabled' => $profileRequirements['has_additional_fields'],
-            'employmentTypeChoices' => collect(Job::EMPLOYMENT_TYPES)
-                ->map(fn (string $label, string $value): array => ['id' => $value, 'body' => __($label)])
-                ->values()
-                ->all(),
             'personalFields' => [
                 [
                     'name' => 'first_name',
@@ -205,53 +198,28 @@ class JobApplicationController extends Controller
                     'required' => true,
                     'autocomplete' => 'tel',
                 ],
-                [
-                    'name' => 'date_of_birth',
-                    'label' => __('Date of birth'),
-                    'type' => 'date',
-                    'required' => true,
-                    'min' => '1900-01-01',
-                    'max' => today()->subDay()->toDateString(),
-                ],
-                [
-                    'name' => 'gender',
-                    'label' => __('Gender identity'),
-                    'type' => 'dropdown',
-                    'required' => true,
-                    'choices' => [
-                        ['id' => 'male', 'body' => __('Male')],
-                        ['id' => 'female', 'body' => __('Female')],
-                    ],
-                ],
-                [
-                    'name' => 'marital_status',
-                    'label' => __('Marital status'),
-                    'type' => 'dropdown',
-                    'required' => true,
-                    'choices' => [
-                        ['id' => 'single', 'body' => __('Single')],
-                        ['id' => 'married', 'body' => __('Married')],
-                        ['id' => 'Other', 'body' => __('Other')],
-                    ],
-                ],
             ],
             'identityField' => [
                 'name' => 'identification_type',
-                'label' => __('Identification method'),
+                'label' => __('Identification document type'),
                 'type' => 'dropdown',
-                'required' => $profileRequirements['identification'],
+                'required' => true,
                 'choices' => $identityChoices->all(),
             ],
+            'identityCountryChoices' => collect($countries)->map(fn (array $country): array => [
+                'id' => $country['value'],
+                'body' => $country['label'],
+            ])->values()->all(),
+            'identityRequired' => true,
+            'identityRequirementReason' => $job->identity_requirement_reason,
+            'savedIdentityIssuingCountry' => is_array($savedIssuerCountry) ? $savedIssuerCountry['label'] : null,
+            'profilePhotoRequired' => $profileRequirements['profile_image'],
         ];
 
         $viewData['personalFieldValues'] = collect($viewData['personalFields'])
-            ->mapWithKeys(function (array $field) use ($request, $user, $applicantProfile): array {
+            ->mapWithKeys(function (array $field) use ($request, $user): array {
                 $name = $field['name'];
-                $default = match ($name) {
-                    'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                    'gender' => $user->getAttribute('gender') ?: $applicantProfile->selfIdentification?->gender_identity,
-                    default => $user->getAttribute($name),
-                };
+                $default = $user->getAttribute($name);
 
                 return [$name => $request->old($name, $default)];
             })

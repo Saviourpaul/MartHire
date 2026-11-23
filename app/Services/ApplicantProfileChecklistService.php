@@ -64,39 +64,12 @@ class ApplicantProfileChecklistService
     public function applicationRequirements(
         User $user,
         ApplicantProfile $profile,
-        CandidateJobPreference $preferences
     ): array {
-        $identification = $profile->selfIdentification;
-        $contact = [
-            'professional_headline' => blank($profile->professional_headline),
-            'about' => blank($profile->about),
-            'disability_status' => ! in_array($identification?->disability_status, ['yes', 'no'], true),
-            'disability_details' => $identification?->disability_status === 'yes' && blank($identification?->disability_details),
-        ];
-        $needsContactFields = in_array(true, $contact, true);
-        $needsEmployment = $profile->employments->isEmpty();
-        $needsSkills = $profile->skills->isEmpty();
-        $needsEducation = $profile->educations->isEmpty();
-        $needsOnlineProfiles = $profile->links->isEmpty();
-        $needsWorkPreferences = ! (
-            filled($preferences->preferred_roles)
-            || filled($preferences->preferred_locations)
-            || filled($preferences->preferred_job_type)
-            || filled($preferences->preferred_workplace)
-            || $preferences->salary_min !== null
-            || $preferences->salary_max !== null
-        );
-
         return [
             'resume' => ! $this->profiles->hasAvailableResume($profile),
+            'profile_image' => app(PublicMediaUrl::class)->url($user->profile_image_path) === null,
             'identification' => $this->profiles->availableIdentificationDocument($user) === null,
-            'contact' => $contact,
-            'employment' => $needsEmployment,
-            'skills' => $needsSkills,
-            'education' => $needsEducation,
-            'online_profiles' => $needsOnlineProfiles,
-            'work_preferences' => $needsWorkPreferences,
-            'has_additional_fields' => $needsContactFields || $needsEmployment || $needsSkills || $needsEducation || $needsOnlineProfiles || $needsWorkPreferences,
+            'has_additional_fields' => false,
         ];
     }
 

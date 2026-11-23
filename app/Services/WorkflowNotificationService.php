@@ -67,7 +67,7 @@ class WorkflowNotificationService
             'application', $application->id, 'New application',
             'A new application was submitted for '.$application->job->title.' ('.$application->reference.').'
         );
-        $this->workspaceUpdates->organization(
+        $this->workspaceUpdates->organizationAfterResponse(
             (int) $application->organization_id,
             ['applications', 'candidates', 'notifications'],
             'A new application was submitted.',
@@ -426,6 +426,9 @@ class WorkflowNotificationService
     {
         try {
             $pending = dispatch(new SendWorkflowNotificationEmail($id));
+            if (config('queue.default') === 'sync' && ! app()->runningInConsole()) {
+                $pending->afterResponse();
+            }
             unset($pending);
         } catch (Throwable) {
             Log::warning('Workflow notification queue unavailable; the outbox will retry.', ['outbox_id' => $id]);

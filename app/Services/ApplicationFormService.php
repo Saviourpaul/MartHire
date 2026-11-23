@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Enums\ApplicationDocumentType;
 use App\Enums\CandidatePipelineStage;
+use App\Enums\JobScreeningQuestionType;
 use App\Models\ApplicantProfile;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationForm;
 use App\Models\Job;
+use App\Models\JobScreeningQuestion;
 use App\Models\User;
 use App\Models\UserIdentificationDocument;
 use Illuminate\Database\QueryException;
@@ -17,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 use Throwable;
 
 class ApplicationFormService
@@ -28,8 +31,7 @@ class ApplicationFormService
     public function __construct(
         private PipelineTransitionService $pipelineTransitions,
         private WorkflowNotificationService $notifications,
-        private ApplicantProfileService $profiles,
-        private ApplicantProfileChecklistService $profileChecklist
+        private ApplicantProfileService $profiles
     ) {}
 
     /**
@@ -39,12 +41,6 @@ class ApplicationFormService
      */
     public function submit(Job $job, User $applicant, array $data): ApplicationForm
     {
-        if ($job->applications()->where('user_id', $applicant->id)->exists()) {
-            throw ValidationException::withMessages([
-                'job' => 'You have already applied for this job.',
-            ]);
-        }
-
         $storedFiles = [];
         $oldProfileImagePath = $applicant->profile_image_path;
         $newProfileImagePath = null;
@@ -52,18 +48,17 @@ class ApplicationFormService
         try {
             $application = DB::transaction(function () use ($job, $applicant, $data, &$storedFiles, &$newProfileImagePath): ApplicationForm {
                 $currentJob = Job::query()->sharedLock()->findOrFail($job->id);
+                $currentJob->load('screeningQuestions');
 
                 if (! $currentJob->isAcceptingApplications()) {
                     throw ValidationException::withMessages(['job' => 'This job is not accepting applications.']);
                 }
 
+                $this->validateScreeningAnswers($currentJob, $data['screening_answers'] ?? []);
+
                 // Shared locks let applicants proceed in parallel, while a
                 // concurrent job closure waits until this submission commits.
                 // The unique (job_id, user_id) index handles duplicate races.
-                if ($currentJob->applications()->where('user_id', $applicant->id)->exists()) {
-                    throw ValidationException::withMessages(['job' => 'You have already applied for this job.']);
-                }
-
                 $profileImagePath = $applicant->profile_image_path;
 
                 if (($data['profile_image'] ?? null) instanceof UploadedFile) {
@@ -71,6 +66,8 @@ class ApplicationFormService
                     $storedFiles[] = ['disk' => 'public', 'path' => $profileImagePath];
                     $newProfileImagePath = $profileImagePath;
                 }
+
+                $applicationProfileImagePath = $this->snapshotProfileImage($profileImagePath, $storedFiles);
 
                 $application = ApplicationForm::create([
                     ...Arr::only($data, [
@@ -82,9 +79,6 @@ class ApplicationFormService
                         'phone_country',
                         'phone_dial_code',
                         'phone_national_number',
-                        'date_of_birth',
-                        'gender',
-                        'marital_status',
                         'country_code',
                         'country',
                         'state',
@@ -98,31 +92,33 @@ class ApplicationFormService
                     'reference' => $this->generateReference(),
                     'status' => CandidatePipelineStage::Submitted,
                     'submitted_at' => now(),
-                    'profile_image_path' => $profileImagePath,
+                    'profile_image_path' => $applicationProfileImagePath,
                 ]);
 
                 if (($data['identification_document'] ?? null) instanceof UploadedFile) {
                     $identificationType = ApplicationDocumentType::from($data['identification_type']);
-                    $identification = $this->storeIdentificationDocument(
-                        $applicant,
-                        $identificationType,
+                    $this->createDocument(
+                        $application,
                         $data['identification_document'],
-                        $storedFiles
+                        $identificationType,
+                        $identificationType->label(),
+                        $storedFiles,
+                        $data['identity_issuing_country_code'] ?? null,
                     );
                 } else {
                     $identification = $this->profiles->availableIdentificationDocument($applicant);
-
                     if (! $identification) {
                         throw ValidationException::withMessages([
-                            'identification_document' => 'Your saved identification document is no longer available. Upload it again to continue.',
+                            'identification_document' => 'Upload a government-issued identification document to apply.',
                         ]);
                     }
+                    $this->copyIdentityDocumentToApplication(
+                        $application,
+                        $identification,
+                        $data['identity_issuing_country_code'] ?? $identification->issuing_country_code,
+                        $storedFiles,
+                    );
                 }
-
-                $this->createIdentityDocument(
-                    $application,
-                    $identification
-                );
 
                 if (($data['resume'] ?? null) instanceof UploadedFile) {
                     $this->createDocument(
@@ -137,15 +133,7 @@ class ApplicationFormService
                     $this->createDocumentFromProfileResume($application, $profile, $storedFiles);
                 }
 
-                foreach ($data['education_documents'] as $document) {
-                    $this->createDocument(
-                        $application,
-                        $document['file'],
-                        ApplicationDocumentType::Education,
-                        $document['name'],
-                        $storedFiles
-                    );
-                }
+                $this->storeScreeningAnswerSnapshots($application, $currentJob, $data['screening_answers'] ?? []);
 
                 $application->statusHistories()->create([
                     'from_status' => null,
@@ -158,7 +146,7 @@ class ApplicationFormService
                 $this->syncApplicantProfile($applicant, $data, $profileImagePath, $storedFiles);
                 $this->notifications->applicationSubmitted($application);
 
-                return $application->load(['job', 'documents']);
+                return $application->load(['job', 'documents', 'screeningAnswers']);
             });
         } catch (Throwable $throwable) {
             $this->deleteStoredFiles($storedFiles);
@@ -201,7 +189,6 @@ class ApplicationFormService
         $profileData = Arr::only($data, [
             'first_name',
             'last_name',
-            'date_of_birth',
             'phone',
             'phone_country',
             'phone_dial_code',
@@ -229,18 +216,10 @@ class ApplicationFormService
             $storedFiles[] = ['disk' => 'local', 'path' => $profile->resume_path];
         }
 
-        $profileChecklistData = $data;
-        $profileChecklistData['profile_contact'] = [
-            ...($profileChecklistData['profile_contact'] ?? []),
-            'gender_identity' => $data['gender'],
-        ];
-        $this->profiles->syncChecklistDetails($applicant, $profileChecklistData);
-
-        $checklist = $this->profileChecklist->forUser($applicant->fresh());
-        if ($checklist['completed'] < $checklist['total']) {
-            throw ValidationException::withMessages([
-                'profile' => 'Complete the required profile details before submitting your application.',
-            ]);
+        if (array_intersect(array_keys($data), [
+            'profile_contact', 'profile_employment', 'profile_education', 'profile_skills', 'profile_links', 'profile_preferences',
+        ]) !== []) {
+            $this->profiles->syncChecklistDetails($applicant, $data);
         }
     }
 
@@ -300,56 +279,117 @@ class ApplicationFormService
     /**
      * @param  array<int, array{disk: string, path: string}>  $storedFiles
      */
-    private function storeIdentificationDocument(
-        User $applicant,
-        ApplicationDocumentType $type,
-        UploadedFile $file,
-        array &$storedFiles
-    ): UserIdentificationDocument {
-        if (! $type->isIdentityType()) {
+    /**
+     * Copy a previously saved private identity file into the application so a
+     * future profile replacement cannot change the evidence that was reviewed.
+     *
+     * @param array<int, array{disk: string, path: string}> $storedFiles
+     */
+    private function copyIdentityDocumentToApplication(
+        ApplicationForm $application,
+        UserIdentificationDocument $identification,
+        ?string $issuingCountryCode,
+        array &$storedFiles,
+    ): ApplicationDocument {
+        $diskName = config('filesystems.application_documents_disk', 'local');
+        $extension = strtolower(pathinfo($identification->original_name, PATHINFO_EXTENSION));
+        if (! in_array($extension, ['pdf', 'jpg', 'jpeg', 'png'], true)
+            || ! Storage::disk($diskName)->exists($identification->file_path)) {
             throw ValidationException::withMessages([
-                'identification_type' => 'Select a supported identification method.',
+                'identification_document' => 'Your saved identification document is no longer available or supported. Upload it again to continue.',
             ]);
         }
 
-        $disk = config('filesystems.application_documents_disk', 'local');
-        $path = $file->store('user-identification-documents/'.$applicant->id, $disk);
-        $storedFiles[] = ['disk' => $disk, 'path' => $path];
+        if (Storage::disk($diskName)->size($identification->file_path) > self::DOCUMENT_MAX_KB * 1024) {
+            throw ValidationException::withMessages([
+                'identification_document' => 'Your saved identification document is larger than the 5 MB application limit. Upload a smaller file to continue.',
+            ]);
+        }
 
-        // Application snapshots may still reference a previously selected profile document.
-        return $applicant->identificationDocument()->updateOrCreate([], [
-            'document_type' => $type,
-            'file_path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType() ?: null,
-            'size' => $file->getSize(),
-        ]);
-    }
+        $destination = 'application-documents/'.$application->id.'/identity-'.Str::uuid().'.'.$extension;
+        $stream = Storage::disk($diskName)->readStream($identification->file_path);
+        if (! is_resource($stream)) {
+            throw ValidationException::withMessages([
+                'identification_document' => 'Your saved identification document could not be read. Upload it again to continue.',
+            ]);
+        }
 
-    private function createIdentityDocument(
-        ApplicationForm $application,
-        UserIdentificationDocument $identification
-    ): ApplicationDocument {
+        try {
+            $written = Storage::disk($diskName)->writeStream($destination, $stream);
+        } finally {
+            fclose($stream);
+        }
+
+        if (! $written) {
+            throw ValidationException::withMessages([
+                'identification_document' => 'Your saved identification document could not be copied. Upload it again to continue.',
+            ]);
+        }
+
+        $storedFiles[] = ['disk' => $diskName, 'path' => $destination];
+
         return $application->documents()->create([
             'user_identification_document_id' => $identification->id,
             'document_type' => $identification->document_type,
             'document_name' => $identification->document_type->label(),
-            'file_path' => $identification->file_path,
+            'file_path' => $destination,
             'original_name' => $identification->original_name,
             'mime_type' => $identification->mime_type,
-            'size' => $identification->size,
+            'size' => Storage::disk($diskName)->size($destination),
+            'issuing_country_code' => $issuingCountryCode,
         ]);
     }
 
     /**
      * @param  array<int, array{disk: string, path: string}>  $storedFiles
      */
+    /**
+     * Keep the image attached to this submission stable when the applicant
+     * later replaces their account photo.
+     *
+     * @param  array<int, array{disk: string, path: string}>  $storedFiles
+     */
+    private function snapshotProfileImage(?string $profileImagePath, array &$storedFiles): string
+    {
+        if (! filled($profileImagePath)) {
+            throw ValidationException::withMessages([
+                'profile_image' => 'Upload a valid profile photo to apply.',
+            ]);
+        }
+
+        $path = ltrim($profileImagePath, '/');
+        foreach (['storage/', 'public/'] as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                $path = substr($path, strlen($prefix));
+            }
+        }
+
+        $publicPath = app(PublicMediaUrl::class)->publicPath($path);
+        $extension = strtolower(pathinfo((string) $publicPath, PATHINFO_EXTENSION));
+        if ($publicPath === null || ! in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)
+            || ! Storage::disk('public')->exists($publicPath)) {
+            throw ValidationException::withMessages([
+                'profile_image' => 'Upload a valid profile photo to apply.',
+            ]);
+        }
+
+        $snapshotPath = 'profile-images/application-'.Str::uuid().'.'.$extension;
+        if (! Storage::disk('public')->copy($publicPath, $snapshotPath)) {
+            throw new RuntimeException('Unable to preserve the applicant photo for this application.');
+        }
+
+        $storedFiles[] = ['disk' => 'public', 'path' => $snapshotPath];
+
+        return $snapshotPath;
+    }
+
     private function createDocument(
         ApplicationForm $application,
         UploadedFile $file,
         ApplicationDocumentType $type,
         string $name,
-        array &$storedFiles
+        array &$storedFiles,
+        ?string $issuingCountryCode = null,
     ): ApplicationDocument {
         $disk = config('filesystems.application_documents_disk', 'local');
         $path = $file->store('application-documents/'.$application->id, $disk);
@@ -362,7 +402,69 @@ class ApplicationFormService
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getMimeType() ?: null,
             'size' => $file->getSize(),
+            'issuing_country_code' => $issuingCountryCode,
         ]);
+    }
+
+    /** @param array<string, mixed> $answers */
+    private function validateScreeningAnswers(Job $job, array $answers): void
+    {
+        $questions = $job->screeningQuestions;
+        $knownKeys = $questions->pluck('question_key')->all();
+        foreach (array_keys($answers) as $key) {
+            if (! in_array((string) $key, $knownKeys, true)) {
+                throw ValidationException::withMessages([
+                    'screening_answers' => 'One of the screening questions has changed. Refresh the application and try again.',
+                ]);
+            }
+        }
+
+        /** @var JobScreeningQuestion $question */
+        foreach ($questions as $question) {
+            $key = $question->question_key;
+            $answer = $answers[$key] ?? null;
+            if ($answer === null || $answer === '' || $answer === []) {
+                throw ValidationException::withMessages(['screening_answers.'.$key => 'Answer this required screening question.']);
+            }
+
+            $options = $question->options ?? [];
+            $valid = match ($question->type) {
+                JobScreeningQuestionType::ShortText => is_string($answer) && mb_strlen($answer) <= 250,
+                JobScreeningQuestionType::LongText => is_string($answer) && mb_strlen($answer) <= 5000,
+                JobScreeningQuestionType::SingleSelect => is_string($answer) && in_array($answer, $options, true),
+                JobScreeningQuestionType::MultiSelect => is_array($answer)
+                    && count($answer) <= count($options)
+                    && count($answer) === count(array_unique($answer))
+                    && collect($answer)->every(fn ($option): bool => is_string($option) && in_array($option, $options, true)),
+                JobScreeningQuestionType::YesNo => in_array((string) $answer, ['yes', 'no', '1', '0'], true),
+            };
+
+            if (! $valid) {
+                throw ValidationException::withMessages(['screening_answers.'.$key => 'Provide an answer that matches this question.']);
+            }
+        }
+    }
+
+    /** @param array<string, mixed> $answers */
+    private function storeScreeningAnswerSnapshots(ApplicationForm $application, Job $job, array $answers): void
+    {
+        /** @var JobScreeningQuestion $question */
+        foreach ($job->screeningQuestions as $question) {
+            $answer = $answers[$question->question_key] ?? null;
+            if ($question->type === JobScreeningQuestionType::YesNo && $answer !== null) {
+                $answer = in_array((string) $answer, ['yes', '1'], true) ? 'Yes' : 'No';
+            }
+
+            $application->screeningAnswers()->create([
+                'question_key' => $question->question_key,
+                'type' => $question->type->value,
+                'prompt' => $question->prompt,
+                'options' => $question->options,
+                'is_required' => true,
+                'position' => $question->position,
+                'answer' => $answer,
+            ]);
+        }
     }
 
     /**

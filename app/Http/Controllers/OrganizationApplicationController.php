@@ -9,6 +9,7 @@ use App\Models\Job;
 use App\Services\ApplicationDocumentFileService;
 use App\Services\ApplicationFormService;
 use App\Services\CandidateReviewService;
+use App\Services\CountryDisplayService;
 use App\Services\EmailTemplateService;
 use App\Services\InterviewWorkspaceData;
 use App\Support\CsvCellSanitizer;
@@ -148,6 +149,9 @@ class OrganizationApplicationController extends Controller
                     return [
                         'id' => (string) $document->id,
                         'label' => $document->displayLabel(),
+                        'issuing_country_name' => $document->issuing_country_code
+                            ? app(CountryDisplayService::class)->present($document->issuing_country_code, null)['name']
+                            : null,
                         'size' => $document->size,
                         'preview_url' => $document->previewUrl(),
                         'download_url' => $document->downloadUrl(),

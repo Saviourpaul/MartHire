@@ -19,6 +19,11 @@ class JobApplication extends Model
         'status',
         'attempts',
         'error_code',
+        'dispatch_token',
+        'dispatch_attempted_at',
+        'dispatch_attempts',
+        'next_attempt_at',
+        'processing_lease_until',
         'payload',
         'schema_hash',
         'workable_candidate_id',
@@ -36,6 +41,9 @@ class JobApplication extends Model
         'payload' => 'encrypted:array',
         'consented_at' => 'datetime',
         'submitted_at' => 'datetime',
+        'dispatch_attempted_at' => 'datetime',
+        'next_attempt_at' => 'datetime',
+        'processing_lease_until' => 'datetime',
     ];
 
     public function jobPosting(): BelongsTo

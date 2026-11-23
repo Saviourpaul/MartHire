@@ -8,6 +8,7 @@ enum ApplicationDocumentType: string
     case InternationalPassport = 'international_passport';
     case DriversLicense = 'drivers_license';
     case VotersCard = 'voters_card';
+    case OtherGovernmentId = 'other_government_id';
     case Resume = 'resume';
     case Education = 'education';
     case LegacyIdentity = 'legacy_identity';
@@ -22,6 +23,7 @@ enum ApplicationDocumentType: string
             self::InternationalPassport,
             self::DriversLicense,
             self::VotersCard,
+            self::OtherGovernmentId,
         ];
     }
 
@@ -41,10 +43,11 @@ enum ApplicationDocumentType: string
     public function label(): string
     {
         return match ($this) {
-            self::NationalIdentityCard => 'National Identity Card / NIN Slip',
+            self::NationalIdentityCard => 'National Identity Card',
             self::InternationalPassport => 'International Passport',
             self::DriversLicense => "Driver's License",
             self::VotersCard => "Voter's Card",
+            self::OtherGovernmentId => 'Other government-issued ID',
             self::Resume => 'Résumé / CV',
             self::Education => 'Educational Qualification',
             self::LegacyIdentity => 'Legacy identity document',

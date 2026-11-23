@@ -31,6 +31,7 @@ class ApplicationDocument extends Model
         'original_name',
         'mime_type',
         'size',
+        'issuing_country_code',
     ];
 
     protected function casts(): array

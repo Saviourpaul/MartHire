@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\JobStatus;
+use App\Http\Requests\Concerns\ValidatesJobScreeningQuestions;
 use App\Models\Job;
 use App\Services\JobCountryService;
 use App\Support\JobDescription;
@@ -10,9 +11,12 @@ use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
+use Illuminate\Validation\Validator;
 
 class UpdateJobRequest extends FormRequest
 {
+    use ValidatesJobScreeningQuestions;
+
     public function authorize(): bool
     {
         $job = $this->route('job');
@@ -25,6 +29,12 @@ class UpdateJobRequest extends FormRequest
         if (is_string($this->input('country_code'))) {
             $this->merge(['country_code' => strtoupper(trim($this->input('country_code')))]);
         }
+
+        $this->merge(['requires_identity_document' => $this->boolean('requires_identity_document')]);
+        if (! $this->boolean('requires_identity_document')) {
+            $this->merge(['identity_requirement_reason' => null]);
+        }
+        $this->normalizeScreeningQuestionDefinitions();
     }
 
     /**
@@ -51,10 +61,22 @@ class UpdateJobRequest extends FormRequest
                 ? ['nullable', File::image()->types(['jpg', 'jpeg', 'png', 'webp', 'gif'])->max(2048)]
                 : ['nullable', 'string', 'max:2048'],
             'remove_logo' => ['nullable', 'boolean'],
+            'requires_identity_document' => ['required', 'boolean'],
+            'identity_requirement_reason' => [
+                Rule::requiredIf(fn (): bool => $this->boolean('requires_identity_document')),
+                Rule::prohibitedIf(fn (): bool => ! $this->boolean('requires_identity_document')),
+                'nullable', 'string', 'min:10', 'max:255',
+            ],
             'start_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:start_date'],
             'action' => ['required', Rule::in(['publish', 'save_draft'])],
+            ...$this->screeningQuestionRules(allowExisting: true),
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(fn (Validator $validator) => $this->validateScreeningQuestionOwnership($validator, allowExisting: true));
     }
 
     public function resolvedStatus(): JobStatus
