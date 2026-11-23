@@ -4,9 +4,12 @@
     x-show="!ready || step === 0" :aria-hidden="ready && step !== 0">
     <legend data-wizard-heading tabindex="-1">{{ __('Let’s start with you') }}</legend>
 
-    <x-avatar-upload :user="$user" :required="blank($user->profile_image_path)" :wizard="true" :hint="__(
-        'JPG, PNG or WEBP. Up to 5 MB, between 200 × 200 and 2000 × 2000 pixels. Your saved photo is used when no replacement is selected.',
-    )" />
+    <x-avatar-upload
+        :user="$user"
+        :required="$profileRequirements['profile_image']"
+        :allow-change="$profileRequirements['profile_image']"
+        :wizard="true"
+        :hint="$profileRequirements['profile_image'] ? __('JPG, PNG, or WebP, up to 5 MB.') : __('Your saved profile photo will be included with this application.')" />
     <div class="nw-form-section__grid">
         @foreach ($personalFields as $field)
             <div class="nw-form-section__item is-half">

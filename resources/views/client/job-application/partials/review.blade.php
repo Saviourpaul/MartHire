@@ -1,8 +1,8 @@
 <fieldset class="nw-form-section nw-wizard__panel" data-wizard-step
     data-step-title="{{ __('Review and submit') }}"
     data-step-description="{{ __('Check your application before sending it.') }}"
-    x-show="!ready || step === {{ $profileStepEnabled ? 4 : 3 }}"
-    :aria-hidden="ready && step !== {{ $profileStepEnabled ? 4 : 3 }}">
+    x-show="!ready || step === {{ $reviewStepIndex }}"
+    :aria-hidden="ready && step !== {{ $reviewStepIndex }}">
     <legend data-wizard-heading tabindex="-1">{{ __('Ready to send?') }}</legend>
     <p class="nw-wizard__description">
         {{ __('Review your details and documents. Use Edit to make any changes before submitting.') }}

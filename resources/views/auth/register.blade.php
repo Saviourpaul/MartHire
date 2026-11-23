@@ -2,7 +2,6 @@
     <x-slot name="title">{{ __('Create an account') }}</x-slot>
 
     <header class="nw-auth-heading">
-        <span class="nw-eyebrow">{{ __('Start something good') }}</span>
         <h1 id="auth-heading">{{ __('Your possibilities start here.') }}</h1>
         <p>{{ __('Create your applicant account to explore opportunities and manage your applications.') }}</p>
     </header>
@@ -42,7 +41,7 @@
             <x-input-error id="password_confirmation-error" :messages="$errors->get('password_confirmation')" />
         </div>
 
-        <x-primary-button>{{ __('Create account') }} <span aria-hidden="true">&rarr;</span></x-primary-button>
+        <x-primary-button>{{ __('Create account') }} </x-primary-button>
     </form>
 
    <br> 

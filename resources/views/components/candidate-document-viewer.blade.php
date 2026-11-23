@@ -13,7 +13,7 @@
             </div>
             <template x-if="selectedDocument?.available"><a class="nw-button nw-button--outline nw-button--small" x-bind:href="selectedDocument.download_url" download><x-icon name="download" /><span>{{ __('Download') }}</span></a></template>
         </div>
-        <div class="nw-review-documents__filename"><x-icon name="file" /><span x-text="selectedDocument?.label">{{ $documents[0]['label'] }}</span><span class="nw-review-private"><x-icon name="lock" />{{ __('Private') }}</span></div>
+        <div class="nw-review-documents__filename"><x-icon name="file" /><span x-text="selectedDocument?.label">{{ $documents[0]['label'] }}</span><span x-show="selectedDocument?.issuing_country_name" x-text="selectedDocument?.issuing_country_name ? '{{ __('Issued by') }} ' + selectedDocument.issuing_country_name : ''" x-cloak></span><span class="nw-review-private"><x-icon name="lock" />{{ __('Private') }}</span></div>
         <div class="nw-review-pdf-controls" role="group" aria-label="{{ __('PDF navigation and zoom') }}" x-show="documentState === 'ready' && documentMime === 'application/pdf'" x-cloak>
             <button type="button" class="nw-icon-button" x-on:click="changePdfPage(-1)" x-bind:disabled="pdfBusy || pdfPage <= 1" aria-label="{{ __('Previous page') }}"><x-icon name="arrow-left" /></button>
             <span role="status">{{ __('Page') }} <span x-text="pdfPage"></span> {{ __('of') }} <span x-text="pdfPages"></span></span>

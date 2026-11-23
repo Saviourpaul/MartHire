@@ -19,7 +19,7 @@ const TOOLBAR = [
 ];
 
 export function registerJobForm(Alpine) {
-    Alpine.data('jobForm', ({ maxLength = 100000, storageKey = 'job-form' } = {}) => {
+    Alpine.data('jobForm', ({ maxLength = 100000, storageKey = 'job-form', screeningQuestions = [], requiresIdentityDocument = false } = {}) => {
         // Quill/Parchment relies on object identity. Keep its instance outside
         // Alpine's deeply reactive state, including calls made after init.
         let quill = null;
@@ -30,6 +30,16 @@ export function registerJobForm(Alpine) {
             count: 0,
             submitting: false,
             dirty: false,
+            requiresIdentityDocument: Boolean(requiresIdentityDocument),
+            screeningQuestions: Array.isArray(screeningQuestions) ? screeningQuestions.map((question, index) => ({
+                id: question.id || null,
+                localKey: `existing-${question.id || index}`,
+                prompt: question.prompt || '',
+                type: question.type || 'short_text',
+                required: Boolean(question.required),
+                options: Array.isArray(question.options) ? [...question.options] : [],
+            })) : [],
+            nextScreeningQuestionKey: 1,
 
             init() {
                 const input = this.$refs.input;
@@ -97,6 +107,35 @@ export function registerJobForm(Alpine) {
                 try {
                     window.localStorage.removeItem(storageKey);
                 } catch (_) {}
+            },
+
+            addScreeningQuestion() {
+                if (this.screeningQuestions.length >= 15) return;
+                this.screeningQuestions.push({
+                    id: null,
+                    localKey: `new-${this.nextScreeningQuestionKey++}`,
+                    prompt: '',
+                    type: 'short_text',
+                    required: true,
+                    options: [],
+                });
+            },
+
+            removeScreeningQuestion(index) {
+                this.screeningQuestions.splice(index, 1);
+            },
+
+            addScreeningOption(question) {
+                if (question.options.length < 10) question.options.push('');
+            },
+
+            removeScreeningOption(question, index) {
+                if (question.options.length <= 2) return;
+                question.options.splice(index, 1);
+            },
+
+            ensureScreeningOptions(question) {
+                while (question.options.length < 2) question.options.push('');
             },
 
             destroy() {

@@ -1,12 +1,12 @@
-<fieldset class="nw-form-section nw-wizard__panel" data-wizard-step data-step-title="{{ __('Your address') }}"
-    data-step-description="{{ __('Choose your country, state, and city or local government area.') }}"
+<fieldset class="nw-form-section nw-wizard__panel" data-wizard-step data-step-title="{{ __('Your location') }}"
+    data-step-description="{{ __('Tell the hiring team where you are based.') }}"
     x-show="!ready || step === 1" :aria-hidden="ready && step !== 1">
     <legend data-wizard-heading tabindex="-1">{{ __('Where are you located?') }}</legend>
 
     <div class="nw-form-section__grid">
         <div class="nw-field nw-form-section__item is-half" data-field="country_code" data-type="dropdown"
-            data-label="{{ __('Country') }}" data-required data-location-field>
-            <label class="nw-label" for="country_code">{{ __('Country') }} <span class="nw-required">*</span></label>
+            data-location-field data-label="{{ __('Country') }}" data-required>
+            <label class="nw-label" for="country_code">{{ __('Country') }} <span class="nw-required" aria-hidden="true">*</span></label>
             <select id="country_code" name="country_code" class="nw-select" x-model="countryCode"
                 x-on:change="loadStates()" required aria-describedby="country-error"
                 :aria-invalid="error('country_code') ? 'true' : 'false'">
@@ -21,11 +21,12 @@
                 x-text="error('country_code')" x-cloak></p>
         </div>
         <div class="nw-field nw-form-section__item is-half" data-field="state" data-type="dropdown"
-            data-label="{{ __('State') }}" data-required data-location-field>
+            data-location-field data-label="{{ __('State') }}" data-required>
             <label class="nw-label" :for="stateManual ? 'manual-state' : 'state'">{{ __('State / region') }} <span
-                    class="nw-required">*</span></label>
+                    class="nw-required" aria-hidden="true">*</span></label>
             <select id="state" name="state" class="nw-select" x-model="state" x-on:change="loadCities()"
-                x-show="!stateManual" :disabled="stateManual || !countryCode || loadingStates" required
+                x-show="!stateManual" :disabled="stateManual || !countryCode || loadingStates"
+                x-bind:required="!stateManual"
                 aria-describedby="state-hint state-error" :aria-invalid="error('state') ? 'true' : 'false'">
                 <option value=""
                     x-text="loadingStates ? @js(__('Loading states…')) : @js(__('Select a state'))">
@@ -35,8 +36,8 @@
                 </template>
             </select>
             <input id="manual-state" name="state" class="nw-input" type="text" x-model="state"
-                x-on:change="loadCities()" x-show="stateManual" :disabled="!stateManual || loadingStates" required
-                minlength="2" maxlength="255" aria-label="{{ __('State / region') }}"
+                x-on:change="loadCities()" x-show="stateManual" :disabled="!stateManual || loadingStates"
+                minlength="2" maxlength="255" x-bind:required="stateManual" aria-label="{{ __('State / region') }}"
                 aria-describedby="state-hint state-error" />
             <p class="nw-form-hint" id="state-hint" x-show="stateManual">
                 {{ __('Regions are not listed for this country. Enter your state or region.') }}
@@ -45,14 +46,14 @@
                 x-cloak></p>
         </div>
         <div class="nw-field nw-form-section__item" data-field="city" data-type="dropdown"
-            data-label="{{ __('City') }}" :data-required="countryCode !== 'NG' ? '' : null"
-            data-location-field x-show="countryCode !== 'NG'">
+            data-location-field data-label="{{ __('City') }}" x-show="countryCode !== 'NG'"
+            x-bind:data-required="countryCode !== 'NG' ? '' : null">
             <label class="nw-label" :for="cityManual ? 'manual-city' : 'city'">{{ __('City') }} <span
-                    class="nw-required">*</span></label>
+                    class="nw-required" aria-hidden="true" x-show="countryCode !== 'NG'">*</span></label>
             <select id="city" name="city" class="nw-select" x-model="city" x-show="!cityManual"
-                :required="countryCode !== 'NG'"
                 :disabled="countryCode === 'NG' || cityManual || !state || loadingStates ||
                     loadingCities"
+                x-bind:required="countryCode !== 'NG' && !cityManual"
                 aria-describedby="city-hint city-error" :aria-invalid="error('city') ? 'true' : 'false'">
                 <option value=""
                     x-text="loadingCities ? @js(__('Loading cities…')) : @js(__('Select a city'))">
@@ -62,10 +63,9 @@
                 </template>
             </select>
             <input id="manual-city" name="city" class="nw-input" type="text" x-model="city" x-show="cityManual"
-                :required="countryCode !== 'NG'"
                 :disabled="countryCode === 'NG' || !cityManual || !state || loadingStates ||
                     loadingCities"
-                minlength="2" maxlength="255" aria-label="{{ __('City') }}"
+                minlength="2" maxlength="255" x-bind:required="countryCode !== 'NG' && cityManual" aria-label="{{ __('City') }}"
                 aria-describedby="city-hint city-error" />
             <p class="nw-form-hint" id="city-hint" x-show="cityManual">
                 {{ __('Cities are not listed for this state. Enter your city.') }}</p>
@@ -73,13 +73,13 @@
                 x-cloak></p>
         </div>
         <div class="nw-field nw-form-section__item" data-field="local_government_area" data-type="dropdown"
-            data-label="{{ __('Local government area') }}" :data-required="countryCode === 'NG' ? '' : null"
-            data-location-field x-show="countryCode === 'NG'">
+            data-location-field data-label="{{ __('Local government area') }}" x-show="countryCode === 'NG'"
+            x-bind:data-required="countryCode === 'NG' ? '' : null">
             <label class="nw-label" for="local_government_area">{{ __('Local government area') }}
-                <span class="nw-required">*</span></label>
+                <span class="nw-required" aria-hidden="true" x-show="countryCode === 'NG'">*</span></label>
             <select id="local_government_area" name="local_government_area" class="nw-select" x-model="lga"
-                :required="countryCode === 'NG'"
                 :disabled="countryCode !== 'NG' || !state || loadingStates || loadingCities"
+                x-bind:required="countryCode === 'NG'"
                 aria-describedby="lga-error" :aria-invalid="error('local_government_area') ? 'true' : 'false'">
                 <option value=""
                     x-text="loadingCities ? @js(__('Loading areas…')) : @js(__('Select a local government area'))">
@@ -101,14 +101,5 @@
                     class="nw-link" x-on:click="loadCities(true)"
                     :disabled="loadingCities">{{ __('Retry cities / areas') }}</button></p>
         </div>
-        <div class="nw-form-section__item"><x-application-field :field="[
-            'name' => 'address',
-            'label' => __('Street address'),
-            'type' => 'text',
-            'required' => true,
-            'min_length' => 5,
-            'max_length' => 255,
-            'autocomplete' => 'street-address',
-        ]" :value="old('address', $user->address)" /></div>
     </div>
 </fieldset>

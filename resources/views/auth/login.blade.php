@@ -32,7 +32,7 @@
             @endif
         </div>
 
-        <x-primary-button>{{ __('Log in') }} <span aria-hidden="true">&rarr;</span></x-primary-button>
+        <x-primary-button>{{ __('Log in') }}</x-primary-button>
     </form>
   <br>
     

@@ -1207,6 +1207,142 @@
     }
 }
 
+.nw-job-identity-requirement,
+.nw-screening-builder {
+    display: grid;
+    gap: 16px;
+}
+
+.nw-job-identity-requirement h2,
+.nw-screening-builder h2 {
+    margin: 0;
+    color: var(--nw-ink);
+    font-family: var(--nw-body);
+    font-size: 18px;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+.nw-job-identity-requirement .nw-form-hint,
+.nw-screening-builder__heading .nw-form-hint {
+    margin: 5px 0 0;
+    max-width: 72ch;
+}
+
+.nw-screening-builder__heading,
+.nw-screening-question__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.nw-screening-builder__count {
+    flex: 0 0 auto;
+    color: var(--nw-muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.nw-screening-builder__list {
+    display: grid;
+    gap: 12px;
+}
+
+.nw-screening-question {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--nw-line);
+    border-radius: 10px;
+    background: var(--nw-paper);
+}
+
+.nw-screening-question__head {
+    align-items: center;
+    color: var(--nw-ink);
+    font-size: 14px;
+}
+
+.nw-screening-question__head .nw-link,
+.nw-screening-question__options>.nw-link {
+    min-height: 36px;
+}
+
+.nw-screening-question__options {
+    display: grid;
+    gap: 9px;
+}
+
+.nw-screening-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 8px;
+}
+
+.nw-screening-option .nw-icon-button {
+    width: 40px;
+    height: 40px;
+}
+
+.nw-screening-question__required {
+    width: fit-content;
+}
+
+.nw-screening-builder__empty {
+    margin: 0;
+    color: var(--nw-muted);
+    font-size: 14px;
+}
+
+.nw-screening-builder :disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.nw-review-screening {
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid var(--nw-line);
+}
+
+.nw-review-screening h3 {
+    margin: 0;
+    color: var(--nw-ink);
+    font-size: 16px;
+}
+
+.nw-review-screening .nw-review-facts {
+    margin-top: 16px;
+}
+
+.nw-review-required-label {
+    margin-left: 6px;
+    color: var(--nw-muted);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    .nw-screening-builder__heading {
+        align-items: flex-start;
+    }
+
+    .nw-screening-question {
+        padding: 14px;
+    }
+
+    .nw-screening-question__head {
+        align-items: flex-start;
+    }
+
+    .nw-screening-question__head .nw-link {
+        text-align: right;
+    }
+}
+
 @font-face {
     font-family: 'Font Awesome 6 Brands';
     font-style: normal;
@@ -11349,6 +11485,60 @@ a.nw-chip {
 }
 
 .nw-review-facts dd {
+    overflow-wrap: anywhere;
+}
+
+.nw-review-screening .nw-review-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
+
+.nw-review-screening .nw-review-facts>div {
+    min-width: 0;
+    padding-block: 16px;
+    border-bottom: 1px solid var(--nw-line);
+}
+
+.nw-review-screening .nw-review-facts>div:first-child {
+    padding-top: 0;
+}
+
+.nw-review-screening .nw-review-facts>div:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.nw-review-screening .nw-review-facts dt {
+    color: var(--nw-ink);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: normal;
+    text-transform: none;
+    overflow-wrap: anywhere;
+}
+
+.nw-review-screening .nw-review-required-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    margin-left: 8px;
+    border: 1px solid var(--nw-line);
+    border-radius: 999px;
+    background: var(--nw-soft);
+    color: var(--nw-muted);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.nw-review-screening .nw-review-facts dd {
+    margin-top: 8px;
+    color: var(--nw-ink);
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
 

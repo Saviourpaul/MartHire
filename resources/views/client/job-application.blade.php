@@ -15,9 +15,7 @@
 
             <div class="nw-wizard" x-data="nativeApplicationForm({
                 errors: @js($serverErrors),
-                documents: @js($educationDocuments),
-                profileDisabilityStatus: @js(old('profile_contact.disability_status', $applicantProfile->selfIdentification?->disability_status ?? '')),
-                profileEmploymentCurrent: @js((bool) old('profile_employment.is_current', false)),
+                identityRequired: @js($identityRequired),
                 location: {
                     countries: @js($countries),
                     countryCode: @js($initialCountry),
@@ -67,6 +65,7 @@
                         'personalFieldValues' => $personalFieldValues,
                         'user' => $user,
                         'applicantProfile' => $applicantProfile,
+                        'profileRequirements' => $profileRequirements,
                     ])
 
                     @include('client.job-application.partials.address', [
@@ -80,24 +79,23 @@
                         'user' => $user,
                     ])
 
-                    @include('client.job-application.partials.profile', [
-                        'profileStepEnabled' => $profileStepEnabled,
-                        'profileRequirements' => $profileRequirements,
-                        'applicantProfile' => $applicantProfile,
-                        'jobPreferences' => $jobPreferences,
-                        'employmentTypeChoices' => $employmentTypeChoices,
-                    ])
+                    @if ($screeningStepEnabled)
+                        @include('client.job-application.partials.screening-questions')
+                    @endif
 
                     @include('client.job-application.partials.documents', [
-                        'profileStepEnabled' => $profileStepEnabled,
+                        'documentsStepIndex' => $documentsStepIndex,
                         'savedIdentityDocument' => $savedIdentityDocument,
                         'identityField' => $identityField,
                         'profileRequirements' => $profileRequirements,
                         'applicantProfile' => $applicantProfile,
+                        'identityCountryChoices' => $identityCountryChoices,
+                        'identityRequired' => $identityRequired,
+                        'identityRequirementReason' => $identityRequirementReason,
                     ])
 
                     @include('client.job-application.partials.review', [
-                        'profileStepEnabled' => $profileStepEnabled,
+                        'reviewStepIndex' => $reviewStepIndex,
                     ])
 
                     <x-form.wizard-actions :cancel-url="route('jobs.show', $job)" :submit-label="__('Submit application')" />

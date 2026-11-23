@@ -22,7 +22,7 @@
 
     @fragment('candidate-review')
         <div class="nw-review" data-live-table="candidate-review" data-live-topics="candidates,applications,interviews,notifications,team,jobs"
-            data-live-pages="" data-live-interval="0" data-live-url="{{ request()->fullUrl() }}" x-data="candidateReview({ documents: @js($reviewDocuments), tab: @js($initialTab) })"
+            data-live-pages="" data-live-interval="0" data-live-url="" x-data="candidateReview({ documents: @js($reviewDocuments), tab: @js($initialTab) })"
             x-bind:data-current-review-tab="reviewTab" x-bind:data-current-document="documentId">
             @if ($errors->any())
                 <div class="nw-notice nw-notice--error" role="alert">
@@ -120,10 +120,12 @@
                                         </div>
                                     @endif
                                 @endforeach
-                                <div>
-                                    <dt>{{ __('Country') }}</dt>
-                                    <dd><x-country-display :country="$profile['country_data']" /></dd>
-                                </div>
+                                @if ($profile['country_data']['code'] || $profile['country_data']['name'] !== __('Country not provided'))
+                                    <div>
+                                        <dt>{{ __('Country') }}</dt>
+                                        <dd><x-country-display :country="$profile['country_data']" /></dd>
+                                    </div>
+                                @endif
                                 <div>
                                     <dt>{{ __('Application reference') }}</dt>
                                     <dd>{{ $application->reference }}</dd>
@@ -133,6 +135,25 @@
                                     <dd>{{ $application->submitted_at?->format('j M Y, g:i A') ?? '—' }}</dd>
                                 </div>
                             </dl>
+                            @if (!empty($review['screening_answers']))
+                                <section class="nw-review-screening" aria-labelledby="screening-answers-heading">
+                                    <h3 id="screening-answers-heading">{{ __('Job screening answers') }}</h3>
+                                    <dl class="nw-detail-list nw-review-facts">
+                                        @foreach ($review['screening_answers'] as $screeningAnswer)
+                                            <div>
+                                                <dt>{{ $screeningAnswer['prompt'] }}@if ($screeningAnswer['is_required']) <span class="nw-review-required-label">{{ __('Required') }}</span>@endif</dt>
+                                                <dd>
+                                                    @if (is_array($screeningAnswer['answer']))
+                                                        {{ $screeningAnswer['answer'] === [] ? __('No response') : implode(', ', $screeningAnswer['answer']) }}
+                                                    @else
+                                                        {{ filled($screeningAnswer['answer']) ? $screeningAnswer['answer'] : __('No response') }}
+                                                    @endif
+                                                </dd>
+                                            </div>
+                                        @endforeach
+                                    </dl>
+                                </section>
+                            @endif
                             @if ($application->employer_remarks)
                                 <div class="nw-review-remarks">
                                     <h3>{{ __('Latest stage remarks') }}</h3>

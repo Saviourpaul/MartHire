@@ -4,6 +4,7 @@ import { createFormWizard } from './form-wizard.js';
 import { createLocationSelector } from './location-selector.js';
 
 const readableSize = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+const UPLOAD_TIMEOUT_ERROR = 'application-upload-timeout';
 
 function submitMultipartForm(form, onProgress) {
     return new Promise((resolve, reject) => {
@@ -23,7 +24,7 @@ function submitMultipartForm(form, onProgress) {
             json: async () => JSON.parse(request.responseText),
         }));
         request.addEventListener('error', () => reject(new TypeError('The application request could not connect.')));
-        request.addEventListener('timeout', () => reject(new Error('The upload took too long. Check your connection and try again.')));
+        request.addEventListener('timeout', () => reject(new Error(UPLOAD_TIMEOUT_ERROR)));
         request.send(new FormData(form));
     });
 }
@@ -31,7 +32,7 @@ function submitMultipartForm(form, onProgress) {
 // Laravel reports errors as "answers.q-why"; the form names them "answers[q-why]".
 const errorKey = (name) => name.replace(/\[\]$/, '').replace(/\[([^\]]+)\]/g, '.$1');
 
-export function createApplicationForm({ preview = true, errors = {}, mode = 'workable', location = {}, documents = [{ key: 0, name: '' },], profileDisabilityStatus = '', profileEmploymentCurrent = false } = {}) {
+export function createApplicationForm({ preview = true, errors = {}, mode = 'workable', location = {}, documents = [{ key: 0, name: '' },], profileDisabilityStatus = '', profileEmploymentCurrent = false, identityRequired = false } = {}) {
     return {
         ...createFormWizard(),
         ...(mode === 'native' ? createLocationSelector(location) : {}),
@@ -43,6 +44,7 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
         documents,
         profileDisabilityStatus,
         profileEmploymentCurrent,
+        identityRequired: Boolean(identityRequired),
         nextDocument: documents.length,
         unmappedErrors: [],
         summary: [],
@@ -138,10 +140,10 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
             const type = field.dataset.type;
             const required = field.hasAttribute('data-required');
 
-            const control = this.controlFor(field);
-            if (!control) return '';
             if (field.hasAttribute('data-location-field') && (this.loadingStates || this.loadingCities)) return 'Please wait for the locations to finish loading.';
             if (field.hasAttribute('data-location-field') && this.locationError) return this.locationError;
+            const control = this.controlFor(field);
+            if (!control) return '';
             if (type === 'file') {
                 if (this.fileProblems[name]) return this.fileProblems[name];
                 const file = control.files?.[0];
@@ -207,12 +209,18 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
                 .reduce((total, input) => total + [...(input.files || [])].reduce((size, file) => size + file.size, 0), 0);
             const selectedUploadCount = fileInputs.reduce((total, input) => total + (input.files?.length || 0), 0);
             if (Number.isFinite(maxUploadFiles) && selectedUploadCount > maxUploadFiles) {
-                this.submissionError = `You selected ${selectedUploadCount} files. This form can send up to ${maxUploadFiles} files at once. Remove a file and try again.`;
+                this.submissionError = this.message('errorUploadCount', 'You selected :actual files. This form can send up to :limit files at once. Remove a file and try again.', {
+                    actual: selectedUploadCount,
+                    limit: maxUploadFiles,
+                });
                 this.$nextTick(() => this.$refs.submissionError?.focus());
                 return;
             }
             if (Number.isFinite(maxTotalUploadBytes) && maxTotalUploadBytes >= 0 && selectedUploadBytes > maxTotalUploadBytes) {
-                this.submissionError = `Your selected files total ${readableSize(selectedUploadBytes)}. This form can send up to ${readableSize(maxTotalUploadBytes)} at once. Remove a file or choose smaller files, then try again.`;
+                this.submissionError = this.message('errorUploadTotal', 'Your selected files total :selected. This form can send up to :limit at once. Remove a file or choose smaller files, then try again.', {
+                    selected: readableSize(selectedUploadBytes),
+                    limit: readableSize(maxTotalUploadBytes),
+                });
                 this.$nextTick(() => this.$refs.submissionError?.focus());
                 return;
             }
@@ -223,7 +231,7 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
                     this.uploadProgress = progress;
                 });
                 if (response.status === 413) {
-                    let message = 'The upload is larger than the server allows. Remove a file or choose smaller files, then try again.';
+                    let message = this.message('errorUploadLarge', 'The application upload is larger than the server allows. Remove a file or choose smaller files, then try again.');
                     try {
                         const result = await response.json();
                         if (typeof result.message === 'string') message = result.message;
@@ -232,12 +240,13 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
                 }
                 if (!response.headers.get('content-type')?.includes('application/json')) {
                     if (response.status === 401 || response.status === 419 || (response.status >= 200 && response.status < 300)) {
-                        throw new Error('Please refresh this page and sign in again if your session has expired.');
+                        throw new Error(this.message('errorSession', 'Please refresh this page and sign in again if your session has expired.'));
                     }
-                    if (response.status === 403) throw new Error('Your account does not have permission to submit this application.');
-                    if (response.status === 404) throw new Error('This job is no longer accepting applications.');
-                    if (response.status >= 500) throw new Error('The server could not complete your application. Your entries are still here; please try again.');
-                    throw new Error('We could not submit your application. Your entries are still here; please try again.');
+                    if (response.status === 403) throw new Error(this.message('errorPermission', 'Your account does not have permission to submit this application.'));
+                    if (response.status === 404) throw new Error(this.message('errorNotFound', 'This job is no longer accepting applications.'));
+                    if (response.status === 429) throw new Error(this.message('errorRateLimit', 'Too many attempts. Wait a moment, then try again.'));
+                    if (response.status >= 500) throw new Error(this.message('errorServer', 'The server could not complete your application. Your entries are still here; please try again.'));
+                    throw new Error(this.message('errorGeneric', 'We could not submit your application. Your entries are still here; please try again.'));
                 }
                 const result = await response.json();
                 if (response.status === 422) { this.restoreErrors(result.errors || {}); return; }
@@ -247,12 +256,30 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
                     window.location.assign(destination.href);
                     return;
                 }
-                if (!response.ok) throw new Error(response.status === 419 ? 'Your session has expired. Refresh this page before trying again.' : 'We could not submit your application. Your entries are still here; please try again.');
-                if (result.submitted !== true) throw new Error('We could not confirm your application. Please try again.');
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 419) {
+                        throw new Error(this.message('errorSession', 'Please refresh this page and sign in again if your session has expired.'));
+                    }
+                    if (response.status === 403) throw new Error(this.message('errorPermission', 'Your account does not have permission to submit this application.'));
+                    if (response.status === 404) throw new Error(this.message('errorNotFound', 'This job is no longer accepting applications.'));
+                    if (response.status === 429) throw new Error(this.message('errorRateLimit', 'Too many attempts. Wait a moment, then try again.'));
+                    if (response.status >= 500) throw new Error(this.message('errorServer', 'The server could not complete your application. Your entries are still here; please try again.'));
+                    if (typeof result.message === 'string' && result.message.trim()) throw new Error(result.message);
+                    throw new Error(this.message('errorGeneric', 'We could not submit your application. Your entries are still here; please try again.'));
+                }
+                if (result.submitted !== true) throw new Error(this.message('errorGeneric', 'We could not confirm your application. Please try again.'));
                 this.done = true;
                 this.$nextTick(() => this.$refs.success?.focus());
             } catch (error) {
-                this.submissionError = error instanceof TypeError ? 'We could not connect. Your entries are still here; please try again.' : error.message;
+                if (error instanceof TypeError) {
+                    this.submissionError = this.message('errorConnection', 'We could not connect. Your entries are still here; please try again.');
+                } else if (error?.message === UPLOAD_TIMEOUT_ERROR) {
+                    this.submissionError = this.message('errorTimeout', 'The upload took too long. Check your connection and try again.');
+                } else if (error instanceof SyntaxError) {
+                    this.submissionError = this.message('errorGeneric', 'We could not submit your application. Your entries are still here; please try again.');
+                } else {
+                    this.submissionError = error.message;
+                }
                 this.$nextTick(() => this.$refs.submissionError?.focus());
             } finally {
                 this.submitting = false;
@@ -264,6 +291,15 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
             if (this.uploadProgress === null) return labels.progressPreparing ?? 'Preparing your application…';
             if (this.uploadProgress >= 100) return labels.progressFinishing ?? 'Files uploaded. Finishing your submission…';
             return `${labels.progressUploading ?? 'Uploading your application…'} ${this.uploadProgress}%`;
+        },
+        message(key, fallback, replacements = {}) {
+            let message = this.$refs.progressStatus?.dataset?.[key] ?? fallback;
+            Object.entries(replacements).forEach(([name, value]) => {
+                const replacement = String(value);
+                message = message.split(`__${name.toUpperCase()}__`).join(replacement);
+                message = message.split(`:${name}`).join(replacement);
+            });
+            return message;
         },
         goTo(item) {
             if (Number.isInteger(item.step) && item.step >= 0) this.moveTo(item.step, false);
@@ -278,7 +314,7 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
             const allowed = (field.dataset.accept || '').split(',').map((extension) => extension.trim().replace(/^\./, '').toLowerCase()).filter(Boolean);
             const fieldLimit = Number(field.dataset.max) || 0;
             const runtimeLimit = Number(this.$refs.form?.dataset.maxSingleUploadBytes);
-            if (Number.isFinite(runtimeLimit) && runtimeLimit === 0) return 'The server is not configured to accept file uploads. Try again later.';
+            if (Number.isFinite(runtimeLimit) && runtimeLimit === 0) return this.message('errorNoFileUploads', 'The server is not configured to accept file uploads. Try again later.');
             const limit = Number.isFinite(runtimeLimit) && runtimeLimit >= 0
                 ? (fieldLimit ? Math.min(fieldLimit, runtimeLimit) : runtimeLimit)
                 : fieldLimit;
@@ -286,8 +322,13 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
             const accepted = allowed.some((rule) => rule.includes('/')
                 ? (rule.endsWith('/*') ? file.type?.startsWith(rule.slice(0, -1)) : file.type === rule)
                 : rule === extension);
-            if (allowed.length && !accepted) return `That file type isn't supported. Please choose a ${allowed.map((item) => item.toUpperCase()).join(', ')} file.`;
-            if (limit && file.size > limit) return `That file is ${readableSize(file.size)}. Please choose one under ${readableSize(limit)}.`;
+            if (allowed.length && !accepted) return this.message('errorFileType', "This file type isn't supported. Choose a :types file.", {
+                types: allowed.map((item) => item.toUpperCase()).join(', '),
+            });
+            if (limit && file.size > limit) return this.message('errorFileSize', 'That file is :selected. Please choose one under :limit.', {
+                selected: readableSize(file.size),
+                limit: readableSize(limit),
+            });
             return '';
         },
         // Files: checked as soon as they are chosen, so the person finds out straight away.
@@ -298,6 +339,14 @@ export function createApplicationForm({ preview = true, errors = {}, mode = 'wor
             const file = input.files[0];
 
             if (!file) { this.remove(name, input); return; }
+
+            if (name === 'identification_document') {
+                ['identification_type', 'identity_issuing_country_code'].forEach((fieldName) => {
+                    const control = this.$refs.form.querySelector(`[name="${fieldName}"]`);
+                    if (control) control.value = '';
+                    this.clear(fieldName);
+                });
+            }
 
             const problem = this.fileProblem(field, file);
             if (problem) {
