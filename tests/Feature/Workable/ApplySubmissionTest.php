@@ -17,6 +17,10 @@ use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    config(['queue.default' => 'database']);
+});
+
 function fakeApplicationForm(?array $form = null): void
 {
     Http::fake([

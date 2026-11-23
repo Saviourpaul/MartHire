@@ -9,3 +9,7 @@ When the user requests a code review in this repository, follow the project skil
 ## Browser verification
 
 When making code changes, use the installed Playwright setup with Chrome to verify the affected application flow whenever it can be exercised in a browser. Do not rely only on static checks when browser verification is practical. If Chrome or the app environment is unavailable, report that limitation and run the closest relevant checks.
+
+## Installed agent skills
+
+At the start of each coding task, check `.codeartsdoer/skills` for a skill matching the work and read its `SKILL.md`. Apply its workflow when relevant; the linked skill files are the reference source.

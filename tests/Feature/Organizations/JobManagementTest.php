@@ -1,10 +1,13 @@
 <?php
 
 use App\Enums\JobStatus;
+use App\Enums\JobScreeningQuestionType;
 use App\Enums\OrganizationRole;
 use App\Models\Job;
+use App\Models\JobScreeningQuestion;
 use App\Models\JobPostMember;
 use App\Models\Organization;
+use App\Models\OrganizationMember;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\JobCountryService;
@@ -65,6 +68,15 @@ function createOrgJob(Organization $organization, User $user, array $overrides =
         'due_date' => now()->addDays(30),
         'status' => JobStatus::Open,
     ], $overrides)));
+}
+
+function completeJobManagementMemberOnboarding(OrganizationMember $member): void
+{
+    $member->onboardingProgress()->updateOrCreate([], [
+        'current_step' => 'complete',
+        'completed_steps' => ['welcome', 'profile', 'team', 'finish'],
+        'completed_at' => now(),
+    ]);
 }
 
 test('an owner can publish a job using only country for its location', function () {
@@ -166,6 +178,71 @@ test('workplace type can be changed when editing a job', function () {
         ->and($job->fresh()->workplaceTypeLabel())->toBe('Hybrid');
 });
 
+test('organizations can add and edit vacancy-specific screening questions', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $payload = jobPayload([
+        'screening_questions_submitted' => '1',
+        'screening_questions' => [[
+            'prompt' => 'How many years of relevant experience do you have?',
+            'type' => JobScreeningQuestionType::ShortText->value,
+            'required' => '1',
+        ]],
+    ]);
+
+    $this->actingAs($owner)->post(route('organisations.jobs.store'), $payload)
+        ->assertRedirect()->assertSessionHasNoErrors();
+    $job = latestJob();
+    $question = $job->screeningQuestions()->sole();
+
+    expect($question->prompt)->toBe('How many years of relevant experience do you have?')
+        ->and($question->type)->toBe(JobScreeningQuestionType::ShortText)
+        ->and($question->is_required)->toBeTrue();
+
+    $this->actingAs($owner)->patch(route('organisations.jobs.update', $job), jobPayload([
+        'screening_questions_submitted' => '1',
+        'screening_questions' => [[
+            'id' => $question->id,
+            'prompt' => 'Share a relevant accomplishment from your recent work.',
+            'type' => JobScreeningQuestionType::LongText->value,
+            'required' => '0',
+        ]],
+    ]))->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($job->screeningQuestions()->sole()->id)->toBe($question->id)
+        ->and($job->screeningQuestions()->sole()->prompt)->toBe('Share a relevant accomplishment from your recent work.')
+        ->and($job->screeningQuestions()->sole()->type)->toBe(JobScreeningQuestionType::LongText)
+        ->and($job->screeningQuestions()->sole()->is_required)->toBeTrue();
+});
+
+test('screening question edits reject IDs owned by another vacancy and allow explicit removal', function () {
+    [$organization, $owner] = organizationWithOwner();
+    $first = createOrgJob($organization, $owner, ['title' => 'First vacancy']);
+    $second = createOrgJob($organization, $owner, ['title' => 'Second vacancy']);
+    $foreignQuestion = $second->screeningQuestions()->create([
+        'prompt' => 'Describe a challenge you solved on the job.',
+        'type' => JobScreeningQuestionType::ShortText,
+        'is_required' => false,
+        'position' => 0,
+    ]);
+
+    $this->actingAs($owner)->patch(route('organisations.jobs.update', $first), jobPayload([
+        'screening_questions_submitted' => '1',
+        'screening_questions' => [[
+            'id' => $foreignQuestion->id,
+            'prompt' => 'Try to attach another vacancy question here.',
+            'type' => JobScreeningQuestionType::ShortText->value,
+            'required' => '0',
+        ]],
+    ]))->assertSessionHasErrors('screening_questions.0.id');
+
+    $this->patch(route('organisations.jobs.update', $second), jobPayload([
+        'screening_questions_submitted' => '1',
+        'screening_questions' => [],
+    ]))->assertRedirect()->assertSessionHasNoErrors();
+
+    expect(JobScreeningQuestion::query()->whereKey($foreignQuestion->id)->exists())->toBeFalse();
+});
+
 test('a job stores normalized country codes and ignores submitted country names', function () {
     [$organization, $owner] = organizationWithOwner();
 
@@ -228,11 +305,13 @@ test('a job can be saved as a draft and is excluded from the public board and ap
 
 test('a recruiter can create but a user without create_jobs cannot', function () {
     [$organization, $owner] = organizationWithOwner();
-    $recruiter = addOrganizationMember($organization, OrganizationRole::Recruiter)->user;
-    $interviewer = addOrganizationMember($organization, OrganizationRole::Interviewer)->user;
+    $recruiterMembership = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    $interviewerMembership = addOrganizationMember($organization, OrganizationRole::Interviewer);
+    completeJobManagementMemberOnboarding($recruiterMembership);
+    completeJobManagementMemberOnboarding($interviewerMembership);
 
-    $this->actingAs($recruiter)->post(route('organisations.jobs.store'), jobPayload())->assertRedirect();
-    $this->actingAs($interviewer)->post(route('organisations.jobs.store'), jobPayload())->assertForbidden();
+    $this->actingAs($recruiterMembership->user)->post(route('organisations.jobs.store'), jobPayload())->assertRedirect();
+    $this->actingAs($interviewerMembership->user)->post(route('organisations.jobs.store'), jobPayload())->assertForbidden();
 });
 
 test('job creation validates required fields and description text', function () {
@@ -290,15 +369,19 @@ test('the jobs index lists org jobs by role and shows draft badges to the owner'
 
 test('delete is hidden from a recruiter but shown to the owner', function () {
     [$organization, $owner] = organizationWithOwner();
-    $recruiter = addOrganizationMember($organization, OrganizationRole::Recruiter)->user;
+    $recruiterMembership = addOrganizationMember($organization, OrganizationRole::Recruiter);
+    completeJobManagementMemberOnboarding($recruiterMembership);
+    $recruiter = $recruiterMembership->user;
     $job = createOrgJob($organization, $owner, ['title' => 'Shared Role']);
     app(OrganizationContext::class)->runInOrganization($organization, fn () => JobPostMember::create([
         'organization_id' => $organization->id, 'job_id' => $job->id, 'user_id' => $recruiter->id,
     ]));
 
-    $this->actingAs($owner)->get(route('organisations.jobs.index'))->assertSee('nw-button--danger', false);
+    $this->actingAs($owner)->get(route('organisations.jobs.index'))
+        ->assertSee('nw-row-actions__item--danger', false)
+        ->assertSee('Delete job permanently');
     $this->actingAs($recruiter)->get(route('organisations.jobs.index'))
-        ->assertOk()->assertSee('Shared Role')->assertDontSee('nw-button--danger', false);
+        ->assertOk()->assertSee('Shared Role')->assertDontSee('nw-row-actions__item--danger', false);
 });
 
 test('an owner can close and then delete a job', function () {

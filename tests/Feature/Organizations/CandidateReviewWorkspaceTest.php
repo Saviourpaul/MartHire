@@ -4,12 +4,22 @@ use App\Enums\CandidatePipelineStage;
 use App\Enums\OrganizationRole;
 use App\Models\ApplicationForm;
 use App\Models\JobPostMember;
+use App\Models\OrganizationMember;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\CandidateReviewService;
 use App\Services\OrganizationProvisioner;
 use App\Support\OrganizationContext;
 use Illuminate\Support\Facades\Storage;
+
+function completeCandidateReviewMemberOnboarding(OrganizationMember $member): void
+{
+    $member->onboardingProgress()->updateOrCreate([], [
+        'current_step' => 'complete',
+        'completed_steps' => ['welcome', 'profile', 'team', 'finish'],
+        'completed_at' => now(),
+    ]);
+}
 
 function reviewWorkspaceApplication(User $owner, array $attributes = []): ApplicationForm
 {
@@ -40,6 +50,7 @@ function reviewWorkspaceApplication(User $owner, array $attributes = []): Applic
 
 test('candidate workspace reviews the submission snapshot instead of a later profile edit', function () {
     Storage::fake('public');
+    Storage::disk('public')->put('profile-images/submitted.jpg', 'stored image fixture');
     [$organization, $owner] = organizationWithOwner();
     $application = reviewWorkspaceApplication($owner, ['date_of_birth' => '1995-02-03', 'gender' => 'female']);
 
@@ -114,7 +125,9 @@ test('transition remarks and readable actions are presented without leaking raw 
 
 test('interviewer workspace excludes document and email activity and keeps the valid pipeline', function () {
     [$organization, $owner] = organizationWithOwner();
-    $interviewer = addOrganizationMember($organization, OrganizationRole::Interviewer)->user;
+    $interviewerMembership = addOrganizationMember($organization, OrganizationRole::Interviewer);
+    completeCandidateReviewMemberOnboarding($interviewerMembership);
+    $interviewer = $interviewerMembership->user;
     $application = reviewWorkspaceApplication($owner, ['status' => CandidatePipelineStage::Interview]);
     app(OrganizationContext::class)->runInOrganization($organization, function () use ($application, $interviewer, $owner): void {
         JobPostMember::create(['organization_id' => $application->organization_id, 'job_id' => $application->job_id, 'user_id' => $interviewer->id]);

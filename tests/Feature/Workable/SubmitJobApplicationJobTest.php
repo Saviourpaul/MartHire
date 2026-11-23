@@ -47,9 +47,9 @@ function outboxFixture(string $candidatesResponseFixture, int $candidatesStatus)
     return [$company, $posting, $application];
 }
 
-function runOutbox(JobApplication $application): void
+function runOutbox(JobApplication $application, ?string $dispatchToken = null): void
 {
-    app()->call([new SubmitJobApplicationJob($application), 'handle']);
+    app()->call([new SubmitJobApplicationJob($application, $dispatchToken), 'handle']);
 }
 
 it('submits successfully, records the candidate, and purges the payload and file', function () {
@@ -114,4 +114,55 @@ it('is idempotent — a submitted application is not posted again', function () 
     runOutbox($application);
 
     Http::assertNothingSent();
+});
+
+it('parks duplicate queue deliveries while the original worker lease is active', function () {
+    [, , $application] = outboxFixture('candidate_created.json', 201);
+    $token = (string) Str::uuid();
+    $application->update([
+        'status' => 'submitting',
+        'dispatch_token' => $token,
+        'processing_lease_until' => now()->addMinutes(2),
+    ]);
+
+    runOutbox($application, $token);
+
+    expect($application->fresh()->status)->toBe('submitting');
+    Http::assertNothingSent();
+});
+
+it('schedules safe Workable transient failures through the durable outbox', function () {
+    $form = json_decode(file_get_contents(base_path('tests/Fixtures/workable/application_form.json')), true);
+    Http::fake([
+        '*/spi/v3/jobs/SENIO001/application_form*' => Http::response($form, 200),
+        '*/spi/v3/jobs/SENIO001/candidates*' => Http::response([], 429, ['Retry-After' => '120']),
+    ]);
+    Storage::fake('local');
+    Storage::disk('local')->put('applications/1/cv.pdf', 'PDF-BYTES');
+    $company = Company::factory()->create([
+        'subdomain' => 'pilotco', 'api_token' => 'tok_123',
+        'apply_mode' => 'native', 'credentials_status' => 'valid',
+    ]);
+    $posting = JobPosting::factory()->for($company)->create(['shortcode' => 'SENIO001', 'apply_supported' => true]);
+    $token = (string) Str::uuid();
+    $application = JobApplication::create([
+        'job_posting_id' => $posting->id,
+        'idempotency_key' => (string) Str::uuid(),
+        'email' => 'cand@example.com', 'first_name' => 'Cand', 'last_name' => 'Idate',
+        'status' => 'queued',
+        'dispatch_token' => $token,
+        'payload' => [
+            'data' => ['first_name' => 'Cand', 'last_name' => 'Idate', 'email' => 'cand@example.com'],
+            'files' => ['resume' => ['path' => 'applications/1/cv.pdf', 'name' => 'cv.pdf']],
+        ],
+    ]);
+
+    runOutbox($application, $token);
+
+    $fresh = $application->fresh();
+    expect($fresh->status)->toBe('queued')
+        ->and($fresh->dispatch_token)->toBeNull()
+        ->and($fresh->processing_lease_until)->toBeNull()
+        ->and($fresh->next_attempt_at)->toBeGreaterThan(now()->addSeconds(119));
+    Http::assertSentCount(2);
 });
