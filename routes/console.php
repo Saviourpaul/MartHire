@@ -9,4 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('workable:sync')->everyThirtyMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('workable:dispatch-applications')->everyMinute()->withoutOverlapping()->onOneServer();
+Schedule::command('notifications:drain-outbox')->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command('accounts:process-inactivity')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
