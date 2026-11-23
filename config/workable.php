@@ -34,6 +34,10 @@ return [
 
         'payload_retention_days' => (int) env('APPLICATION_PAYLOAD_RETENTION_DAYS', 30),
 
+        'dispatch_stale_minutes' => (int) env('WORKABLE_APPLICATION_DISPATCH_STALE_MINUTES', 15),
+
+        'processing_lease_seconds' => (int) env('WORKABLE_APPLICATION_PROCESSING_LEASE_SECONDS', 180),
+
         // Private disk uploaded resumes are stored on (never public, never served directly).
         'disk' => env('APPLICATION_DISK', 'local'),
 
